@@ -1,15 +1,14 @@
+# llms/providers/anthropic.py
+
 import ai21
 import time
 
 
 class AI21Provider:
     # per million tokens
-    MODEL_COSTS = {
-        "j2-jumbo": {"prompt": 15.0, "completion": 15.0},
-        "j2-grande": {"prompt": 10.0, "completion": 10.0},
-        "j2-large": {"prompt": 3.0, "completion": 3.0},
-        "j2-jumbo-instruct": {"prompt": 15.0, "completion": 15.0},
-        "j2-grande-instruct": {"prompt": 10.0, "completion": 10.0},
+    MODEL_INFO = {
+        "j2-jumbo-instruct": {"prompt": 15.0, "completion": 15.0, "token_limit": 8192},
+        "j2-grande-instruct": {"prompt": 10.0, "completion": 10.0, "token_limit": 8192},
     }
 
     def __init__(self, api_key, model=None):
@@ -30,7 +29,7 @@ class AI21Provider:
         completion_tokens = len(response.completions[0].data.tokens)
         total_tokens = prompt_tokens + completion_tokens
 
-        cost_per_token = self.MODEL_COSTS[self.model]
+        cost_per_token = self.MODEL_INFO[self.model]
         cost = (prompt_tokens * cost_per_token["prompt"] / 1000000) + (
             completion_tokens * cost_per_token["completion"] / 1000000
         )

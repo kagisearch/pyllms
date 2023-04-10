@@ -57,19 +57,19 @@ class LLMS:
         for single_model in model:
             if (
                 openai_api_key is not None
-                and single_model in OpenAIProvider.MODEL_COSTS
+                and single_model in OpenAIProvider.MODEL_INFO
             ):
                 self._providers.append(
                     OpenAIProvider(api_key=openai_api_key, model=single_model)
                 )
             elif (
                 anthropic_api_key is not None
-                and single_model in AnthropicProvider.MODEL_COSTS
+                and single_model in AnthropicProvider.MODEL_INFO
             ):
                 self._providers.append(
                     AnthropicProvider(api_key=anthropic_api_key, model=single_model)
                 )
-            elif ai21_api_key is not None and single_model in AI21Provider.MODEL_COSTS:
+            elif ai21_api_key is not None and single_model in AI21Provider.MODEL_INFO:
                 self._providers.append(
                     AI21Provider(api_key=ai21_api_key, model=single_model)
                 )
@@ -82,7 +82,7 @@ class LLMS:
         all_providers = [OpenAIProvider, AI21Provider, AnthropicProvider]
 
         for provider in all_providers:
-            for model, cost in provider.MODEL_COSTS.items():
+            for model, cost in provider.MODEL_INFO.items():
                 if query and (
                     (query.lower() not in model.lower())
                     and (query.lower() not in provider.__name__.lower())

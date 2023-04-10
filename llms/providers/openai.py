@@ -4,11 +4,10 @@ import time
 
 class OpenAIProvider:
     # per million tokens
-    MODEL_COSTS = {
-        "gpt-4": {"prompt": 30.0, "completion": 60.0},
-        "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0},
+    MODEL_INFO = {
+        "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8000},
+        "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4000},
     }
-
     def __init__(self, api_key, model=None):
         openai.api_key = api_key
         if model is None:
@@ -37,7 +36,7 @@ class OpenAIProvider:
         completion_tokens = usage["completion_tokens"]
         total_tokens = usage["total_tokens"]
 
-        cost_per_token = self.MODEL_COSTS[self.model]
+        cost_per_token = self.MODEL_INFO[self.model]
         cost = (prompt_tokens * cost_per_token["prompt"] / 1000000) + (
             completion_tokens * cost_per_token["completion"] / 1000000
         )

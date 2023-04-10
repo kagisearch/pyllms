@@ -6,11 +6,10 @@ import time
 
 
 class AnthropicProvider:
-    MODEL_COSTS = {
-        "claude-instant-v1": {"prompt": 0.43, "completion": 1.45},
-        "claude-v1": {"prompt": 2.9, "completion": 8.6},
+    MODEL_INFO = {
+        "claude-instant-v1": {"prompt": 0.43, "completion": 1.45, "token_limit": 8000},
+        "claude-v1": {"prompt": 2.9, "completion": 8.6, "token_limit": 8000},
     }
-
     def __init__(self, api_key=None, model=None):
         if api_key is None:
             api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -41,7 +40,7 @@ class AnthropicProvider:
         prompt_tokens = anthropic.count_tokens(formatted_prompt)
         completion_tokens = anthropic.count_tokens(completion)
         total_tokens = prompt_tokens + completion_tokens
-        cost_per_token = self.MODEL_COSTS[self.model]
+        cost_per_token = self.MODEL_INFO[self.model]
         cost = (
             (prompt_tokens * cost_per_token["prompt"])
             + (completion_tokens * cost_per_token["completion"])
