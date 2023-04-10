@@ -120,42 +120,65 @@ class LLMS:
 
         return Result(results)
 
-    def benchmark(self, evaluator=None, show_outputs=False, html=False):
-        prompts = [
-            "What is the capital of the country where Christopher Columbus was born?",
-            "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
-            "Explain the process of photosynthesis in plants, including the role of chlorophyll and the importance of light. Discuss the main outcomes of photosynthesis and why it is essential for life on Earth.",
-            "Solve The Two Door Riddle: You are in a room with two doors. One door leads to certain death, and the other leads to freedom. There are two guards, one in front of each door. One guard always tells the truth, and the other guard always lies. You can only ask one question to one guard to determine which door leads to freedom. What question should you ask?",
-            "Solve the quadratic equation: x^2 - 5x + 6 = 0",
-            "How much is 7! + 7? Describe steps you took.",
-            "Describe the differences between depth-first search (DFS) and breadth-first search (BFS) algorithms in graph traversal, and provide an example use case for each of them.",
-            "Write a Python function that takes a string of text as input and returns a dictionary containing the frequency of each word in the text. Discuss the time complexity of your solution and any possible improvements to optimize its performance.",
-            "Write a Python function that takes a list of integers as input, finds the two numbers with the largest product, and returns their product. Also, provide a brief explanation of the logic behind your solution.",
-            "You are given a string containing a sequence of ASCII characters. Your task is to write a JavaScript function that compresses the string by replacing consecutive occurrences of the same character with the character followed by the number of times it appears consecutively. Then, write a JavaScript function to decompress the compressed string back to its original form. The input string only contains printable ASCII characters. For example, if the input string is 'aaabccddd', the compressed string should be 'a3b1c2d3'. The decompressed string should be the same as the input string.",
-            "Given the following messy and unstructured data, extract the names, email addresses, and phone numbers of the individuals listed:\
-\
-John Doe - johndoe@email.com (555) 123-4567\
-random text 1\
-Jane Smith\
-random text 2, 555-\
-987-6543\
-janesmith@email.com\
-random text 3\
-Bob Johnson - bob.johnson@email.com\
-random text 4 area code 555 phone: 111-2222\
-",
-        ]
+    def benchmark(self, prompts=None, evaluator=None, show_outputs=False, html=False):
+        
+        if not prompts:
+            prompts = [
+                "What is the capital of the country where Christopher Columbus was born?",
+                "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
+                "Explain the process of photosynthesis in plants, including the role of chlorophyll and the importance of light. Discuss the main outcomes of photosynthesis and why it is essential for life on Earth.",
+                "Solve The Two Door Riddle: You are in a room with two doors. One door leads to certain death, and the other leads to freedom. There are two guards, one in front of each door. One guard always tells the truth, and the other guard always lies. You can only ask one question to one guard to determine which door leads to freedom. What question should you ask?",
+                "Solve the quadratic equation: x^2 - 5x + 6 = 0",
+                "How much is 7! + 7? Describe steps you took.",
+                "Describe the differences between depth-first search (DFS) and breadth-first search (BFS) algorithms in graph traversal, and provide an example use case for each of them.",
+                "Write a Python function that takes a string of text as input and returns a dictionary containing the frequency of each word in the text. Discuss the time complexity of your solution and any possible improvements to optimize its performance.",
+                "Write a Python function that takes a list of integers as input, finds the two numbers with the largest product, and returns their product. Also, provide a brief explanation of the logic behind your solution.",
+                "You are given a string containing a sequence of ASCII characters. Your task is to write a JavaScript function that compresses the string by replacing consecutive occurrences of the same character with the character followed by the number of times it appears consecutively. Then, write a JavaScript function to decompress the compressed string back to its original form. The input string only contains printable ASCII characters. For example, if the input string is 'aaabccddd', the compressed string should be 'a3b1c2d3'. The decompressed string should be the same as the input string.",
+                "Given the following messy and unstructured data, extract the names, email addresses, and phone numbers of the individuals listed:\
+    \
+    John Doe - johndoe@email.com (555) 123-4567\
+    random text 1\
+    Jane Smith\
+    random text 2, 555-\
+    987-6543\
+    janesmith@email.com\
+    random text 3\
+    Bob Johnson - bob.johnson@email.com\
+    random text 4 area code 555 phone: 111-2222\
+    ",
+            ]
 
         def evaluate_answers(
             evaluator, query_answer_pairs: List[Tuple[str, str]]
         ) -> List[int]:
-            prompt = "Please evaluate the following answers on a scale of 1 to 10 (10 being the best):\n\n"
+            system='''
+            You are a truthful evaluator of the capabilties of other AI models.
+
+You are given a list of queries and answers by an AI model. For each query first think about  the solution yourself, then score the reply of the other AI, compared to yours on a scale 1 to 10 (10 being great).
+
+For example:
+
+Query: What is the capital of the country where Christopher Columbus was born?
+Answer: Christopher Columbus was born in Genoa, Italy.
+Your thought (do not print this): Christopher Columbus was born in the Republic of Genoa, which is now part of Italy. The capital of Italy is Rome.
+Score: 3 (it is wrong answer, but city was correct)
+
+Query : A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?
+Answer: You should push the door. The reason for this is that the mirror writing is intended for people on the other side of the door to read, not for you. So, if you push the door, you will be pushing it in the direction that the people on the other side are expecting it to move.
+Your thought (do not print this): Since the word "push" is written in mirror writing, it suggests that the instruction is intended for people on the other side of the door. Therefore, you should pull the door to open it.
+Score: 1 (it is wrong)
+
+Your only output should be a list of comma seperated integers representing your evaluation score for each answer.
+
+'''
+            #prompt = "Please evaluate the following answers on a scale of 1 to 10 (10 being the best):\n\n"
+            prompt=""
             for i, (query, answer) in enumerate(query_answer_pairs):
                 prompt += f"Query #{i + 1}: {query}\nAnswer #{i + 1}: {answer}\n\n"
-            prompt += "Please provide a score for each answer as a list of integers separated by commas, with no additional text or explanation. For example: 6, 10, 10"
-            #print(prompt)
-            evaluator_result = evaluator.complete(prompt).text
-            #print(evaluator_result)
+#            prompt += "Please provide a score for each answer as a list of integers separated by commas, with no additional text or explanation. For example: 6, 10, 10"
+            print(prompt)
+            evaluator_result = evaluator.complete(prompt, system=system).text
+            print(evaluator_result)
             scores = evaluator_result.split(",")
             return [int(score.strip()) for score in scores]
 

@@ -18,9 +18,14 @@ class OpenAIProvider:
     def __str__(self):
         return f"{self.__class__.__name__} ({self.model})"
 
-    def complete(self, prompt, temperature=0, **kwargs):
+    def complete(self, prompt, temperature=0, system=None, **kwargs):
         start_time = time.time()
+
         messages = [{"role": "user", "content": prompt}]
+
+        if system:
+            messages=[{"role": "system", "content": system}]+messages
+
         response = openai.ChatCompletion.create(
             model=self.model, messages=messages, temperature=temperature, **kwargs
         )
