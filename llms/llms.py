@@ -315,7 +315,7 @@ Your only output should be a list of comma seperated integers representing your 
                     f"Total Tokens: {total_tokens}",
                     f"Total Cost: {model_data['total_cost']:.5f}",
                     f"Median Latency: {model_data['median_latency']:.2f}",
-                    f"Aggregrated speed:: {total_tokens/model_data['total_latency']:.2f}",
+                    f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
                 ]
 
             else:
@@ -324,7 +324,7 @@ Your only output should be a list of comma seperated integers representing your 
                     f"Total Tokens: {total_tokens}",
                     f"Total Cost: {model_data['total_cost']:.5f}",
                     f"Median Latency: {model_data['median_latency']:.2f}",
-                    f"Aggregrated speed: {total_tokens/model_data['total_latency']:.2f}",
+                    f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
                 ]
             if evaluator:
                 row_data.append(f"Total Score: {total_score}")
