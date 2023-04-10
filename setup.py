@@ -6,7 +6,12 @@ setup(
     packages=find_packages(),
     install_requires=[
         "openai",
+        "anthropic",
+        "ai21",
+        "huggingface_hub",
         "markdown2",
+        "prettytable",
+
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",

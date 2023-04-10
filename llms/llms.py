@@ -5,8 +5,9 @@ from prettytable import PrettyTable
 from .providers import OpenAIProvider
 from .providers import AnthropicProvider
 from .providers import AI21Provider
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from typing import List, Tuple
 
 class Result:
     def __init__(self, results):
@@ -43,7 +44,11 @@ class LLMS:
             ai21_api_key = os.getenv("AI21_API_KEY")
 
         if model is None:
-            model = ["gpt-3.5-turbo"]
+            model = os.getenv("LLMS_DEFAULT_MODEL")
+            if model is None:
+                model = ["gpt-3.5-turbo"]
+            else:
+                model = [model]
         elif isinstance(model, str):
             model = [model]
 
@@ -77,7 +82,10 @@ class LLMS:
 
         for provider in all_providers:
             for model, cost in provider.MODEL_COSTS.items():
-                if query and ((query.lower() not in model.lower()) and (query.lower() not in provider.__name__.lower())):
+                if query and (
+                    (query.lower() not in model.lower())
+                    and (query.lower() not in provider.__name__.lower())
+                ):
                     continue
                 model_info = {
                     "provider": provider.__name__,
@@ -111,61 +119,115 @@ class LLMS:
 
         return Result(results)
 
-    def benchmark(self, show_outputs=False, html=False):
+
+    def benchmark2(self, evaluator=None, show_outputs=False, html=False):
         prompts = [
-            "What is the capital of France?",
-            "Explain the process of photosynthesis.",
-            "How does a combustion engine work?",
-            "What are the primary colors?",
-            "What is the Pythagorean theorem?",
-            "Give me five suitable names for a baby born on startship Enterprise",
-            "Summarize social cognitive theory in two sentences",
-            "what is the recipe for world's best omlette?",
-            "How to make money online?",
+            "What is the capital of the country where Christopher Columbus was born?",
+            "Explain the process of photosynthesis in plants, including the role of chlorophyll and the importance of light. Discuss the main outcomes of photosynthesis and why it is essential for life on Earth.",
+            "Solve The Two Door Riddle: You are in a room with two doors. One door leads to certain death, and the other leads to freedom. There are two guards, one in front of each door. One guard always tells the truth, and the other guard always lies. You can only ask one question to one guard to determine which door leads to freedom. What question should you ask?",
+            "Solve the quadratic equation: x^2 - 5x + 6 = 0",
+            "How much is 7! + 7? Describe steps you took.",
+            "Describe the differences between depth-first search (DFS) and breadth-first search (BFS) algorithms in graph traversal, and provide an example use case for each of them.",
+            "Write a Python function that takes a string of text as input and returns a dictionary containing the frequency of each word in the text. Discuss the time complexity of your solution and any possible improvements to optimize its performance.",          
+            "Write a Python function that takes a list of integers as input, finds the two numbers with the largest product, and returns their product. Also, provide a brief explanation of the logic behind your solution.",
+            "You are given a string containing a sequence of ASCII characters. Your task is to write a JavaScript function that compresses the string by replacing consecutive occurrences of the same character with the character followed by the number of times it appears consecutively. Then, write a JavaScript function to decompress the compressed string back to its original form. The input string only contains printable ASCII characters. For example, if the input string is 'aaabccddd', the compressed string should be 'a3b1c2d3'. The decompressed string should be the same as the input string.",
+            "Given the following messy and unstructured data, extract the names, email addresses, and phone numbers of the individuals listed:\
+\
+John Doe - johndoe@email.com (555) 123-4567\
+random text 1\
+Jane Smith\
+random text 2, 555-\
+987-6543\
+janesmith@email.com\
+random text 3\
+Bob Johnson - bob.johnson@email.com\
+random text 4 area code 555 phone: 111-2222\
+"
         ]
+
+        def evaluate_answers(evaluator, query_answer_pairs: List[Tuple[str, str]]) -> List[int]:
+            prompt = "Please evaluate the following answers on a scale of 1 to 10 (10 being the best):\n\n"
+            for i, (query, answer) in enumerate(query_answer_pairs):
+                prompt += f"Query #{i + 1}: {query}\nAnswer #{i + 1}: {answer}\n\n"
+            prompt += "Please provide a score for each answer as a list of integers separated by commas, with no additional text or explanation. For example: 6, 10, 10"
+            print(prompt)
+            evaluator_result = evaluator.complete(prompt).text
+            print(evaluator_result)
+            scores = evaluator_result.split(',')
+            return [int(score.strip()) for score in scores]
+
 
         model_results = {}
 
-        # Helper function to run a completion task and store the result
-        def process_prompt(model, prompt):
+  
+        def process_prompt(model, prompt, index):
+            print(model, index)
             result = model.complete(prompt)
             output_data = {
                 "text": result["text"],
                 "tokens": result["meta"]["tokens"],
                 "latency": result["meta"]["latency"],
                 "cost": result["meta"]["cost"],
+                "prompt_index": index,
             }
-            return model, output_data
+            return output_data
 
+        def process_prompts_sequentially(model, prompts):
+            results = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                futures = [executor.submit(process_prompt, model, prompt, index) for index, prompt in enumerate(prompts)]
+                for future in concurrent.futures.as_completed(futures):
+                    results.append(future.result())
+            return model, results
+
+        # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
-            model_results = {}
-            futures = []
-            for model in self._providers:
-                model_results[model] = {
-                    "outputs": [],
-                    "total_latency": 0,
-                    "total_cost": 0,
-                }
-                for prompt in prompts:
-                    future = executor.submit(process_prompt, model, prompt)
-                    futures.append((model, future))
+            futures = [executor.submit(process_prompts_sequentially, model, prompts) for model in self._providers]
 
-            for future in as_completed([f[1] for f in futures]):
-                model, output_data = next((f for f in futures if f[1] == future))
-                result = future.result()
-                model_results[model]["outputs"].append(result[1])
-                model_results[model]["total_latency"] += result[1]["latency"]
-                model_results[model]["total_cost"] += result[1]["cost"]
+            for future in as_completed(futures):
+                model, outputs = future.result()
+                model_results[model] = {"outputs": outputs, "total_latency": 0, "total_cost": 0}
+
+                for output_data in outputs:
+                    model_results[model]["total_latency"] += output_data["latency"]
+                    model_results[model]["total_cost"] += output_data["cost"]
+
 
         for model in model_results:
             outputs = model_results[model]["outputs"]
             model_results[model]["median_latency"] = statistics.median(
-                [output["latency"] for output in outputs]
+                [output["latency"] for output in outputs]                
             )
+            
+            total_tokens = sum([output["tokens"] for output in outputs])
+            total_latency = model_results[model]["total_latency"]
+            model_results[model]["aggregated_speed"] = total_tokens / total_latency
 
-        sorted_models = sorted(
-            model_results, key=lambda x: model_results[x]["median_latency"]
+   
+    
+        if evaluator:
+            for model in model_results:
+                all_query_answer_pairs = []
+                model_data = model_results[model]
+                for output_data in model_data["outputs"]:
+                    prompt_index = output_data["prompt_index"]
+                    all_query_answer_pairs.append((prompts[prompt_index], output_data["text"]))
+
+                evaluation = evaluate_answers(evaluator, all_query_answer_pairs)
+                # Add evaluation to results
+                model_results[model]["evaluation"] = []
+                for i in range(len(model_results[model]["outputs"])):
+                    model_results[model]["evaluation"].append(evaluation[i])
+
+            sorted_models = sorted(
+                    model_results, key=lambda x: model_results[x]["aggregated_speed"] * sum(model_results[x]["evaluation"]), reverse=True
+            )
+        else:
+          sorted_models = sorted(
+            model_results, key=lambda x: model_results[x]["aggregated_speed"], reverse=True
         )
+        
+        
 
         headers = [
             "Model",
@@ -174,17 +236,25 @@ class LLMS:
             "Cost ($)",
             "Latency (s)",
             "Speed (tokens/sec)",
+            "Evaluation"
         ]
+
         if not show_outputs:
             headers.remove("Output")
+   
+        if not evaluator:
+            headers.remove("Evaluation")    
 
         table = PrettyTable(headers)
 
         for model in sorted_models:
             model_data = model_results[model]
             total_tokens = 0
-            for output_data in model_data["outputs"]:
+            total_score = 0
+            for index, output_data in enumerate(model_data["outputs"]):
                 total_tokens += output_data["tokens"]
+                if evaluator:
+                    total_score += model_results[model]["evaluation"][index]
                 row_data = [
                     model,
                     output_data["text"],
@@ -195,10 +265,13 @@ class LLMS:
                 ]
                 if not show_outputs:
                     row_data.remove(output_data["text"])
+                if evaluator:
+                    row_data.append(model_results[model]["evaluation"][index])
                 table.add_row(row_data)
+           
+
             if show_outputs:
-                table.add_row(
-                    [
+                row_data=[
                         model,
                         "",
                         f"Total Tokens: {total_tokens}",
@@ -206,17 +279,20 @@ class LLMS:
                         f"Median Latency: {model_data['median_latency']:.2f}",
                         f"Aggregrated speed:: {total_tokens/model_data['total_latency']:.2f}",
                     ]
-                )
+               
             else:
-                table.add_row(
-                    [
+                row_data= [
                         model,
                         f"Total Tokens: {total_tokens}",
                         f"Total Cost: {model_data['total_cost']:.5f}",
                         f"Median Latency: {model_data['median_latency']:.2f}",
                         f"Aggregrated speed: {total_tokens/model_data['total_latency']:.2f}",
-                    ]
-                )
+                ]
+            if evaluator:
+                    row_data.append(f"Total Score: {total_score}")
+
+            table.add_row(row_data)
+
         if not html:
             return table
         else:
