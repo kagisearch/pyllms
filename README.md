@@ -1,6 +1,6 @@
 # LLMS
 
-A lightweight Python package for easy interaction with popular language models from OpenAI, Anthropic, AI21 and others.
+A lightweight Python that strives to enable dead-simple interaction with popular language models from OpenAI, Anthropic, AI21 and others.
 
 ## Installation
 
