@@ -129,7 +129,7 @@ models.benchmark(evaluator=gpt4)
 
 In addition, you can evaluate models on your own prompts:
 ```
-models.benchmark(prompts=["what is the capital of finland"],evaluator=gpt4)
+models.benchmark(prompts=["what is the capital of finland", "who won superbowl in the year justin bieber was born"],evaluator=gpt4)
 ```
 
 ## Supported Models
