@@ -5,11 +5,11 @@ import pathlib
 here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
-_project_homepage = "https://github.com/kagisearch/llms"
+_project_homepage = "https://github.com/kagisearch/pyllms"
 
 setup(
     name="pyllms",
-    version="0.1.1",
+    version="0.1.2",
     description="A brief description of your package",
     long_description=long_description,
     long_description_content_type="text/markdown",
