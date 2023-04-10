@@ -160,15 +160,18 @@ For example:
 
 Query: What is the capital of the country where Christopher Columbus was born?
 Answer: Christopher Columbus was born in Genoa, Italy.
-Your thought (do not print this): Christopher Columbus was born in the Republic of Genoa, which is now part of Italy. The capital of Italy is Rome.
-Score: 3 (it is wrong answer, but city was correct)
 
 Query : A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?
 Answer: You should push the door. The reason for this is that the mirror writing is intended for people on the other side of the door to read, not for you. So, if you push the door, you will be pushing it in the direction that the people on the other side are expecting it to move.
-Your thought (do not print this): Since the word "push" is written in mirror writing, it suggests that the instruction is intended for people on the other side of the door. Therefore, you should pull the door to open it.
-Score: 1 (it is wrong)
 
-Your only output should be a list of comma seperated integers representing your evaluation score for each answer.
+
+Christopher Columbus was born in the Republic of Genoa, which is now part of Italy. The capital of Italy is Rome. So you would score it 3 (it is wrong answer, but city was correct)
+Since the word "push" is written in mirror writing, it suggests that the instruction is intended for people on the other side of the door. Therefore, you should pull the door to open it.
+You would score this 1 (it is wrong)
+
+
+Your only output should be a list of comma seperated integers representing your evaluation score for each answer. No other output is allowed. For example above your output will be:
+1, 3
 
 '''
             #prompt = "Please evaluate the following answers on a scale of 1 to 10 (10 being the best):\n\n"
