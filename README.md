@@ -85,6 +85,7 @@ gpt4=llms.init('gpt-4')
 models.benchmark(evaluator=gpt4)
 ```
 
+```
 +---------------------------------------+--------------------+---------------------+----------------------+---------------------------+------------------+
 |                 Model                 |       Tokens       |       Cost ($)      |     Latency (s)      |     Speed (tokens/sec)    |    Evaluation    |
 +---------------------------------------+--------------------+---------------------+----------------------+---------------------------+------------------+
@@ -113,7 +114,7 @@ models.benchmark(evaluator=gpt4)
 |     OpenAIProvider (gpt-3.5-turbo)    |        170         |       0.00034       |         2.72         |           62.52           |        10        |
 |     OpenAIProvider (gpt-3.5-turbo)    | Total Tokens: 2767 | Total Cost: 0.00553 | Median Latency: 8.35 |  Aggregrated speed: 34.66 | Total Score: 108 |
 +---------------------------------------+--------------------+---------------------+----------------------+---------------------------+------------------+
-
+```
 ## Supported Models
 
 To get a list of supported models, call list(). Models will be shown in the order of least expensive to most expensive.
