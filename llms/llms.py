@@ -9,6 +9,7 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Tuple
 
+
 class Result:
     def __init__(self, results):
         self._results = results
@@ -119,16 +120,16 @@ class LLMS:
 
         return Result(results)
 
-
     def benchmark2(self, evaluator=None, show_outputs=False, html=False):
         prompts = [
             "What is the capital of the country where Christopher Columbus was born?",
+            "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
             "Explain the process of photosynthesis in plants, including the role of chlorophyll and the importance of light. Discuss the main outcomes of photosynthesis and why it is essential for life on Earth.",
             "Solve The Two Door Riddle: You are in a room with two doors. One door leads to certain death, and the other leads to freedom. There are two guards, one in front of each door. One guard always tells the truth, and the other guard always lies. You can only ask one question to one guard to determine which door leads to freedom. What question should you ask?",
             "Solve the quadratic equation: x^2 - 5x + 6 = 0",
             "How much is 7! + 7? Describe steps you took.",
             "Describe the differences between depth-first search (DFS) and breadth-first search (BFS) algorithms in graph traversal, and provide an example use case for each of them.",
-            "Write a Python function that takes a string of text as input and returns a dictionary containing the frequency of each word in the text. Discuss the time complexity of your solution and any possible improvements to optimize its performance.",          
+            "Write a Python function that takes a string of text as input and returns a dictionary containing the frequency of each word in the text. Discuss the time complexity of your solution and any possible improvements to optimize its performance.",
             "Write a Python function that takes a list of integers as input, finds the two numbers with the largest product, and returns their product. Also, provide a brief explanation of the logic behind your solution.",
             "You are given a string containing a sequence of ASCII characters. Your task is to write a JavaScript function that compresses the string by replacing consecutive occurrences of the same character with the character followed by the number of times it appears consecutively. Then, write a JavaScript function to decompress the compressed string back to its original form. The input string only contains printable ASCII characters. For example, if the input string is 'aaabccddd', the compressed string should be 'a3b1c2d3'. The decompressed string should be the same as the input string.",
             "Given the following messy and unstructured data, extract the names, email addresses, and phone numbers of the individuals listed:\
@@ -142,10 +143,12 @@ janesmith@email.com\
 random text 3\
 Bob Johnson - bob.johnson@email.com\
 random text 4 area code 555 phone: 111-2222\
-"
+",
         ]
 
-        def evaluate_answers(evaluator, query_answer_pairs: List[Tuple[str, str]]) -> List[int]:
+        def evaluate_answers(
+            evaluator, query_answer_pairs: List[Tuple[str, str]]
+        ) -> List[int]:
             prompt = "Please evaluate the following answers on a scale of 1 to 10 (10 being the best):\n\n"
             for i, (query, answer) in enumerate(query_answer_pairs):
                 prompt += f"Query #{i + 1}: {query}\nAnswer #{i + 1}: {answer}\n\n"
@@ -153,13 +156,11 @@ random text 4 area code 555 phone: 111-2222\
             print(prompt)
             evaluator_result = evaluator.complete(prompt).text
             print(evaluator_result)
-            scores = evaluator_result.split(',')
+            scores = evaluator_result.split(",")
             return [int(score.strip()) for score in scores]
-
 
         model_results = {}
 
-  
         def process_prompt(model, prompt, index):
             print(model, index)
             result = model.complete(prompt)
@@ -175,43 +176,52 @@ random text 4 area code 555 phone: 111-2222\
         def process_prompts_sequentially(model, prompts):
             results = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                futures = [executor.submit(process_prompt, model, prompt, index) for index, prompt in enumerate(prompts)]
+                futures = [
+                    executor.submit(process_prompt, model, prompt, index)
+                    for index, prompt in enumerate(prompts)
+                ]
                 for future in concurrent.futures.as_completed(futures):
                     results.append(future.result())
             return model, results
 
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(process_prompts_sequentially, model, prompts) for model in self._providers]
+            futures = [
+                executor.submit(process_prompts_sequentially, model, prompts)
+                for model in self._providers
+            ]
 
             for future in as_completed(futures):
                 model, outputs = future.result()
-                model_results[model] = {"outputs": outputs, "total_latency": 0, "total_cost": 0}
+                model_results[model] = {
+                    "outputs": outputs,
+                    "total_latency": 0,
+                    "total_cost": 0,
+                }
 
                 for output_data in outputs:
                     model_results[model]["total_latency"] += output_data["latency"]
                     model_results[model]["total_cost"] += output_data["cost"]
 
-
         for model in model_results:
             outputs = model_results[model]["outputs"]
             model_results[model]["median_latency"] = statistics.median(
-                [output["latency"] for output in outputs]                
+                [output["latency"] for output in outputs]
             )
-            
+
             total_tokens = sum([output["tokens"] for output in outputs])
             total_latency = model_results[model]["total_latency"]
             model_results[model]["aggregated_speed"] = total_tokens / total_latency
 
-   
-    
         if evaluator:
             for model in model_results:
                 all_query_answer_pairs = []
                 model_data = model_results[model]
                 for output_data in model_data["outputs"]:
                     prompt_index = output_data["prompt_index"]
-                    all_query_answer_pairs.append((prompts[prompt_index], output_data["text"]))
+                    all_query_answer_pairs.append(
+                        (prompts[prompt_index], output_data["text"])
+                    )
 
                 evaluation = evaluate_answers(evaluator, all_query_answer_pairs)
                 # Add evaluation to results
@@ -220,14 +230,17 @@ random text 4 area code 555 phone: 111-2222\
                     model_results[model]["evaluation"].append(evaluation[i])
 
             sorted_models = sorted(
-                    model_results, key=lambda x: model_results[x]["aggregated_speed"] * sum(model_results[x]["evaluation"]), reverse=True
+                model_results,
+                key=lambda x: model_results[x]["aggregated_speed"]
+                * sum(model_results[x]["evaluation"]),
+                reverse=True,
             )
         else:
-          sorted_models = sorted(
-            model_results, key=lambda x: model_results[x]["aggregated_speed"], reverse=True
-        )
-        
-        
+            sorted_models = sorted(
+                model_results,
+                key=lambda x: model_results[x]["aggregated_speed"],
+                reverse=True,
+            )
 
         headers = [
             "Model",
@@ -236,14 +249,14 @@ random text 4 area code 555 phone: 111-2222\
             "Cost ($)",
             "Latency (s)",
             "Speed (tokens/sec)",
-            "Evaluation"
+            "Evaluation",
         ]
 
         if not show_outputs:
             headers.remove("Output")
-   
+
         if not evaluator:
-            headers.remove("Evaluation")    
+            headers.remove("Evaluation")
 
         table = PrettyTable(headers)
 
@@ -268,28 +281,27 @@ random text 4 area code 555 phone: 111-2222\
                 if evaluator:
                     row_data.append(model_results[model]["evaluation"][index])
                 table.add_row(row_data)
-           
 
             if show_outputs:
-                row_data=[
-                        model,
-                        "",
-                        f"Total Tokens: {total_tokens}",
-                        f"Total Cost: {model_data['total_cost']:.5f}",
-                        f"Median Latency: {model_data['median_latency']:.2f}",
-                        f"Aggregrated speed:: {total_tokens/model_data['total_latency']:.2f}",
-                    ]
-               
+                row_data = [
+                    model,
+                    "",
+                    f"Total Tokens: {total_tokens}",
+                    f"Total Cost: {model_data['total_cost']:.5f}",
+                    f"Median Latency: {model_data['median_latency']:.2f}",
+                    f"Aggregrated speed:: {total_tokens/model_data['total_latency']:.2f}",
+                ]
+
             else:
-                row_data= [
-                        model,
-                        f"Total Tokens: {total_tokens}",
-                        f"Total Cost: {model_data['total_cost']:.5f}",
-                        f"Median Latency: {model_data['median_latency']:.2f}",
-                        f"Aggregrated speed: {total_tokens/model_data['total_latency']:.2f}",
+                row_data = [
+                    model,
+                    f"Total Tokens: {total_tokens}",
+                    f"Total Cost: {model_data['total_cost']:.5f}",
+                    f"Median Latency: {model_data['median_latency']:.2f}",
+                    f"Aggregrated speed: {total_tokens/model_data['total_latency']:.2f}",
                 ]
             if evaluator:
-                    row_data.append(f"Total Score: {total_score}")
+                row_data.append(f"Total Score: {total_score}")
 
             table.add_row(row_data)
 
