@@ -32,25 +32,25 @@ export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
 
 
-Alternatively you can pass initialization values to the init() method:
+Alternatively, you can pass initialization values to the init() method:
 
 ```
 model=llms.init(openai_api_key='your_api_key_here', model='gpt-4')
 ```
 
 
-You can also pass optional parameters to the complete method. Any parameters accepted by the original model are supported automatically, in verbatim form:
+You can also pass optional parameters to the complete method. Any parameters accepted by the original model are supported automatically, in the verbatim form:
 
 ```
 result = model.complete(
     "what is the capital of country where mozzart was born",
-    temperature=0.8,
+    temperature=0.1,
 )
 ```
 
+By default, temperature for all models is set to 0.
 
-Result will also contain useful information like tokens used, cost (which is automaticall calculated using current pricing) and result latency:
-
+The result will also contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and result latency:
 ```
 >>> print(result.meta)
 {'model': 'gpt-3.5-turbo', 'tokens': 15, 'tokens_prompt': 14, 'tokens_completion': 1, 'cost': 3e-05, 'latency': 0.48232388496398926}
@@ -65,7 +65,7 @@ Result will also contain useful information like tokens used, cost (which is aut
 
 ## Multi-model usage
 
-You can initialize multiple models at once. This is useful for testing and comparing output. All models will be queried in parallel to save time. 
+You can initialize multiple models at once, which is very useful for testing and comparing output of different models. All models will run in parallel to save time. 
 
 ```
 >>> models=llms.init(model=['gpt-3.5-turbo','claude-instant-v1'])
@@ -130,7 +130,7 @@ models.benchmark(evaluator=gpt4)
 
 In addition, you can evaluate models on your own prompts:
 ```
-models.benchmark(prompts=["what is the capital of finland"],evaluator=gpt4)
+models.benchmark(prompts=["what is the capital of finland", "who won superbowl in the year justin bieber was born"],evaluator=gpt4)
 ```
 
 ## Supported Models
