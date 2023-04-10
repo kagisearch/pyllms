@@ -44,10 +44,11 @@ You can also pass optional parameters to the complete method. Any parameters acc
 ```
 result = model.complete(
     "what is the capital of country where mozzart was born",
-    temperature=0.8,
+    temperature=0.1,
 )
 ```
 
+By default, temperature for all models is set to 0.
 
 The result will also contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and result latency:
 ```
