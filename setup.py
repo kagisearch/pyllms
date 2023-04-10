@@ -8,8 +8,8 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 _project_homepage = "https://github.com/kagisearch/llms"
 
 setup(
-    name="llms",
-    version="0.1.0",
+    name="pyllms",
+    version="0.1.1",
     description="A brief description of your package",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -42,7 +42,7 @@ setup(
     keywords="llm, llms, large language model, AI, NLP, natural language processing, gpt, chatgpt, openai, anthropic, ai21",
     project_urls={
         "Documentation": _project_homepage,
-        "Source Code": _project_homepage_,
-        "Issue Tracker": _project_homepage_+"/issues",
+        "Source Code": _project_homepage,
+        "Issue Tracker": _project_homepage+"/issues",
     },
 )

@@ -1,4 +1,4 @@
-# LLMS
+# PyLLMs
 
 A lightweight Python that strives to enable dead-simple interaction with popular language models from OpenAI, Anthropic, AI21 and others.
 
@@ -7,7 +7,7 @@ A lightweight Python that strives to enable dead-simple interaction with popular
 Clone this repository and install the package using pip:
 
 ```
-pip3 install llms
+pip3 install pyllms
 ```
 
 
