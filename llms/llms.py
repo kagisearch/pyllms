@@ -120,7 +120,7 @@ class LLMS:
 
         return Result(results)
 
-    def benchmark2(self, evaluator=None, show_outputs=False, html=False):
+    def benchmark(self, evaluator=None, show_outputs=False, html=False):
         prompts = [
             "What is the capital of the country where Christopher Columbus was born?",
             "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
@@ -153,9 +153,9 @@ random text 4 area code 555 phone: 111-2222\
             for i, (query, answer) in enumerate(query_answer_pairs):
                 prompt += f"Query #{i + 1}: {query}\nAnswer #{i + 1}: {answer}\n\n"
             prompt += "Please provide a score for each answer as a list of integers separated by commas, with no additional text or explanation. For example: 6, 10, 10"
-            print(prompt)
+            #print(prompt)
             evaluator_result = evaluator.complete(prompt).text
-            print(evaluator_result)
+            #print(evaluator_result)
             scores = evaluator_result.split(",")
             return [int(score.strip()) for score in scores]
 
