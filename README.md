@@ -86,34 +86,46 @@ models.benchmark(evaluator=gpt4)
 ```
 
 ```
-+---------------------------------------+--------------------+---------------------+----------------------+---------------------------+------------------+
-|                 Model                 |       Tokens       |       Cost ($)      |     Latency (s)      |     Speed (tokens/sec)    |    Evaluation    |
-+---------------------------------------+--------------------+---------------------+----------------------+---------------------------+------------------+
-| AnthropicProvider (claude-instant-v1) |         33         |       0.00003       |         0.86         |           38.49           |        8         |
-| AnthropicProvider (claude-instant-v1) |        152         |       0.00019       |         1.81         |           83.99           |        10        |
-| AnthropicProvider (claude-instant-v1) |        248         |       0.00031       |         2.15         |           115.37          |        7         |
-| AnthropicProvider (claude-instant-v1) |        209         |       0.00021       |         1.69         |           123.94          |        10        |
-| AnthropicProvider (claude-instant-v1) |         59         |       0.00006       |         0.68         |           86.91           |        10        |
-| AnthropicProvider (claude-instant-v1) |        140         |       0.00018       |         1.44         |           96.93           |        10        |
-| AnthropicProvider (claude-instant-v1) |        245         |       0.00031       |         2.51         |           97.73           |        9         |
-| AnthropicProvider (claude-instant-v1) |        250         |       0.00031       |         2.17         |           115.10          |        9         |
-| AnthropicProvider (claude-instant-v1) |        248         |       0.00031       |         2.15         |           115.24          |        9         |
-| AnthropicProvider (claude-instant-v1) |        323         |       0.00034       |         1.86         |           173.71          |        8         |
-| AnthropicProvider (claude-instant-v1) |        168         |       0.00015       |         0.91         |           184.79          |        10        |
-| AnthropicProvider (claude-instant-v1) | Total Tokens: 2075 | Total Cost: 0.00240 | Median Latency: 1.81 | Aggregrated speed: 113.85 | Total Score: 100 |
-|     OpenAIProvider (gpt-3.5-turbo)    |         37         |       0.00007       |         1.22         |           30.39           |        8         |
-|     OpenAIProvider (gpt-3.5-turbo)    |         93         |       0.00019       |         2.32         |           40.13           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        451         |       0.00090       |        14.70         |           30.69           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        204         |       0.00041       |         4.50         |           45.38           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        320         |       0.00064       |        10.51         |           30.44           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        109         |       0.00022       |         3.27         |           33.31           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        314         |       0.00063       |         9.96         |           31.52           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        294         |       0.00059       |         8.84         |           33.26           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        274         |       0.00055       |         8.35         |           32.82           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        501         |       0.00100       |        13.45         |           37.26           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        170         |       0.00034       |         2.72         |           62.52           |        10        |
-|     OpenAIProvider (gpt-3.5-turbo)    | Total Tokens: 2767 | Total Cost: 0.00553 | Median Latency: 8.35 |  Aggregrated speed: 34.66 | Total Score: 108 |
-+---------------------------------------+--------------------+---------------------+----------------------+---------------------------+------------------+
++---------------------------------------+--------------------+---------------------+----------------------+---------------------------+-----------------+
+|                 Model                 |       Tokens       |       Cost ($)      |     Latency (s)      |     Speed (tokens/sec)    |    Evaluation   |
++---------------------------------------+--------------------+---------------------+----------------------+---------------------------+-----------------+
+| AnthropicProvider (claude-instant-v1) |         33         |       0.00003       |         0.81         |           40.83           |        3        |
+| AnthropicProvider (claude-instant-v1) |        152         |       0.00019       |         1.76         |           86.44           |        10       |
+| AnthropicProvider (claude-instant-v1) |        248         |       0.00031       |         2.25         |           110.09          |        8        |
+| AnthropicProvider (claude-instant-v1) |        209         |       0.00021       |         1.69         |           123.97          |        10       |
+| AnthropicProvider (claude-instant-v1) |         59         |       0.00006       |         0.70         |           84.11           |        10       |
+| AnthropicProvider (claude-instant-v1) |        140         |       0.00018       |         1.58         |           88.85           |        10       |
+| AnthropicProvider (claude-instant-v1) |        245         |       0.00031       |         2.45         |           100.05          |        9        |
+| AnthropicProvider (claude-instant-v1) |        250         |       0.00031       |         2.31         |           108.07          |        9        |
+| AnthropicProvider (claude-instant-v1) |        248         |       0.00031       |         2.18         |           113.66          |        9        |
+| AnthropicProvider (claude-instant-v1) |        323         |       0.00034       |         1.93         |           166.96          |        8        |
+| AnthropicProvider (claude-instant-v1) |        168         |       0.00015       |         0.88         |           190.10          |        10       |
+| AnthropicProvider (claude-instant-v1) | Total Tokens: 2075 | Total Cost: 0.00240 | Median Latency: 1.76 | Aggregrated speed: 111.89 | Total Score: 96 |
+|     OpenAIProvider (gpt-3.5-turbo)    |         37         |       0.00007       |         1.35         |           27.47           |        3        |
+|     OpenAIProvider (gpt-3.5-turbo)    |         93         |       0.00019       |         3.20         |           29.05           |        1        |
+|     OpenAIProvider (gpt-3.5-turbo)    |        451         |       0.00090       |        19.46         |           23.18           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        204         |       0.00041       |         5.49         |           37.17           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        320         |       0.00064       |        13.27         |           24.11           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        109         |       0.00022       |         4.01         |           27.15           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        314         |       0.00063       |        11.16         |           28.13           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        294         |       0.00059       |        10.83         |           27.14           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        274         |       0.00055       |         9.59         |           28.56           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        501         |       0.00100       |        14.96         |           33.49           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    |        170         |       0.00034       |         2.91         |           58.43           |        10       |
+|     OpenAIProvider (gpt-3.5-turbo)    | Total Tokens: 2767 | Total Cost: 0.00553 | Median Latency: 9.59 |  Aggregrated speed: 28.75 | Total Score: 94 |
+|    AI21Provider (j2-jumbo-instruct)   |         27         |       0.00040       |         1.10         |           24.63           |        2        |
+|    AI21Provider (j2-jumbo-instruct)   |        114         |       0.00171       |         3.11         |           36.63           |        1        |
+|    AI21Provider (j2-jumbo-instruct)   |        195         |       0.00293       |         5.37         |           36.30           |        10       |
+|    AI21Provider (j2-jumbo-instruct)   |        117         |       0.00176       |         2.17         |           53.98           |        2        |
+|    AI21Provider (j2-jumbo-instruct)   |        216         |       0.00324       |         6.20         |           34.84           |        8        |
+|    AI21Provider (j2-jumbo-instruct)   |         67         |       0.00101       |         1.88         |           35.69           |        10       |
+|    AI21Provider (j2-jumbo-instruct)   |        229         |       0.00344       |         6.09         |           37.57           |        9        |
+|    AI21Provider (j2-jumbo-instruct)   |        225         |       0.00337       |         6.56         |           34.29           |        4        |
+|    AI21Provider (j2-jumbo-instruct)   |        218         |       0.00327       |         5.91         |           36.89           |        1        |
+|    AI21Provider (j2-jumbo-instruct)   |        281         |       0.00421       |         6.24         |           45.00           |        1        |
+|    AI21Provider (j2-jumbo-instruct)   |        127         |       0.00191       |         1.57         |           80.68           |        10       |
+|    AI21Provider (j2-jumbo-instruct)   | Total Tokens: 1816 | Total Cost: 0.02724 | Median Latency: 5.37 |  Aggregrated speed: 39.30 | Total Score: 58 |
++---------------------------------------+--------------------+---------------------+----------------------+---------------------------+-----------------+
 ```
 ## Supported Models
 
