@@ -3,7 +3,7 @@ import time
 
 
 class OpenAIProvider:
-    # per million tokens
+    # cost is per million tokens
     MODEL_INFO = {
         "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8000},
         "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4000},
