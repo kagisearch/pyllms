@@ -2,6 +2,8 @@
 
 import ai21
 import time
+import itertools
+from typing import List
 
 
 class AI21Provider:
@@ -20,10 +22,26 @@ class AI21Provider:
     def __str__(self):
         return f"{self.__class__.__name__} ({self.model})"
 
-    def complete(self, prompt, temperature=0, maxTokens=200, **kwargs):
+    def complete(self,
+                 prompt: str,
+                 history: List[tuple] | None = None,
+                 temperature: float = 0,
+                 maxTokens: int = 200,
+                 **kwargs):
+
+        HUMAN_PROMPT = "\n\nHuman:"
+        AI_PROMPT = "\n\nAssistant:"
+
+        if history is not None:
+            role_cycle = itertools.cycle((HUMAN_PROMPT, AI_PROMPT))
+            history_messages = itertools.chain.from_iterable(history)
+            history_prompt = "".join(itertools.chain.from_iterable(zip(role_cycle, history_messages)))
+            prompt = f"{history_prompt}{prompt}"
+
         start_time = time.time()
         response = ai21.Completion.execute(model=self.model, prompt=prompt, temperature=temperature, maxTokens=maxTokens, **kwargs)
         latency = time.time() - start_time
+
         completion = response.completions[0].data.text.strip()
         prompt_tokens = len(response.prompt.tokens)
         completion_tokens = len(response.completions[0].data.tokens)

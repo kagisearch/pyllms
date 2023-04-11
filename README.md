@@ -77,10 +77,20 @@ You can initialize multiple models at once, which is very useful for testing and
 [{'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455}, {'model': 'claude-instant-v1', 'tokens': 54, 'tokens_prompt': 20, 'tokens_completion': 34, 'cost': 5.79e-05, 'latency': 0.7291600704193115}]
 ```
 
+
+## Web App
+
+You can run a web app with simple chat interface by running
+```
+python -m app.py
+```
+
+
+
 ## Benchmarks
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
+models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'j2-jumbo-instruct'])
 gpt4=llms.init('gpt-4')
 models.benchmark(evaluator=gpt4)
 ```
