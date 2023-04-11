@@ -90,7 +90,7 @@ python -m app.py
 ## Benchmarks
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
+models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'j2-jumbo-instruct'])
 gpt4=llms.init('gpt-4')
 models.benchmark(evaluator=gpt4)
 ```
