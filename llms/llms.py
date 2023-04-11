@@ -100,9 +100,9 @@ class LLMS:
         )
         return sorted_list
 
-    def complete(self, prompt, **kwargs):
+    def complete(self, prompt, history=None, **kwargs):
         def _generate(provider):
-            response = provider.complete(prompt, **kwargs)
+            response = provider.complete(prompt, history, **kwargs)
             return {
                 "text": response["text"],
                 "meta": response["meta"],

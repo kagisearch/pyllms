@@ -18,9 +18,9 @@ with gr.Blocks() as demo:
 
     def bot(history, model_choice):
         model = LLMS(model=model_choice)
-        # TODO: support multi-turns messages
-        last_message = history[-1][0]
-        result = model.complete(last_message)
+        *prev_exchanges, last_exchange = history
+        last_user_message = last_exchange[0]
+        result = model.complete(prompt=last_user_message, history=prev_exchanges)
         bot_message = result.text
         history[-1][1] = bot_message
         return history

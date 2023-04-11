@@ -1,5 +1,7 @@
+import itertools
 import openai
 import time
+from typing import List
 
 
 class OpenAIProvider:
@@ -8,6 +10,7 @@ class OpenAIProvider:
         "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8000},
         "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4000},
     }
+
     def __init__(self, api_key, model=None):
         openai.api_key = api_key
         if model is None:
@@ -17,13 +20,27 @@ class OpenAIProvider:
     def __str__(self):
         return f"{self.__class__.__name__} ({self.model})"
 
-    def complete(self, prompt, temperature=0, system=None, **kwargs):
+    def complete(self,
+                 prompt: str,
+                 history: List[tuple] | None = None,
+                 system_message: str = None,
+                 temperature: float = 0,
+                 **kwargs):
         start_time = time.time()
 
         messages = [{"role": "user", "content": prompt}]
 
-        if system:
-            messages=[{"role": "system", "content": system}]+messages
+        if history:
+            role_cycle = itertools.cycle(('user', 'assistant'))
+            history_messages = itertools.chain.from_iterable(history)
+
+            history = [{"role": role, "content": message}
+                       for role, message in zip(role_cycle, history_messages)
+                       if message is not None]
+            messages = [*history, *messages]
+
+        if system_message:
+            messages = [{"role": "system", "content": system_message}, *messages] 
 
         response = openai.ChatCompletion.create(
             model=self.model, messages=messages, temperature=temperature, **kwargs
