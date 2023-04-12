@@ -1,7 +1,7 @@
 import itertools
 import openai
 import time
-from typing import List
+from typing import List, Optional
 
 
 class OpenAIProvider:
@@ -22,7 +22,7 @@ class OpenAIProvider:
 
     def complete(self,
                  prompt: str,
-                 history: List[tuple] | None = None,
+                 history: Optional[List[tuple]] = None,
                  system_message: str = None,
                  temperature: float = 0,
                  **kwargs):

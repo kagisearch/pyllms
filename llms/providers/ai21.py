@@ -3,7 +3,7 @@
 import ai21
 import time
 import itertools
-from typing import List
+from typing import List, Optional
 
 
 class AI21Provider:
@@ -24,7 +24,7 @@ class AI21Provider:
 
     def complete(self,
                  prompt: str,
-                 history: List[tuple] | None = None,
+                 history: Optional[List[tuple]] = None,
                  temperature: float = 0,
                  maxTokens: int = 200,
                  **kwargs):

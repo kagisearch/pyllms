@@ -5,7 +5,7 @@ import os
 import anthropic
 import time
 
-from typing import List
+from typing import List, Optional
 
 
 class AnthropicProvider:
@@ -28,7 +28,7 @@ class AnthropicProvider:
 
     def complete(self,
                  prompt: str,
-                 history: List[tuple] | None = None,
+                 history: Optional[List[tuple]] = None,
                  temperature: float = 0,
                  max_tokens_to_sample: int = 200,
                  **kwargs
