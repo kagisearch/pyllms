@@ -4,4 +4,3 @@ ai21
 huggingface_hub
 markdown2
 prettytable
-gradio==3.25.0

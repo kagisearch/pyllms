@@ -78,15 +78,6 @@ You can initialize multiple models at once, which is very useful for testing and
 ```
 
 
-## Web App
-
-You can run a web app with simple chat interface by running
-```
-python -m app.py
-```
-
-
-
 ## Benchmarks
 
 ```
