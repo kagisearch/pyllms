@@ -1,6 +1,14 @@
 # PyLLMs
 
-A lightweight Python that strives to enable dead-simple interaction with popular language models from OpenAI, Anthropic, AI21 and others.
+PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21), with a built-in model performance benchmark. 
+
+It is ideal for fast prototyping and evaluationg different models thanks to:
+- Connect to top LLMs in few lines of code (currenly OpenAI, Anthropic and AI21 are supported)
+- Response meta includes tokens processed, cost and latency standardized across the models
+- Multi-model support: Get completitions from different models at the same time
+- LLM benchmark: Eevaluate models on quality, speed and cost
+
+Feel free to reuse and expand. Pull requests are welcome.
 
 ## Installation
 
@@ -56,7 +64,7 @@ result = model.complete(
 
 Note: By default, temperature for all models is set to 0, and max_tokens to 300.
 
-The result will also contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency in the 'meta' field:
+The result meta will contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency:
 ```
 >>> print(result.meta)
 {'model': 'gpt-3.5-turbo', 'tokens': 15, 'tokens_prompt': 14, 'tokens_completion': 1, 'cost': 3e-05, 'latency': 0.48232388496398926}
@@ -109,18 +117,18 @@ python3 -u
 
 ## Benchmarks
 
-Models are appearing like mushrooms after rain and we are interested in:
+Models are appearing like mushrooms after rain and everyone is interested in three things:
 
 1) Quality
 2) Speed
 3) Cost
 
-We included an automated benchmark system. The quality is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
+PyLLMs icludes an automated benchmark system. The quality of models is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
 
 
 ```
 models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'j2-jumbo-instruct'])
-gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in this case only speed and cost is evaluated
+gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
 models.benchmark(evaluator=gpt4)
 ```
 
