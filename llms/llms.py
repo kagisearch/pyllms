@@ -22,6 +22,8 @@ class Result:
 
     @property
     def html(self):
+        if len(self._results) == 1:
+            return markdown2.markdown(self._results[0]["text"])
         return [markdown2.markdown(result["text"]) for result in self._results]
 
     @property
