@@ -88,18 +88,18 @@ You can also initialize multiple models at once! This is very useful for testing
 
 ## Benchmarks
 
-Models are appearing like mushrooms after rain and we are interested in:
+Models are appearing like mushrooms after rain and everyone is interested in three things:
 
 1) Quality
 2) Speed
 3) Cost
 
-We included an automated benchmark system. The quality is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
+PyLLMs icludes an automated benchmark system. The quality of models is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
 
 
 ```
 models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'j2-jumbo-instruct'])
-gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in this case only speed and cost is evaluated
+gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
 models.benchmark(evaluator=gpt4)
 ```
 
