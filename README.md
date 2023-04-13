@@ -64,7 +64,7 @@ result = model.complete(
 
 Note: By default, temperature for all models is set to 0, and max_tokens to 300.
 
-The result will also contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency in the 'meta' field:
+The result meta will contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency:
 ```
 >>> print(result.meta)
 {'model': 'gpt-3.5-turbo', 'tokens': 15, 'tokens_prompt': 14, 'tokens_completion': 1, 'cost': 3e-05, 'latency': 0.48232388496398926}
