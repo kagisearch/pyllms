@@ -26,7 +26,7 @@ class AI21Provider:
                  prompt: str,
                  history: Optional[List[tuple]] = None,
                  temperature: float = 0,
-                 maxTokens: int = 200,
+                 max_tokens: int = 300,
                  **kwargs):
 
         HUMAN_PROMPT = "\n\nHuman:"
@@ -38,8 +38,13 @@ class AI21Provider:
             history_prompt = "".join(itertools.chain.from_iterable(zip(role_cycle, history_messages)))
             prompt = f"{history_prompt}{prompt}"
 
+        maxTokens = max_tokens  # Assign max_tokens to maxTokens
+
+        if 'maxTokens' not in kwargs:
+            kwargs['maxTokens'] = maxTokens  # Add maxTokens to kwargs if not present
+
         start_time = time.time()
-        response = ai21.Completion.execute(model=self.model, prompt=prompt, temperature=temperature, maxTokens=maxTokens, **kwargs)
+        response = ai21.Completion.execute(model=self.model, prompt=prompt, temperature=temperature, **kwargs)
         latency = time.time() - start_time
 
         completion = response.completions[0].data.text.strip()

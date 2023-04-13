@@ -39,12 +39,13 @@ model=llms.init(openai_api_key='your_api_key_here', model='gpt-4')
 ```
 
 
-You can also pass optional parameters to the complete method. Any parameters accepted by the original model are supported automatically, in the verbatim form:
+You can also pass optional parameters to the complete method. 'temperature' and 'max_tokens' are standardized across all APIs and get converted to the corresponding API params. Any other parameters accepted by the original model are supported in their verbatim form:
 
 ```
 result = model.complete(
     "what is the capital of country where mozzart was born",
     temperature=0.1,
+    max_tokens=200
 )
 ```
 
@@ -55,10 +56,6 @@ The result will also contain helpful information like tokens used, cost (which i
 >>> print(result.meta)
 {'model': 'gpt-3.5-turbo', 'tokens': 15, 'tokens_prompt': 14, 'tokens_completion': 1, 'cost': 3e-05, 'latency': 0.48232388496398926}
 ```
-
-
-
-
 
 
 

@@ -35,6 +35,7 @@ class LLMS:
     def __init__(
         self, model=None, openai_api_key=None, anthropic_api_key=None, ai21_api_key=None
     ):
+
         if openai_api_key is None:
             openai_api_key = os.getenv("OPENAI_API_KEY")
 
@@ -55,10 +56,7 @@ class LLMS:
 
         self._providers = []
         for single_model in model:
-            if (
-                openai_api_key is not None
-                and single_model in OpenAIProvider.MODEL_INFO
-            ):
+            if openai_api_key is not None and single_model in OpenAIProvider.MODEL_INFO:
                 self._providers.append(
                     OpenAIProvider(api_key=openai_api_key, model=single_model)
                 )
@@ -102,6 +100,7 @@ class LLMS:
 
     def complete(self, prompt, history=None, **kwargs):
         def _generate(provider):
+           
             response = provider.complete(prompt, history, **kwargs)
             return {
                 "text": response["text"],
@@ -121,17 +120,16 @@ class LLMS:
         return Result(results)
 
     def benchmark(self, prompts=None, evaluator=None, show_outputs=False, html=False):
-        
         if not prompts:
             prompts = [
                 "What is the capital of the country where Christopher Columbus was born?",
                 "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
                 "Solve the quadratic equation: x^2 - 5x + 6 = 0",
                 "How much is 7! * 3! -1234.5 ?",
-                "translate this sentence by alternating words in gemran and french \"it was a beautiful day that thursday and I want skiing outside. it started raining soon although they said it won't be until friday, so I went to the pool instead\"",
+                'translate this sentence by alternating words in gemran and french "it was a beautiful day that thursday and I want skiing outside. it started raining soon although they said it won\'t be until friday, so I went to the pool instead"',
                 "Convert December 21 · 1:00 – 1:50pm pacific to asia/taipei time",
                 "In my kitchen there's a table with a cup with a ball inside. I moved the cup to my bed in my bedroom and turned the cup upside down. I grabbed the cup again and moved to the main room. Where's the ball now?",
-                "Capture the essence of this in exactly 7 words: \"There’s much that divides us in Northern Ireland though one thing is guaranteed to bring us together: local phrases. Call it slang, call it colloquialisms, we all know only too well how important words are to where we’re from . . . and when it comes to the phrases that make us ‘us,’ we’ve got a lot to say. While you don’t need advance knowledge of the words to fit in, well, it helps. How else will you know where ‘foundered’ sits on the scale of warm to freezing? Or deciding whether that new car purchase is more ‘clinker’ than ‘beezer’? Or appreciating that ‘grand’ can mean exactly that or anything but? If the best way to get to know a nation is to understand their language, then surely tourists must be at times confused about what comes out of our mouths. Throughout the island of Ireland, we have utterly brilliant ways to verbally express ourselves.“I think it’s really important,” says Dr Frank Ferguson, research director for English Language and Literature at Ulster University, about the vitality of slang as part of language.\"",
+                'Capture the essence of this in exactly 7 words: "There’s much that divides us in Northern Ireland though one thing is guaranteed to bring us together: local phrases. Call it slang, call it colloquialisms, we all know only too well how important words are to where we’re from . . . and when it comes to the phrases that make us ‘us,’ we’ve got a lot to say. While you don’t need advance knowledge of the words to fit in, well, it helps. How else will you know where ‘foundered’ sits on the scale of warm to freezing? Or deciding whether that new car purchase is more ‘clinker’ than ‘beezer’? Or appreciating that ‘grand’ can mean exactly that or anything but? If the best way to get to know a nation is to understand their language, then surely tourists must be at times confused about what comes out of our mouths. Throughout the island of Ireland, we have utterly brilliant ways to verbally express ourselves.“I think it’s really important,” says Dr Frank Ferguson, research director for English Language and Literature at Ulster University, about the vitality of slang as part of language."',
                 "Write a Python function that takes a list of integers as input and returns the length of the longest increasing subsequence. An increasing subsequence is a subsequence of the given list where the elements are in strictly increasing order. Your function should have an efficient solution with a time complexity better than O(n^2), where n is the length of the input list. Output only code with no explainations and provide example usage.",
                 "Write a Python function that takes a list of integers as input and returns the maximum sum of non-adjacent elements in the list. The function should return 0 if the input list is empty. Your function should have an efficient solution with a time complexity of O(n), where n is the length of the input list. Output only code with no explainations and provide example usage.",
                 "You are given a 2D binary matrix filled with 0's and 1's. Your task is to write a JavaScript function that finds the largest rectangle containing only 1's and returns its area. Your function should have an efficient solution with a time complexity better than O(n^3), where n is the total number of elements in the input matrix. Output only code with no explainations and provide example usage.",
@@ -150,7 +148,7 @@ texto aleatorio 4 código de área five-five-five teléfono: eins-eins-eins-zwei
         def evaluate_answers(
             evaluator, query_answer_pairs: List[Tuple[str, str]]
         ) -> List[int]:
-            system='''
+            system = """
             You are a truthful evaluator of the capabilties of other AI models.
 
 You are given a list of queries and answers by an AI model. For each query first think about  the solution yourself, then score the reply of the other AI, compared to yours on a scale 0 to 5 (5 being great).
@@ -171,22 +169,22 @@ Since the word "push" is written in mirror writing, it suggests that the instruc
 Your only output should be a list of comma seperated integers representing your evaluation score for each answer. No other output is allowed. For example above your output will be:
 0, 1
 
-'''
-            #prompt = "Please evaluate the following answers on a scale of 1 to 10 (10 being the best):\n\n"
-            prompt=""
+"""
+            # prompt = "Please evaluate the following answers on a scale of 1 to 10 (10 being the best):\n\n"
+            prompt = ""
             for i, (query, answer) in enumerate(query_answer_pairs):
                 prompt += f"Query #{i + 1}: {query}\nAnswer #{i + 1}: {answer}\n\n"
-#            prompt += "Please provide a score for each answer as a list of integers separated by commas, with no additional text or explanation. For example: 6, 10, 10"
-            print(prompt)
+            #            prompt += "Please provide a score for each answer as a list of integers separated by commas, with no additional text or explanation. For example: 6, 10, 10"
+            #print(prompt)
             evaluator_result = evaluator.complete(prompt, system=system).text
-            print(evaluator_result)
+            #print(evaluator_result)
             scores = evaluator_result.split(",")
             return [int(score.strip()) for score in scores]
 
         model_results = {}
 
         def process_prompt(model, prompt, index):
-            print(model, index)
+            #print(model, index)
             result = model.complete(prompt)
             output_data = {
                 "text": result["text"],

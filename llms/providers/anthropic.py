@@ -30,7 +30,7 @@ class AnthropicProvider:
                  prompt: str,
                  history: Optional[List[tuple]] = None,
                  temperature: float = 0,
-                 max_tokens_to_sample: int = 200,
+                 max_tokens: int = 300,
                  **kwargs
                  ):
 
@@ -41,12 +41,16 @@ class AnthropicProvider:
             history_prompt = "".join(itertools.chain.from_iterable(zip(role_cycle, history_messages)))
             formatted_prompt = f"{history_prompt}{formatted_prompt}"
 
+        max_tokens_to_sample = max_tokens  # Assign max_tokens to maxTokens
+
+        if 'max_tokens_to_sample' not in kwargs:
+            kwargs['max_tokens_to_sample'] = max_tokens_to_sample  # Add maxTokens to kwargs if not present
+
         start_time = time.time()
         response = self.client.completion(
             prompt=formatted_prompt,
             stop_sequences=[anthropic.HUMAN_PROMPT],
             temperature=temperature,
-            max_tokens_to_sample=max_tokens_to_sample,
             model=self.model,
             **kwargs,
         )
