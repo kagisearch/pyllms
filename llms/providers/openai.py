@@ -46,6 +46,7 @@ class OpenAIProvider:
             model=self.model, messages=messages, temperature=temperature, **kwargs
         )
 
+       
         latency = time.time() - start_time
         completion = response.choices[0].message.content.strip()
         usage = response.usage
@@ -69,3 +70,36 @@ class OpenAIProvider:
                 "latency": latency,
             },
         }
+
+
+    def complete_stream(self,
+                 prompt: str,
+                 history: Optional[List[tuple]] = None,
+                 system_message: str = None,
+                 temperature: float = 0,
+                 **kwargs):
+
+        messages = [{"role": "user", "content": prompt}]
+
+        if history:
+            role_cycle = itertools.cycle(('user', 'assistant'))
+            history_messages = itertools.chain.from_iterable(history)
+
+            history = [{"role": role, "content": message}
+                       for role, message in zip(role_cycle, history_messages)
+                       if message is not None]
+            messages = [*history, *messages]
+
+        if system_message:
+            messages = [{"role": "system", "content": system_message}, *messages] 
+
+        if 'stream' not in kwargs:
+            kwargs['stream'] = True  # Add stream param if not present
+
+        response = openai.ChatCompletion.create(
+            model=self.model, messages=messages, temperature=temperature, **kwargs
+        )
+
+        yield from (chunk["choices"][0].get("delta", {}).get("content") for chunk in response)
+       
+

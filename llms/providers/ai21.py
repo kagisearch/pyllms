@@ -38,10 +38,9 @@ class AI21Provider:
             history_prompt = "".join(itertools.chain.from_iterable(zip(role_cycle, history_messages)))
             prompt = f"{history_prompt}{prompt}"
 
-        maxTokens = max_tokens  # Assign max_tokens to maxTokens
 
         if 'maxTokens' not in kwargs:
-            kwargs['maxTokens'] = maxTokens  # Add maxTokens to kwargs if not present
+            kwargs['maxTokens'] = max_tokens  # Add maxTokens to kwargs if not present
 
         start_time = time.time()
         response = ai21.Completion.execute(model=self.model, prompt=prompt, temperature=temperature, **kwargs)

@@ -63,8 +63,6 @@ The result will also contain helpful information like tokens used, cost (which i
 ```
 
 
-
-
 ## Multi-model usage
 
 You can also initialize multiple models at once! This is very useful for testing and comparing output of different models in parallel. 
@@ -79,6 +77,35 @@ You can also initialize multiple models at once! This is very useful for testing
 [{'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455}, {'model': 'claude-instant-v1', 'tokens': 54, 'tokens_prompt': 20, 'tokens_completion': 34, 'cost': 5.79e-05, 'latency': 0.7291600704193115}]
 ```
 
+## Streaming support
+
+PyLLMs supports streaming from compatible models. 'complete_stream' method will return generator object and all you have to do is iterate through it:
+
+```
+>>> model= llms.init('claude-v1')
+>>> result = model.complete_stream("write an essay on civil war")
+>>> for chunks in result:
+...        if content is not None:
+...          print(chunks, end='')   
+... 
+
+Here is a paragraph about civil rights:
+
+
+Civil rights are the basic rights and freedoms that all citizens should have in a society. They include fundamental rights like the right to vote, the right to free speech, the right to practice the religion of one's choice, the right to equal treatment under the law, and the right to live free from discrimination. The civil rights movement in the United States fought to secure these rights for African Americans and other minorities in the face of institutionalized racism and discrimination. Leaders like Martin Luther King Jr. helped pass laws like the Civil Rights Act of 1964 and the Voting Rights Act of 1965 which outlawed discrimination and dismantled barriers to voting. The struggle for civil rights continues today as more work is still needed to promote racial equality and protect the rights of all citizens.
+
+```
+
+Current limitations:
+- When streaming, 'meta' is not available
+- Multi-models are not supported for streaming
+
+
+Tip: if you are testing this in python3 CLI, run it with -u parameter to disable buffering:
+
+```
+python3 -u
+```
 
 ## Benchmarks
 

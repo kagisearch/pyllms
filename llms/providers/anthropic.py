@@ -41,10 +41,8 @@ class AnthropicProvider:
             history_prompt = "".join(itertools.chain.from_iterable(zip(role_cycle, history_messages)))
             formatted_prompt = f"{history_prompt}{formatted_prompt}"
 
-        max_tokens_to_sample = max_tokens  # Assign max_tokens to maxTokens
-
         if 'max_tokens_to_sample' not in kwargs:
-            kwargs['max_tokens_to_sample'] = max_tokens_to_sample  # Add maxTokens to kwargs if not present
+            kwargs['max_tokens_to_sample'] = max_tokens  # Add maxTokens to kwargs if not present
 
         start_time = time.time()
         response = self.client.completion(
@@ -78,3 +76,43 @@ class AnthropicProvider:
                 "latency": latency,
             },
         }
+
+
+    def complete_stream(self,
+                 prompt: str,
+                 history: Optional[List[tuple]] = None,
+                 temperature: float = 0,
+                 max_tokens: int = 300,
+                 **kwargs
+                 ):
+
+        formatted_prompt = f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}"
+        if history is not None:
+            role_cycle = itertools.cycle((anthropic.HUMAN_PROMPT, anthropic.AI_PROMPT))
+            history_messages = itertools.chain.from_iterable(history)
+            history_prompt = "".join(itertools.chain.from_iterable(zip(role_cycle, history_messages)))
+            formatted_prompt = f"{history_prompt}{formatted_prompt}"
+
+
+        if 'max_tokens_to_sample' not in kwargs:
+            kwargs['max_tokens_to_sample'] = max_tokens  # Add maxTokens to kwargs if not present
+
+        if 'stream' not in kwargs:
+            kwargs['stream'] = True  # Add stream param if not present
+
+        response = self.client.completion_stream(
+            prompt=formatted_prompt,
+            stop_sequences=[anthropic.HUMAN_PROMPT],
+            temperature=temperature,
+            model=self.model,
+            **kwargs,
+        )
+    
+        last_completion = ""
+        for data in response:
+            new_chunk = data['completion'][len(last_completion):]
+            last_completion = data['completion']  
+            yield(new_chunk)
+
+       
+        

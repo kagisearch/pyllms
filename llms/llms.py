@@ -104,7 +104,7 @@ class LLMS:
         def _generate(provider):
            
             response = provider.complete(prompt, history, **kwargs)
-            
+    
             formatted_cost = format(response["meta"]["cost"], '.5f')
             formatted_latency = round(response["meta"]["latency"], 2)
             
@@ -116,7 +116,7 @@ class LLMS:
                 "meta": response["meta"],
                 "provider": provider,
             }
-
+     
         results = []
         with ThreadPoolExecutor() as executor:
             futures = {
@@ -127,6 +127,20 @@ class LLMS:
                 results.append(future.result())
 
         return Result(results)
+
+    def complete_stream(self, prompt, history=None, **kwargs):
+                 
+        if len(self._providers)>1:
+            raise ValueError(
+                "Streaming is possible only with a single model"
+            )
+        if isinstance(self._providers[0], AI21Provider):
+            raise ValueError(
+                "Streaming is not yet supported with AI21 models"
+            )
+            
+        yield from self._providers[0].complete_stream(prompt, history, **kwargs)
+
 
     def benchmark(self, prompts=None, evaluator=None, show_outputs=False, html=False):
         if not prompts:
