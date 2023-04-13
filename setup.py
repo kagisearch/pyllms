@@ -9,7 +9,7 @@ _project_homepage = "https://github.com/kagisearch/pyllms"
 
 setup(
     name="pyllms",
-    version="0.1.2",
+    version="0.1.3",
     description="A brief description of your package",
     long_description=long_description,
     long_description_content_type="text/markdown",

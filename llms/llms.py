@@ -102,6 +102,13 @@ class LLMS:
         def _generate(provider):
            
             response = provider.complete(prompt, history, **kwargs)
+            
+            formatted_cost = format(response["meta"]["cost"], '.5f')
+            formatted_latency = round(response["meta"]["latency"], 2)
+            
+            response["meta"]["cost"] = formatted_cost
+            response["meta"]["latency"] = formatted_latency
+
             return {
                 "text": response["text"],
                 "meta": response["meta"],

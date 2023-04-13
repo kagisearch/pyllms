@@ -16,18 +16,21 @@ pip3 install pyllms
 
 ```
 import llms
+
 model = llms.init()
 result = model.complete("what is 5+5")
+
 print(result.text)  
 
 ```
 
-llms will read the API key from environment variables, which you can set like this:
+Library will attempt to read the API keys and the default model from environment variables, which you can set like this:
 
 ```
 export OPENAI_API_KEY="your_api_key_here"
 export ANTHROPIC_API_KEY="your_api_key_here"
 export AI21_API_KEY="your_api_key_here"
+
 export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
 
@@ -39,7 +42,9 @@ model=llms.init(openai_api_key='your_api_key_here', model='gpt-4')
 ```
 
 
-You can also pass optional parameters to the complete method. 'temperature' and 'max_tokens' are standardized across all APIs and get converted to the corresponding API params. Any other parameters accepted by the original model are supported in their verbatim form:
+You can also pass optional parameters to the complete method. 'temperature' and 'max_tokens' are standardized across all APIs and get converted to the corresponding API params. 
+
+Any other parameters accepted by the original model are supported in their verbatim form.
 
 ```
 result = model.complete(
@@ -49,9 +54,9 @@ result = model.complete(
 )
 ```
 
-By default, temperature for all models is set to 0.
+Note: By default, temperature for all models is set to 0, and max_tokens to 300.
 
-The result will also contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and result latency:
+The result will also contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency in the 'meta' field:
 ```
 >>> print(result.meta)
 {'model': 'gpt-3.5-turbo', 'tokens': 15, 'tokens_prompt': 14, 'tokens_completion': 1, 'cost': 3e-05, 'latency': 0.48232388496398926}
@@ -62,7 +67,7 @@ The result will also contain helpful information like tokens used, cost (which i
 
 ## Multi-model usage
 
-You can initialize multiple models at once, which is very useful for testing and comparing output of different models. All models will run in parallel to save time. 
+You can also initialize multiple models at once! This is very useful for testing and comparing output of different models in parallel. 
 
 ```
 >>> models=llms.init(model=['gpt-3.5-turbo','claude-instant-v1'])
@@ -77,9 +82,18 @@ You can initialize multiple models at once, which is very useful for testing and
 
 ## Benchmarks
 
+Models are appearing like mushrooms after rain and we are interested in:
+
+1) Quality
+2) Speed
+3) Cost
+
+We included an automated benchmark system. The quality is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
+
+
 ```
 models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'j2-jumbo-instruct'])
-gpt4=llms.init('gpt-4')
+gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in this case only speed and cost is evaluated
 models.benchmark(evaluator=gpt4)
 ```
 
@@ -126,9 +140,10 @@ models.benchmark(evaluator=gpt4)
 +---------------------------------------+--------------------+---------------------+-----------------------+---------------------------+-----------------+
 ```
 
-In addition, you can evaluate models on your own prompts:
+To evaluate models on your own prompts, simply pass a list of questions. The evaluator will automatically evaluate the responses:
+
 ```
-models.benchmark(prompts=["what is the capital of finland", "who won superbowl in the year justin bieber was born"],evaluator=gpt4)
+models.benchmark(prompts=["what is the capital of finland", "who won superbowl in the year justin bieber was born"], evaluator=gpt4)
 ```
 
 ## Supported Models
