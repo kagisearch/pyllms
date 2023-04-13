@@ -1,6 +1,12 @@
 # PyLLMs
 
-A lightweight Python that strives to enable dead-simple interaction with popular language models from OpenAI, Anthropic, AI21 and others.
+PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21), with a built-in model performance benchmark. 
+
+It is ideal for fast prototyping and evaluationg different models thanks to:
+- Multi model support (get completitions from different model at the same time)
+- LLM benchmark (evaluate models on quality, speed and cost)
+
+Feel free to reuse and expand. Pull requests are welcome.
 
 ## Installation
 
