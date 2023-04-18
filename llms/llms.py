@@ -100,6 +100,16 @@ class LLMS:
         )
         return sorted_list
 
+    def count_tokens(self, content):
+
+        results = []
+        for provider in self._providers:
+            results.append(provider.count_tokens(content))
+        if len(self._providers)>1 :
+            return results
+        else:
+            return results[0]
+        
     def complete(self, prompt, history=None, system_message=None, **kwargs):
         def _generate(provider):
            

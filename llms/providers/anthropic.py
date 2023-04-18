@@ -26,6 +26,11 @@ class AnthropicProvider:
     def __str__(self):
         return f"{self.__class__.__name__} ({self.model})"
 
+    def count_tokens(self, content:str):
+        raise ValueError(
+                "Count tokens is currently not supported with AI21"
+            )
+
     def complete(self,
                  prompt: str,
                  history: Optional[List[tuple]] = None,

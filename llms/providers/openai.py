@@ -1,5 +1,6 @@
 import itertools
 import openai
+import tiktoken
 import time
 from typing import List, Optional
 
@@ -19,6 +20,10 @@ class OpenAIProvider:
 
     def __str__(self):
         return f"{self.__class__.__name__} ({self.model})"
+
+    def count_tokens(self, content:str):
+        enc=tiktoken.encoding_for_model(self.model)
+        return len(enc.encode(content))
 
     def complete(self,
                  prompt: str,

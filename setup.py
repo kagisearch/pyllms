@@ -9,7 +9,7 @@ _project_homepage = "https://github.com/kagisearch/pyllms"
 
 setup(
     name="pyllms",
-    version="0.1.4",
+    version="0.1.6",
     description="Minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21), with a built-in model performance benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -18,6 +18,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "openai",
+        "tiktoken",
         "anthropic",
         "ai21",
         "huggingface_hub",
