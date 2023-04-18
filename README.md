@@ -118,7 +118,15 @@ Tip: if you are testing this in python3 CLI, run it with -u parameter to disable
 python3 -u
 ```
 
-## Benchmarks
+## Other methods
+
+You can count tokens using the model's tokenizer:
+
+```
+count=model.count_tokens('the quick brown fox jumped over the lazy dog')
+```
+
+## Model Benchmarks
 
 Models are appearing like mushrooms after rain and everyone is interested in three things:
 
