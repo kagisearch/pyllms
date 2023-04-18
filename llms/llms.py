@@ -100,7 +100,7 @@ class LLMS:
         )
         return sorted_list
 
-    def complete(self, prompt, history=None, **kwargs):
+    def complete(self, prompt, history=None, system_message=None, **kwargs):
         def _generate(provider):
            
             response = provider.complete(prompt, history, **kwargs)
@@ -128,7 +128,7 @@ class LLMS:
 
         return Result(results)
 
-    def complete_stream(self, prompt, history=None, **kwargs):
+    def complete_stream(self, prompt, history=None, system_message=None, **kwargs):
                  
         if len(self._providers)>1:
             raise ValueError(
@@ -151,6 +151,7 @@ class LLMS:
                 "How much is 7! * 3! -1234.5 ?",
                 'translate this sentence by alternating words in gemran and french "it was a beautiful day that thursday and I want skiing outside. it started raining soon although they said it won\'t be until friday, so I went to the pool instead"',
                 "Convert December 21 · 1:00 – 1:50pm pacific to asia/taipei time",
+                "Explain the plot of Cinderella in a sentence where each word has to begin with the next letter in the alphabet from A to Z, without repeating any letters",
                 "In my kitchen there's a table with a cup with a ball inside. I moved the cup to my bed in my bedroom and turned the cup upside down. I grabbed the cup again and moved to the main room. Where's the ball now?",
                 'Capture the essence of this in exactly 7 words: "There’s much that divides us in Northern Ireland though one thing is guaranteed to bring us together: local phrases. Call it slang, call it colloquialisms, we all know only too well how important words are to where we’re from . . . and when it comes to the phrases that make us ‘us,’ we’ve got a lot to say. While you don’t need advance knowledge of the words to fit in, well, it helps. How else will you know where ‘foundered’ sits on the scale of warm to freezing? Or deciding whether that new car purchase is more ‘clinker’ than ‘beezer’? Or appreciating that ‘grand’ can mean exactly that or anything but? If the best way to get to know a nation is to understand their language, then surely tourists must be at times confused about what comes out of our mouths. Throughout the island of Ireland, we have utterly brilliant ways to verbally express ourselves.“I think it’s really important,” says Dr Frank Ferguson, research director for English Language and Literature at Ulster University, about the vitality of slang as part of language."',
                 "Write a Python function that takes a list of integers as input and returns the length of the longest increasing subsequence. An increasing subsequence is a subsequence of the given list where the elements are in strictly increasing order. Your function should have an efficient solution with a time complexity better than O(n^2), where n is the length of the input list. Output only code with no explainations and provide example usage.",

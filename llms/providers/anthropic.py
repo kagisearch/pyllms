@@ -10,8 +10,8 @@ from typing import List, Optional
 
 class AnthropicProvider:
     MODEL_INFO = {
-        "claude-instant-v1": {"prompt": 0.43, "completion": 1.45, "token_limit": 8000},
-        "claude-v1": {"prompt": 2.9, "completion": 8.6, "token_limit": 8_000},
+        "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
+        "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
     }
 
     def __init__(self, api_key=None, model=None):

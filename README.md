@@ -92,9 +92,9 @@ PyLLMs supports streaming from compatible models. 'complete_stream' method will 
 ```
 >>> model= llms.init('claude-v1')
 >>> result = model.complete_stream("write an essay on civil war")
->>> for chunks in result:
-...        if content is not None:
-...          print(chunks, end='')   
+>>> for chunk in result:
+...        if chunk is not None:
+...          print(chunk, end='')   
 ... 
 
 Here is a paragraph about civil rights:
