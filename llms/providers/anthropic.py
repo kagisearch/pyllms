@@ -31,6 +31,7 @@ class AnthropicProvider:
                  history: Optional[List[tuple]] = None,
                  temperature: float = 0,
                  max_tokens: int = 300,
+                 stop_sequences: Optional[List[str]] = None,
                  **kwargs
                  ):
 
@@ -44,12 +45,15 @@ class AnthropicProvider:
         if 'max_tokens_to_sample' not in kwargs:
             kwargs['max_tokens_to_sample'] = max_tokens  # Add maxTokens to kwargs if not present
 
+        if stop_sequences is None:
+            stop_sequences = [anthropic.HUMAN_PROMPT]
+
         start_time = time.time()
         response = self.client.completion(
             prompt=formatted_prompt,
-            stop_sequences=[anthropic.HUMAN_PROMPT],
             temperature=temperature,
             model=self.model,
+            stop_sequences=stop_sequences,
             **kwargs,
         )
         latency = time.time() - start_time
