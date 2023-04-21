@@ -32,10 +32,11 @@ class AnthropicProvider:
                  temperature: float = 0,
                  max_tokens: int = 300,
                  stop_sequences: Optional[List[str]] = None,
+                 ai_prompt: str = "",
                  **kwargs
                  ):
 
-        formatted_prompt = f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}"
+        formatted_prompt = f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
         if history is not None:
             role_cycle = itertools.cycle((anthropic.HUMAN_PROMPT, anthropic.AI_PROMPT))
             history_messages = itertools.chain.from_iterable(history)
@@ -81,6 +82,61 @@ class AnthropicProvider:
             },
         }
 
+    async def acomplete(self,
+                        prompt: str,
+                        history: Optional[List[tuple]] = None,
+                        temperature: float = 0,
+                        max_tokens: int = 300,
+                        stop_sequences: Optional[List[str]] = None,
+                        ai_prompt: str = "",
+                        **kwargs
+                        ):
+
+        formatted_prompt = f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
+        if history is not None:
+            role_cycle = itertools.cycle((anthropic.HUMAN_PROMPT, anthropic.AI_PROMPT))
+            history_messages = itertools.chain.from_iterable(history)
+            history_prompt = "".join(itertools.chain.from_iterable(zip(role_cycle, history_messages)))
+            formatted_prompt = f"{history_prompt}{formatted_prompt}"
+
+        if 'max_tokens_to_sample' not in kwargs:
+            kwargs['max_tokens_to_sample'] = max_tokens  # Add maxTokens to kwargs if not present
+
+        if stop_sequences is None:
+            stop_sequences = [anthropic.HUMAN_PROMPT]
+
+        start_time = time.time()
+        response = await self.client.acompletion(
+            prompt=formatted_prompt,
+            temperature=temperature,
+            model=self.model,
+            stop_sequences=stop_sequences,
+            **kwargs,
+        )
+        latency = time.time() - start_time
+        completion = response["completion"].strip()
+
+        # Calculate tokens and cost
+        prompt_tokens = anthropic.count_tokens(formatted_prompt)
+        completion_tokens = anthropic.count_tokens(completion)
+        total_tokens = prompt_tokens + completion_tokens
+        cost_per_token = self.MODEL_INFO[self.model]
+        cost = (
+            (prompt_tokens * cost_per_token["prompt"])
+            + (completion_tokens * cost_per_token["completion"])
+        ) / 1_000_000
+
+        return {
+            "text": completion,
+            "meta": {
+                "model": self.model,
+                "tokens": total_tokens,
+                "tokens_prompt": prompt_tokens,
+                "tokens_completion": completion_tokens,
+                "cost": cost,
+                "latency": latency,
+            },
+        }
 
     def complete_stream(self,
                  prompt: str,

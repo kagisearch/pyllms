@@ -7,7 +7,7 @@ from .providers import AnthropicProvider
 from .providers import AI21Provider
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 
 class Result:
@@ -128,6 +128,28 @@ class LLMS:
 
         return Result(results)
 
+    async def acomplete(self,
+                        prompt: str,
+                        history: Optional[List[tuple]] = None,
+                        **kwargs,
+                        ):
+        if len(self._providers) > 1:
+            raise NotImplementedError("acomplete not supported for multi-models yet.")
+        provider = self._providers[0]
+        response = await provider.acomplete(prompt, history, **kwargs)
+
+        formatted_cost = format(response["meta"]["cost"], '.5f')
+        formatted_latency = round(response["meta"]["latency"], 2)
+
+        response["meta"]["cost"] = formatted_cost
+        response["meta"]["latency"] = formatted_latency
+
+        return Result([{
+            "text": response["text"],
+            "meta": response["meta"],
+            "provider": provider,
+        }])
+
     def complete_stream(self, prompt, history=None, **kwargs):
                  
         if len(self._providers)>1:
@@ -199,7 +221,6 @@ Your only output should be a list of comma seperated integers representing your 
                 prompt += f"Query #{i + 1}: {query}\nAnswer #{i + 1}: {answer}\n\n"
             #            prompt += "Please provide a score for each answer as a list of integers separated by commas, with no additional text or explanation. For example: 6, 10, 10"
             #print(prompt)
-            evaluator_result = evaluator.complete(prompt, system=system).text
             #print(evaluator_result)
             scores = evaluator_result.split(",")
             return [int(score.strip()) for score in scores]
