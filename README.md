@@ -109,18 +109,11 @@ You can also initialize multiple models at once! This is very useful for testing
 PyLLMs supports streaming from compatible models. 'complete_stream' method will return generator object and all you have to do is iterate through it:
 
 ```
->>> model= llms.init('claude-v1')
->>> result = model.complete_stream("write an essay on civil war")
->>> for chunk in result:
-...        if chunk is not None:
-...          print(chunk, end='')   
-... 
-
-Here is a paragraph about civil rights:
-
-
-Civil rights are the basic rights and freedoms that all citizens should have in a society. They include fundamental rights like the right to vote, the right to free speech, the right to practice the religion of one's choice, the right to equal treatment under the law, and the right to live free from discrimination. The civil rights movement in the United States fought to secure these rights for African Americans and other minorities in the face of institutionalized racism and discrimination. Leaders like Martin Luther King Jr. helped pass laws like the Civil Rights Act of 1964 and the Voting Rights Act of 1965 which outlawed discrimination and dismantled barriers to voting. The struggle for civil rights continues today as more work is still needed to promote racial equality and protect the rights of all citizens.
-
+model= llms.init('claude-v1')
+result = model.complete_stream("write an essay on civil war")
+for chunk in result:
+   if chunk is not None:
+      print(chunk, end='')   
 ```
 
 Current limitations:
@@ -155,7 +148,9 @@ PyLLMs icludes an automated benchmark system. The quality of models is evaluated
 
 ```
 models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'command-xlarge-nightly'])
+
 gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
+
 models.benchmark(evaluator=gpt4)
 ```
 
@@ -252,9 +247,9 @@ To get a list of supported models, call list(). Models will be shown in the orde
 Useful links:\
 [OpenAI documentation](https://platform.openai.com/docs/api-reference/completions)\
 [Anthropic documentation](https://console.anthropic.com/docs/api/reference#-v1-complete)\
-[AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)
-[Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)
-[Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)
+[AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)\
+[Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)\
+[Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)\
 
 ## License
 
