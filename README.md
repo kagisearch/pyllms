@@ -154,7 +154,7 @@ PyLLMs icludes an automated benchmark system. The quality of models is evaluated
 
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'j2-jumbo-instruct'])
+models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'command-xlarge-nightly'])
 gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
 models.benchmark(evaluator=gpt4)
 ```
