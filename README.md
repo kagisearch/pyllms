@@ -73,7 +73,14 @@ Note: By default, temperature for all models is set to 0, and max_tokens to 300.
 The result meta will contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency:
 ```
 >>> print(result.meta)
-{'model': 'gpt-3.5-turbo', 'tokens': 15, 'tokens_prompt': 14, 'tokens_completion': 1, 'cost': 3e-05, 'latency': 0.48232388496398926}
+{
+  'model': 'gpt-3.5-turbo', 
+  'tokens': 34, 
+  'tokens_prompt': 20, 
+  'tokens_completion': 14, 
+  'cost': '0.00007', 
+  'latency': 1.4
+}
 ```
 
 
@@ -88,7 +95,10 @@ You can also initialize multiple models at once! This is very useful for testing
 ['The capital of the country where Mozart was born is Vienna, Austria.', 'Wolfgang Amadeus Mozart was born in Salzburg, Austria.\n\nSo the capital of the country where Mozart was born is Vienna, Austria.']
 
 >>> print(result.meta)
-[{'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455}, {'model': 'claude-instant-v1', 'tokens': 54, 'tokens_prompt': 20, 'tokens_completion': 34, 'cost': 5.79e-05, 'latency': 0.7291600704193115}]
+[
+{'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455}, 
+{'model': 'claude-instant-v1', 'tokens': 54, 'tokens_prompt': 20, 'tokens_completion': 34, 'cost': 5.79e-05, 'latency': 0.7291600704193115}
+]
 ```
 
 ## Streaming support
@@ -228,8 +238,9 @@ To get a list of supported models, call list(). Models will be shown in the orde
 | AlephAlphaProvider  | luminous-supreme-control |      48.5 |            53.6 |        2048 |
 | AnthropicProvider   | claude-instant-v1      |        1.63 |            5.51 |        9000 |
 | AnthropicProvider   | claude-v1              |       11.02 |           32.68 |        9000 |
-| CohereProvider      | command-xlarge-beta    |          25 |              25 |        8192 |
-| CohereProvider      | command-xlarge-nightly |          25 |              25 |        8192 |
+| CohereProvider      | command-xlarge-beta    |        25.0 |            25.0 |        8192 |
+| CohereProvider      | command-xlarge-nightly |        25.0 |            25.0 |        8192 |
+| HuggingfaceHub      | hf_pythia              |         0.0 |             0.0 |        2048 |
 | OpenAIProvider      | gpt-3.5-turbo          |         2.0 |             2.0 |        4000 |
 | OpenAIProvider      | gpt-4                  |        30.0 |            60.0 |        8000 |
 
