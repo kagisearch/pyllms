@@ -41,6 +41,9 @@ Library will attempt to read the API keys and the default model from environment
 export OPENAI_API_KEY="your_api_key_here"
 export ANTHROPIC_API_KEY="your_api_key_here"
 export AI21_API_KEY="your_api_key_here"
+export COHERE_API_KEY="your_api_key_here"
+export ALEPHALPHA_API_KEY="your_api_key_here"
+export HUGGINFACEHUB_API_KEY="your_api_key_here"
 
 export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
