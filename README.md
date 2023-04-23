@@ -3,13 +3,13 @@
 
 [![](https://dcbadge.vercel.app/api/server/aDNg6E9szy?compact=true&style=flat)](https://discord.gg/aDNg6E9szy) [![Twitter](https://img.shields.io/twitter/follow/KagiHQ?style=social)](https://twitter.com/KagiHQ) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit/) 
 
-PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21), with a built-in model performance benchmark. 
+PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark. 
 
-It is ideal for fast prototyping and evaluationg different models thanks to:
-- Connect to top LLMs in few lines of code (currenly OpenAI, Anthropic and AI21 are supported)
+It is ideal for fast prototyping and evaluating different models thanks to:
+- Connect to top LLMs in s few lines of code (currently OpenAI, Anthropic and AI21 are supported)
 - Response meta includes tokens processed, cost and latency standardized across the models
-- Multi-model support: Get completitions from different models at the same time
-- LLM benchmark: Eevaluate models on quality, speed and cost
+- Multi-model support: Get completions from different models at the same time
+- LLM benchmark: Evaluate models on quality, speed and cost
 
 Feel free to reuse and expand. Pull requests are welcome.
 
@@ -144,46 +144,58 @@ models.benchmark(evaluator=gpt4)
 ```
 
 ```
-+---------------------------------------+--------------------+---------------------+-----------------------+---------------------------+-----------------+
-|                 Model                 |       Tokens       |       Cost ($)      |      Latency (s)      |     Speed (tokens/sec)    |    Evaluation   |
-+---------------------------------------+--------------------+---------------------+-----------------------+---------------------------+-----------------+
-| AnthropicProvider (claude-instant-v1) |         33         |       0.00003       |          0.40         |           82.19           |        3        |
-| AnthropicProvider (claude-instant-v1) |        152         |       0.00019       |          1.65         |           91.89           |        10       |
-| AnthropicProvider (claude-instant-v1) |        248         |       0.00031       |          2.18         |           113.74          |        9        |
-| AnthropicProvider (claude-instant-v1) |        209         |       0.00021       |          1.86         |           112.11          |        10       |
-| AnthropicProvider (claude-instant-v1) |         59         |       0.00006       |          0.87         |           68.18           |        10       |
-| AnthropicProvider (claude-instant-v1) |        140         |       0.00018       |          1.46         |           96.10           |        10       |
-| AnthropicProvider (claude-instant-v1) |        245         |       0.00031       |          2.45         |           100.16          |        9        |
-| AnthropicProvider (claude-instant-v1) |        250         |       0.00031       |          2.29         |           109.35          |        9        |
-| AnthropicProvider (claude-instant-v1) |        248         |       0.00031       |          2.17         |           114.50          |        9        |
-| AnthropicProvider (claude-instant-v1) |        323         |       0.00034       |          1.95         |           165.57          |        8        |
-| AnthropicProvider (claude-instant-v1) |        172         |       0.00014       |          0.97         |           177.63          |        10       |
-| AnthropicProvider (claude-instant-v1) | Total Tokens: 2079 | Total Cost: 0.00240 |  Median Latency: 1.86 | Aggregrated speed: 113.98 | Total Score: 97 |
-|     OpenAIProvider (gpt-3.5-turbo)    |         37         |       0.00007       |          1.20         |           30.86           |        7        |
-|     OpenAIProvider (gpt-3.5-turbo)    |         93         |       0.00019       |          2.89         |           32.19           |        1        |
-|     OpenAIProvider (gpt-3.5-turbo)    |        451         |       0.00090       |         18.10         |           24.91           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        204         |       0.00041       |          5.60         |           36.45           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        366         |       0.00073       |         16.51         |           22.17           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        109         |       0.00022       |          3.69         |           29.51           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        316         |       0.00063       |         11.96         |           26.43           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        294         |       0.00059       |         10.47         |           28.09           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        275         |       0.00055       |         10.02         |           27.45           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        501         |       0.00100       |         16.28         |           30.77           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    |        180         |       0.00036       |          3.23         |           55.79           |        10       |
-|     OpenAIProvider (gpt-3.5-turbo)    | Total Tokens: 2826 | Total Cost: 0.00565 | Median Latency: 10.02 |  Aggregrated speed: 28.28 | Total Score: 98 |
-|    AI21Provider (j2-jumbo-instruct)   |         27         |       0.00040       |          0.95         |           28.31           |        3        |
-|    AI21Provider (j2-jumbo-instruct)   |        114         |       0.00171       |          3.10         |           36.81           |        1        |
-|    AI21Provider (j2-jumbo-instruct)   |        195         |       0.00293       |          5.62         |           34.73           |        10       |
-|    AI21Provider (j2-jumbo-instruct)   |        117         |       0.00176       |          2.08         |           56.12           |        10       |
-|    AI21Provider (j2-jumbo-instruct)   |        216         |       0.00324       |          6.12         |           35.27           |        7        |
-|    AI21Provider (j2-jumbo-instruct)   |         67         |       0.00101       |          2.01         |           33.39           |        10       |
-|    AI21Provider (j2-jumbo-instruct)   |        229         |       0.00344       |          6.14         |           37.27           |        10       |
-|    AI21Provider (j2-jumbo-instruct)   |        225         |       0.00337       |          6.21         |           36.26           |        5        |
-|    AI21Provider (j2-jumbo-instruct)   |        218         |       0.00327       |          5.90         |           36.95           |        1        |
-|    AI21Provider (j2-jumbo-instruct)   |        281         |       0.00421       |          6.25         |           44.97           |        1        |
-|    AI21Provider (j2-jumbo-instruct)   |        149         |       0.00224       |          1.56         |           95.81           |        10       |
-|    AI21Provider (j2-jumbo-instruct)   | Total Tokens: 1838 | Total Cost: 0.02757 |  Median Latency: 5.62 |  Aggregrated speed: 40.01 | Total Score: 68 |
-+---------------------------------------+--------------------+---------------------+-----------------------+---------------------------+-----------------+
++--------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
+|             Model              |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)   |    Evaluation   |
++--------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
+| OpenAIProvider (gpt-3.5-turbo) |         37         |       0.00007       |         1.47         |          25.19          |        1        |
+| OpenAIProvider (gpt-3.5-turbo) |         93         |       0.00019       |         4.13         |          22.53          |        0        |
+| OpenAIProvider (gpt-3.5-turbo) |        360         |       0.00072       |        18.42         |          19.54          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        143         |       0.00029       |         6.76         |          21.15          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        112         |       0.00022       |         3.87         |          28.95          |        4        |
+| OpenAIProvider (gpt-3.5-turbo) |         47         |       0.00009       |         1.57         |          29.86          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |         78         |       0.00016       |         1.52         |          51.19          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        254         |       0.00051       |         1.08         |          235.22         |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        284         |       0.00057       |        11.39         |          24.94          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        358         |       0.00072       |        15.77         |          22.71          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        485         |       0.00097       |        23.84         |          20.34          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        222         |       0.00044       |         3.87         |          57.37          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) | Total Tokens: 2473 | Total Cost: 0.00495 | Median Latency: 4.00 | Aggregated speed: 26.40 | Total Score: 50 |
++--------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
++---------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
+|                 Model                 |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)    |    Evaluation   |
++---------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
+| AnthropicProvider (claude-instant-v1) |         33         |       0.00010       |         0.85         |          38.63           |        1        |
+| AnthropicProvider (claude-instant-v1) |        152         |       0.00072       |         1.69         |          89.97           |        5        |
+| AnthropicProvider (claude-instant-v1) |         59         |       0.00024       |         0.70         |          84.55           |        5        |
+| AnthropicProvider (claude-instant-v1) |        112         |       0.00054       |         1.31         |          85.18           |        5        |
+| AnthropicProvider (claude-instant-v1) |        191         |       0.00082       |         1.54         |          124.30          |        0        |
+| AnthropicProvider (claude-instant-v1) |         65         |       0.00024       |         0.68         |          95.35           |        5        |
+| AnthropicProvider (claude-instant-v1) |        190         |       0.00082       |         1.54         |          123.19          |        5        |
+| AnthropicProvider (claude-instant-v1) |        276         |       0.00053       |         0.69         |          398.39          |        5        |
+| AnthropicProvider (claude-instant-v1) |        220         |       0.00085       |         1.52         |          144.87          |        5        |
+| AnthropicProvider (claude-instant-v1) |        189         |       0.00072       |         1.21         |          156.10          |        5        |
+| AnthropicProvider (claude-instant-v1) |        326         |       0.00145       |         2.65         |          122.87          |        0        |
+| AnthropicProvider (claude-instant-v1) |        281         |       0.00089       |         1.37         |          204.61          |        5        |
+| AnthropicProvider (claude-instant-v1) | Total Tokens: 2094 | Total Cost: 0.00791 | Median Latency: 1.34 | Aggregated speed: 132.82 | Total Score: 46 |
++---------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
+
++-----------------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
+|                  Model                  |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)   |    Evaluation   |
++-----------------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
+| CohereProvider (command-xlarge-nightly) |         27         |       0.00068       |         0.73         |          37.23          |        1        |
+| CohereProvider (command-xlarge-nightly) |         49         |       0.00122       |         1.04         |          47.03          |        5        |
+| CohereProvider (command-xlarge-nightly) |         31         |       0.00077       |         0.67         |          46.10          |        0        |
+| CohereProvider (command-xlarge-nightly) |         30         |       0.00075       |         0.73         |          41.35          |        0        |
+| CohereProvider (command-xlarge-nightly) |        128         |       0.00320       |         2.89         |          44.27          |        0        |
+| CohereProvider (command-xlarge-nightly) |         38         |       0.00095       |         0.70         |          54.29          |        4        |
+| CohereProvider (command-xlarge-nightly) |         57         |       0.00143       |         0.51         |          111.13         |        5        |
+| CohereProvider (command-xlarge-nightly) |        269         |       0.00673       |         0.98         |          274.23         |        3        |
+| CohereProvider (command-xlarge-nightly) |        230         |       0.00575       |         4.55         |          50.54          |        0        |
+| CohereProvider (command-xlarge-nightly) |        170         |       0.00425       |         2.45         |          69.41          |        0        |
+| CohereProvider (command-xlarge-nightly) |        1502        |       0.03755       |        30.80         |          48.77          |        0        |
+| CohereProvider (command-xlarge-nightly) |        218         |       0.00545       |         2.01         |          108.49         |        4        |
+| CohereProvider (command-xlarge-nightly) | Total Tokens: 2749 | Total Cost: 0.06872 | Median Latency: 1.01 | Aggregated speed: 57.20 | Total Score: 22 |
++-----------------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
 ```
 
 To evaluate models on your own prompts, simply pass a list of questions. The evaluator will automatically evaluate the responses:
@@ -198,16 +210,34 @@ To get a list of supported models, call list(). Models will be shown in the orde
 
 ```
 >>> model=llms.init()
+
 >>> model.list()
 
-[{'provider': 'AnthropicProvider', 'name': 'claude-instant-v1', 'cost': {'prompt': 0.43, 'completion': 1.45}}, {'provider': 'OpenAIProvider', 'name': 'gpt-3.5-turbo', 'cost': {'prompt': 2.0, 'completion': 2.0}}, {'provider': 'AI21Provider', 'name': 'j2-large', 'cost': {'prompt': 3.0, 'completion': 3.0}}, {'provider': 'AnthropicProvider', 'name': 'claude-v1', 'cost': {'prompt': 2.9, 'completion': 8.6}}, {'provider': 'AI21Provider', 'name': 'j2-grande', 'cost': {'prompt': 10.0, 'completion': 10.0}}, {'provider': 'AI21Provider', 'name': 'j2-grande-instruct', 'cost': {'prompt': 10.0, 'completion': 10.0}}, {'provider': 'AI21Provider', 'name': 'j2-jumbo', 'cost': {'prompt': 15.0, 'completion': 15.0}}, {'provider': 'AI21Provider', 'name': 'j2-jumbo-instruct', 'cost': {'prompt': 15.0, 'completion': 15.0}}, {'provider': 'OpenAIProvider', 'name': 'gpt-4', 'cost': {'prompt': 30.0, 'completion': 60.0}}]
+>>> model.list("gpt') # lists only models with 'gpt' in name/provider name
+
+| Provider            | Name                   | Prompt Cost | Completion Cost | Token Limit |
+|---------------------|------------------------|-------------|-----------------|-------------|
+| AI21Provider        | j2-grande-instruct     |        10.0 |            10.0 |        8192 |
+| AI21Provider        | j2-jumbo-instruct      |        15.0 |            15.0 |        8192 |
+| AlephAlphaProvider  | luminous-base          |         6.6 |             7.6 |        2048 |
+| AlephAlphaProvider  | luminous-extended      |         9.9 |            10.9 |        2048 |
+| AlephAlphaProvider  | luminous-supreme       |        38.5 |            42.5 |        2048 |
+| AlephAlphaProvider  | luminous-supreme-control |      48.5 |            53.6 |        2048 |
+| AnthropicProvider   | claude-instant-v1      |        1.63 |            5.51 |        9000 |
+| AnthropicProvider   | claude-v1              |       11.02 |           32.68 |        9000 |
+| CohereProvider      | command-xlarge-beta    |          25 |              25 |        8192 |
+| CohereProvider      | command-xlarge-nightly |          25 |              25 |        8192 |
+| OpenAIProvider      | gpt-3.5-turbo          |         2.0 |             2.0 |        4000 |
+| OpenAIProvider      | gpt-4                  |        30.0 |            60.0 |        8000 |
+
 ```
 
 Useful links:\
 [OpenAI documentation](https://platform.openai.com/docs/api-reference/completions)\
 [Anthropic documentation](https://console.anthropic.com/docs/api/reference#-v1-complete)\
 [AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)
-
+[Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)
+[Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)
 
 ## License
 

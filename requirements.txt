@@ -2,6 +2,7 @@ openai
 tiktoken
 anthropic
 ai21
+cohere
+aleph-alpha-client
 huggingface_hub
-markdown2
 prettytable
