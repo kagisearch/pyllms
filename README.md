@@ -35,7 +35,7 @@ print(result.text)
 
 ```
 
-Library will attempt to read the API keys and the default model from environment variables, which you can set like this:
+Library will attempt to read the API keys and the default model from environment variables, which you can set like this (for the provider you are using):
 
 ```
 export OPENAI_API_KEY="your_api_key_here"
