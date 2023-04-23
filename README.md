@@ -253,7 +253,7 @@ Useful links:\
 [Anthropic documentation](https://console.anthropic.com/docs/api/reference#-v1-complete)\
 [AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)\
 [Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)\
-[Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)\
+[Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)
 
 ## License
 
