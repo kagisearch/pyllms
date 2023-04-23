@@ -225,6 +225,10 @@ To get a list of supported models, call list(). Models will be shown in the orde
 >>> model.list()
 
 >>> model.list("gpt') # lists only models with 'gpt' in name/provider name
+```
+
+Here is a pretty table of supported models (in alphabetical order).
+```
 
 | Provider            | Name                   | Prompt Cost | Completion Cost | Token Limit |
 |---------------------|------------------------|-------------|-----------------|-------------|
