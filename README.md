@@ -6,7 +6,7 @@
 PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark. 
 
 It is ideal for fast prototyping and evaluating different models thanks to:
-- Connect to top LLMs in s few lines of code (currently OpenAI, Anthropic and AI21 are supported)
+- Connect to top LLMs in a few lines of code
 - Response meta includes tokens processed, cost and latency standardized across the models
 - Multi-model support: Get completions from different models at the same time
 - LLM benchmark: Evaluate models on quality, speed and cost
