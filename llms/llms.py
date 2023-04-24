@@ -107,6 +107,9 @@ class LLMS:
             else:
                 raise ValueError("Invalid API key and model combination", single_model)
 
+    def __repr__(self) -> str:
+        return f"LLMS({self.model})"
+
     def list(self, query=None):
         model_info_list = []
 
