@@ -177,7 +177,6 @@ class LLMS:
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
         **kwargs,
     ):
         if len(self._providers) > 1:
