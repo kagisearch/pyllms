@@ -104,6 +104,12 @@ You can also initialize multiple models at once! This is very useful for testing
 ]
 ```
 
+## Async support
+Async completion is supported for compatible models. It is not supported in multi-models mode yet.
+```
+result = await model.acomplete("what is the capital of country where mozzart was born")
+```
+
 ## Streaming support
 
 PyLLMs supports streaming from compatible models. 'complete_stream' method will return generator object and all you have to do is iterate through it:
