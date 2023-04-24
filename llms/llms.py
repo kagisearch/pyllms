@@ -203,8 +203,6 @@ class LLMS:
     def complete_stream(self, prompt, **kwargs):
         if len(self._providers) > 1:
             raise ValueError("Streaming is possible only with a single model")
-        if isinstance(self._providers[0], AI21Provider) or isinstance(self._providers[0], AlephAlphaProvider) or isinstance(self._providers[0], HuggingfaceHubProvider):
-            raise ValueError("Streaming is not yet supported with this model")
 
         yield from self._providers[0].complete_stream(prompt, **kwargs)
 
