@@ -1,3 +1,4 @@
+import aiohttp
 import itertools
 import openai
 import tiktoken
@@ -84,8 +85,12 @@ class OpenAIProvider(BaseProvider):
         history: Optional[List[tuple]] = None,
         system_message: str = None,
         temperature: float = 0,
+        aiosession: Optional[aiohttp.ClientSession] = None,
         **kwargs,
     ):
+        if aiosession is not None:
+            openai.aiosession.set(aiosession)
+
         start_time = time.time()
 
         messages = [{"role": "user", "content": prompt}]
