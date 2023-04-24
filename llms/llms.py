@@ -263,13 +263,10 @@ Your only output should be a list of comma seperated integers representing your 
 
 """
 
-            prompt = ""
-            for i, (query, answer) in enumerate(query_answer_pairs):
-                prompt += f"Query #{i + 1}: {query}\nAnswer #{i + 1}: {answer}\n\n"
-            # print(prompt)
+            prompt = "".join(f"Query #{i}: {query}\nAnswer #{i}: {answer}\n\n"
+                             for i, (query, answer) in enumerate(query_answer_pairs, start=1))
 
             evaluator_result = evaluator.complete(prompt, system_message=system).text
-            # print(evaluator_result)
             scores = evaluator_result.split(",")
             return [int(score.strip()) for score in scores]
 
