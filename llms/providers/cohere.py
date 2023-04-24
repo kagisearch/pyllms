@@ -6,9 +6,10 @@ import cohere
 import time
 
 from typing import List, Optional
+from .base_provider import BaseProvider
 
 
-class CohereProvider:
+class CohereProvider(BaseProvider):
     MODEL_INFO = {
         "command-xlarge-beta": {"prompt": 25.0, "completion": 25, "token_limit": 8192},
         "command-xlarge-nightly": {"prompt": 25.0, "completion": 25, "token_limit": 8192},
@@ -22,9 +23,6 @@ class CohereProvider:
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
-
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
 
     def count_tokens(self, content: str):
         tokens = self.client.tokenize(content)

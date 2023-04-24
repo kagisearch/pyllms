@@ -4,8 +4,10 @@ import tiktoken
 import time
 from typing import List, Optional
 
+from .base_provider import BaseProvider
 
-class OpenAIProvider:
+
+class OpenAIProvider(BaseProvider):
     # cost is per million tokens
     MODEL_INFO = {
         "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4000},
@@ -17,9 +19,6 @@ class OpenAIProvider:
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
-
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
 
     def count_tokens(self, content: str):
         enc = tiktoken.encoding_for_model(self.model)

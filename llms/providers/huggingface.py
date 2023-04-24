@@ -6,6 +6,7 @@ from huggingface_hub.inference_api import InferenceApi
 import time
 
 from typing import List, Optional
+from .base_provider import BaseProvider
 
 
 class HuggingfaceHubProvider:
@@ -37,9 +38,6 @@ class HuggingfaceHubProvider:
             repo_id=self.MODEL_INFO[model]["full"], token=api_key
         )
 
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
-
     def complete(
         self,
         prompt: str,
@@ -66,7 +64,6 @@ class HuggingfaceHubProvider:
         if 'error' in response:
             print("Error: ", response['error'])
             return {}
-
 
         completion = response[0]["generated_text"][len(prompt) :]
 

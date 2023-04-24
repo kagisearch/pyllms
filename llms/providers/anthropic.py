@@ -6,16 +6,17 @@ import anthropic
 import time
 
 from typing import List, Optional
+from .base_provider import BaseProvider
 
 
-class AnthropicProvider:
+class AnthropicProvider(BaseProvider):
     MODEL_INFO = {
         "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
         "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
     }
 
     def __init__(self, api_key=None, model=None):
-        
+
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
@@ -23,10 +24,6 @@ class AnthropicProvider:
         if api_key is None:
             api_key = os.getenv("ANTHROPIC_API_KEY")
         self.client = anthropic.Client(api_key)
-
-
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
 
     def count_tokens(self, content: str):
         return anthropic.count_tokens(content)
