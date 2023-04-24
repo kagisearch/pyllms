@@ -20,7 +20,7 @@ class CohereProvider:
         self.client = cohere.Client(api_key)
 
         if model is None:
-            model = list(MODEL_INFO.keys())[0]
+            model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
     def __str__(self):

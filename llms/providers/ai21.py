@@ -16,7 +16,7 @@ class AI21Provider:
     def __init__(self, api_key, model=None):
         ai21.api_key = api_key
         if model is None:
-            model = list(MODEL_INFO.keys())[0]
+            model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
     def __str__(self):

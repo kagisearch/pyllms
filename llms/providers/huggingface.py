@@ -26,7 +26,7 @@ class HuggingfaceHubProvider:
 
     def __init__(self, api_key=None, model=None):
         if model is None:
-            model = list(MODEL_INFO.keys())[0]
+            model = list(self.MODEL_INFO.keys())[0]
 
         self.model = model
 
