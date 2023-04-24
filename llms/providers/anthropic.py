@@ -1,12 +1,51 @@
 # llms/providers/anthropic.py
 
 import itertools
+import json
 import os
-import anthropic
 import time
+import aiohttp
+import anthropic
 
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple, Union
+from anthropic.api import _process_request_error
 from .base_provider import BaseProvider
+
+
+class AnthropicClient(anthropic.Client):
+    """Extend Anthropic Client class to accept aiosession"""
+
+    async def _arequest_as_json(
+        self,
+        method: str,
+        path: str,
+        params: dict,
+        headers: Optional[Dict[str, str]] = None,
+        request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
+        aiosession: Optional[aiohttp.ClientSession] = None,
+    ) -> dict:
+        if aiosession is None:
+            super()._arequest_as_json(
+                method=method,
+                path=path,
+                params=params,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        else:
+            request = self._request_params(headers, method, params, path, request_timeout)
+            async with aiosession.request(
+                request.method,
+                request.url,
+                headers=request.headers,
+                data=request.data,
+                timeout=request.timeout,
+            ) as result:
+                content = await result.text()
+                if result.status != 200:
+                    _process_request_error(method, content, result.status)
+                json_body = json.loads(content)
+                return json_body
 
 
 class AnthropicProvider(BaseProvider):
@@ -23,7 +62,7 @@ class AnthropicProvider(BaseProvider):
 
         if api_key is None:
             api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = anthropic.Client(api_key)
+        self.client = AnthropicClient(api_key)
 
     def count_tokens(self, content: str):
         return anthropic.count_tokens(content)
