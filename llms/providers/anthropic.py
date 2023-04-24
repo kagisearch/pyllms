@@ -161,6 +161,7 @@ class AnthropicProvider:
         history: Optional[List[tuple]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
+        stop_sequences: Optional[List[str]] = None,
         **kwargs,
     ):
         formatted_prompt = f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}"
@@ -180,9 +181,12 @@ class AnthropicProvider:
         if "stream" not in kwargs:
             kwargs["stream"] = True  # Add stream param if not present
 
+        if stop_sequences is None:
+            stop_sequences = [anthropic.HUMAN_PROMPT]
+
         response = self.client.completion_stream(
             prompt=formatted_prompt,
-            stop_sequences=[anthropic.HUMAN_PROMPT],
+            stop_sequences=stop_sequences,
             temperature=temperature,
             model=self.model,
             **kwargs,
