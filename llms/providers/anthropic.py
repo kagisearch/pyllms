@@ -33,7 +33,9 @@ class AnthropicClient(anthropic.Client):
                 request_timeout=request_timeout,
             )
         else:
-            request = self._request_params(headers, method, params, path, request_timeout)
+            request = self._request_params(
+                headers, method, params, path, request_timeout
+            )
             async with aiosession.request(
                 request.method,
                 request.url,
@@ -55,7 +57,6 @@ class AnthropicProvider(BaseProvider):
     }
 
     def __init__(self, api_key=None, model=None):
-
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model

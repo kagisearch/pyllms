@@ -2,6 +2,7 @@ class BaseProvider:
     """Base class for all providers.
     Methods will raise NotImplementedError if they are not overwritten.
     """
+
     def __repr__(self) -> str:
         return f"{self.__name__} ({self.model})"
 

@@ -38,7 +38,7 @@ class LLMS:
         ai21_api_key=None,
         cohere_api_key=None,
         alephalpha_api_key=None,
-        huggingfacehub_api_key=None
+        huggingfacehub_api_key=None,
     ):
         if openai_api_key is None:
             openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -56,7 +56,7 @@ class LLMS:
             alephalpha_api_key = os.getenv("ALEPHALPHA_API_KEY")
 
         if huggingfacehub_api_key is None:
-            huggingfacehub_api_key = os.getenv("HUGGINFACEHUB_API_KEY")    
+            huggingfacehub_api_key = os.getenv("HUGGINFACEHUB_API_KEY")
 
         if model is None:
             model = os.getenv("LLMS_DEFAULT_MODEL")
@@ -102,8 +102,10 @@ class LLMS:
                 and single_model in HuggingfaceHubProvider.MODEL_INFO
             ):
                 self._providers.append(
-                    HuggingfaceHubProvider(api_key=huggingfacehub_api_key, model=single_model)
-                )    
+                    HuggingfaceHubProvider(
+                        api_key=huggingfacehub_api_key, model=single_model
+                    )
+                )
             else:
                 raise ValueError("Invalid API key and model combination", single_model)
 
@@ -119,7 +121,7 @@ class LLMS:
             AnthropicProvider,
             CohereProvider,
             AlephAlphaProvider,
-            HuggingfaceHubProvider
+            HuggingfaceHubProvider,
         ]
 
         for provider in all_providers:

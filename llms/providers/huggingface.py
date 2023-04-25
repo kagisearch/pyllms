@@ -48,7 +48,7 @@ class HuggingfaceHubProvider:
         if self.model == "hf_pythia":
             prompt = "<|prompter|" + prompt + "<|endoftext|><|assistant|>"
 
-        if temperature <=0:
+        if temperature <= 0:
             temperature = 0.01
 
         if "temperature" not in kwargs:
@@ -60,9 +60,9 @@ class HuggingfaceHubProvider:
         start_time = time.time()
         response = self.client(inputs=prompt, params={**kwargs})
         latency = time.time() - start_time
-        #print(response)
-        if 'error' in response:
-            print("Error: ", response['error'])
+        # print(response)
+        if "error" in response:
+            print("Error: ", response["error"])
             return {}
 
         completion = response[0]["generated_text"][len(prompt) :]
