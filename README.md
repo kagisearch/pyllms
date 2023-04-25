@@ -6,7 +6,7 @@
 PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark. 
 
 It is ideal for fast prototyping and evaluating different models thanks to:
-- Connect to top LLMs in s few lines of code (currently OpenAI, Anthropic and AI21 are supported)
+- Connect to top LLMs in a few lines of code
 - Response meta includes tokens processed, cost and latency standardized across the models
 - Multi-model support: Get completions from different models at the same time
 - LLM benchmark: Evaluate models on quality, speed and cost
@@ -35,12 +35,15 @@ print(result.text)
 
 ```
 
-Library will attempt to read the API keys and the default model from environment variables, which you can set like this:
+Library will attempt to read the API keys and the default model from environment variables, which you can set like this (for the provider you are using):
 
 ```
 export OPENAI_API_KEY="your_api_key_here"
 export ANTHROPIC_API_KEY="your_api_key_here"
 export AI21_API_KEY="your_api_key_here"
+export COHERE_API_KEY="your_api_key_here"
+export ALEPHALPHA_API_KEY="your_api_key_here"
+export HUGGINFACEHUB_API_KEY="your_api_key_here"
 
 export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
@@ -70,7 +73,14 @@ Note: By default, temperature for all models is set to 0, and max_tokens to 300.
 The result meta will contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency:
 ```
 >>> print(result.meta)
-{'model': 'gpt-3.5-turbo', 'tokens': 15, 'tokens_prompt': 14, 'tokens_completion': 1, 'cost': 3e-05, 'latency': 0.48232388496398926}
+{
+  'model': 'gpt-3.5-turbo', 
+  'tokens': 34, 
+  'tokens_prompt': 20, 
+  'tokens_completion': 14, 
+  'cost': '0.00007', 
+  'latency': 1.4
+}
 ```
 
 
@@ -82,10 +92,22 @@ You can also initialize multiple models at once! This is very useful for testing
 >>> models=llms.init(model=['gpt-3.5-turbo','claude-instant-v1'])
 >>> result=models.complete('what is the capital of country where mozzart was born')
 >>> print(result.text)
-['The capital of the country where Mozart was born is Vienna, Austria.', 'Wolfgang Amadeus Mozart was born in Salzburg, Austria.\n\nSo the capital of the country where Mozart was born is Vienna, Austria.']
+[
+ 'The capital of the country where Mozart was born is Vienna, Austria.', 
+ 'Wolfgang Amadeus Mozart was born in Salzburg, Austria.\n\nSo the capital of the country where Mozart was born is Vienna, Austria.'
+]
 
 >>> print(result.meta)
-[{'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455}, {'model': 'claude-instant-v1', 'tokens': 54, 'tokens_prompt': 20, 'tokens_completion': 34, 'cost': 5.79e-05, 'latency': 0.7291600704193115}]
+[
+ {'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455}, 
+ {'model': 'claude-instant-v1', 'tokens': 54, 'tokens_prompt': 20, 'tokens_completion': 34, 'cost': 5.79e-05, 'latency': 0.7291600704193115}
+]
+```
+
+## Async support
+Async completion is supported for compatible models. It is not supported in multi-models mode yet.
+```
+result = await model.acomplete("what is the capital of country where mozzart was born")
 ```
 
 ## Streaming support
@@ -93,18 +115,11 @@ You can also initialize multiple models at once! This is very useful for testing
 PyLLMs supports streaming from compatible models. 'complete_stream' method will return generator object and all you have to do is iterate through it:
 
 ```
->>> model= llms.init('claude-v1')
->>> result = model.complete_stream("write an essay on civil war")
->>> for chunk in result:
-...        if chunk is not None:
-...          print(chunk, end='')   
-... 
-
-Here is a paragraph about civil rights:
-
-
-Civil rights are the basic rights and freedoms that all citizens should have in a society. They include fundamental rights like the right to vote, the right to free speech, the right to practice the religion of one's choice, the right to equal treatment under the law, and the right to live free from discrimination. The civil rights movement in the United States fought to secure these rights for African Americans and other minorities in the face of institutionalized racism and discrimination. Leaders like Martin Luther King Jr. helped pass laws like the Civil Rights Act of 1964 and the Voting Rights Act of 1965 which outlawed discrimination and dismantled barriers to voting. The struggle for civil rights continues today as more work is still needed to promote racial equality and protect the rights of all citizens.
-
+model= llms.init('claude-v1')
+result = model.complete_stream("write an essay on civil war")
+for chunk in result:
+   if chunk is not None:
+      print(chunk, end='')   
 ```
 
 Current limitations:
@@ -138,8 +153,10 @@ PyLLMs icludes an automated benchmark system. The quality of models is evaluated
 
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'j2-jumbo-instruct'])
+models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'command-xlarge-nightly'])
+
 gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
+
 models.benchmark(evaluator=gpt4)
 ```
 
@@ -214,6 +231,10 @@ To get a list of supported models, call list(). Models will be shown in the orde
 >>> model.list()
 
 >>> model.list("gpt') # lists only models with 'gpt' in name/provider name
+```
+
+Here is a pretty table of supported models (in alphabetical order).
+```
 
 | Provider            | Name                   | Prompt Cost | Completion Cost | Token Limit |
 |---------------------|------------------------|-------------|-----------------|-------------|
@@ -225,8 +246,9 @@ To get a list of supported models, call list(). Models will be shown in the orde
 | AlephAlphaProvider  | luminous-supreme-control |      48.5 |            53.6 |        2048 |
 | AnthropicProvider   | claude-instant-v1      |        1.63 |            5.51 |        9000 |
 | AnthropicProvider   | claude-v1              |       11.02 |           32.68 |        9000 |
-| CohereProvider      | command-xlarge-beta    |          25 |              25 |        8192 |
-| CohereProvider      | command-xlarge-nightly |          25 |              25 |        8192 |
+| CohereProvider      | command-xlarge-beta    |        25.0 |            25.0 |        8192 |
+| CohereProvider      | command-xlarge-nightly |        25.0 |            25.0 |        8192 |
+| HuggingfaceHub      | hf_pythia              |         0.0 |             0.0 |        2048 |
 | OpenAIProvider      | gpt-3.5-turbo          |         2.0 |             2.0 |        4000 |
 | OpenAIProvider      | gpt-4                  |        30.0 |            60.0 |        8000 |
 
@@ -235,8 +257,8 @@ To get a list of supported models, call list(). Models will be shown in the orde
 Useful links:\
 [OpenAI documentation](https://platform.openai.com/docs/api-reference/completions)\
 [Anthropic documentation](https://console.anthropic.com/docs/api/reference#-v1-complete)\
-[AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)
-[Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)
+[AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)\
+[Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)\
 [Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)
 
 ## License

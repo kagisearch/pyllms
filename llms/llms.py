@@ -107,6 +107,9 @@ class LLMS:
             else:
                 raise ValueError("Invalid API key and model combination", single_model)
 
+    def __repr__(self) -> str:
+        return f"LLMS({self.model})"
+
     def list(self, query=None):
         model_info_list = []
 
@@ -177,7 +180,6 @@ class LLMS:
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
         **kwargs,
     ):
         if len(self._providers) > 1:
@@ -204,8 +206,6 @@ class LLMS:
     def complete_stream(self, prompt, **kwargs):
         if len(self._providers) > 1:
             raise ValueError("Streaming is possible only with a single model")
-        if isinstance(self._providers[0], AI21Provider) or isinstance(self._providers[0], AlephAlphaProvider) or isinstance(self._providers[0], HuggingfaceHubProvider):
-            raise ValueError("Streaming is not yet supported with this model")
 
         yield from self._providers[0].complete_stream(prompt, **kwargs)
 

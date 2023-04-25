@@ -1,35 +1,71 @@
 # llms/providers/anthropic.py
 
 import itertools
+import json
 import os
-import anthropic
 import time
+import aiohttp
+import anthropic
 
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple, Union
+from anthropic.api import _process_request_error
+from .base_provider import BaseProvider
 
 
-class AnthropicProvider:
+class AnthropicClient(anthropic.Client):
+    """Extend Anthropic Client class to accept aiosession"""
+
+    async def _arequest_as_json(
+        self,
+        method: str,
+        path: str,
+        params: dict,
+        headers: Optional[Dict[str, str]] = None,
+        request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
+        aiosession: Optional[aiohttp.ClientSession] = None,
+    ) -> dict:
+        if aiosession is None:
+            super()._arequest_as_json(
+                method=method,
+                path=path,
+                params=params,
+                headers=headers,
+                request_timeout=request_timeout,
+            )
+        else:
+            request = self._request_params(headers, method, params, path, request_timeout)
+            async with aiosession.request(
+                request.method,
+                request.url,
+                headers=request.headers,
+                data=request.data,
+                timeout=request.timeout,
+            ) as result:
+                content = await result.text()
+                if result.status != 200:
+                    _process_request_error(method, content, result.status)
+                json_body = json.loads(content)
+                return json_body
+
+
+class AnthropicProvider(BaseProvider):
     MODEL_INFO = {
         "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
         "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
     }
 
     def __init__(self, api_key=None, model=None):
-        
+
         if model is None:
-            model = list(MODEL_INFO.keys())[0]
+            model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
         if api_key is None:
             api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = anthropic.Client(api_key)
-
-
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
+        self.client = AnthropicClient(api_key)
 
     def count_tokens(self, content: str):
-        raise ValueError("Count tokens is currently not supported with AI21")
+        return anthropic.count_tokens(content)
 
     def complete(
         self,
@@ -161,6 +197,7 @@ class AnthropicProvider:
         history: Optional[List[tuple]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
+        stop_sequences: Optional[List[str]] = None,
         **kwargs,
     ):
         formatted_prompt = f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}"
@@ -180,9 +217,12 @@ class AnthropicProvider:
         if "stream" not in kwargs:
             kwargs["stream"] = True  # Add stream param if not present
 
+        if stop_sequences is None:
+            stop_sequences = [anthropic.HUMAN_PROMPT]
+
         response = self.client.completion_stream(
             prompt=formatted_prompt,
-            stop_sequences=[anthropic.HUMAN_PROMPT],
+            stop_sequences=stop_sequences,
             temperature=temperature,
             model=self.model,
             **kwargs,

@@ -5,8 +5,10 @@ import time
 import itertools
 from typing import List, Optional
 
+from .base_provider import BaseProvider
 
-class AI21Provider:
+
+class AI21Provider(BaseProvider):
     # per million tokens
     MODEL_INFO = {
         "j2-grande-instruct": {"prompt": 10.0, "completion": 10.0, "token_limit": 8192},
@@ -16,14 +18,8 @@ class AI21Provider:
     def __init__(self, api_key, model=None):
         ai21.api_key = api_key
         if model is None:
-            model = list(MODEL_INFO.keys())[0]
+            model = list(self.MODEL_INFO.keys())[0]
         self.model = model
-
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
-
-    def count_tokens(self, content: str):
-        return anthropic.count_tokens(content)
 
     def complete(
         self,

@@ -6,9 +6,10 @@ from aleph_alpha_client import Client, CompletionRequest, Prompt
 import time
 
 from typing import List, Optional
+from .base_provider import BaseProvider
 
 
-class AlephAlphaProvider:
+class AlephAlphaProvider(BaseProvider):
     MODEL_INFO = {
         "luminous-base": {"prompt": 6.6, "completion": 7.6, "token_limit": 2048},
         "luminous-extended": {"prompt": 9.9, "completion": 10.9, "token_limit": 2048},
@@ -26,11 +27,8 @@ class AlephAlphaProvider:
         self.client = Client(api_key)
 
         if model is None:
-            model = list(MODEL_INFO.keys())[0]
+            model = list(self.MODEL_INFO.keys())[0]
         self.model = model
-
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
 
     def complete(
         self,

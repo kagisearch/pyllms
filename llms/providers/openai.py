@@ -1,11 +1,14 @@
+import aiohttp
 import itertools
 import openai
 import tiktoken
 import time
 from typing import List, Optional
 
+from .base_provider import BaseProvider
 
-class OpenAIProvider:
+
+class OpenAIProvider(BaseProvider):
     # cost is per million tokens
     MODEL_INFO = {
         "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4000},
@@ -15,11 +18,8 @@ class OpenAIProvider:
     def __init__(self, api_key, model=None):
         openai.api_key = api_key
         if model is None:
-            model = list(MODEL_INFO.keys())[0]
+            model = list(self.MODEL_INFO.keys())[0]
         self.model = model
-
-    def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
 
     def count_tokens(self, content: str):
         enc = tiktoken.encoding_for_model(self.model)
@@ -85,8 +85,12 @@ class OpenAIProvider:
         history: Optional[List[tuple]] = None,
         system_message: str = None,
         temperature: float = 0,
+        aiosession: Optional[aiohttp.ClientSession] = None,
         **kwargs,
     ):
+        if aiosession is not None:
+            openai.aiosession.set(aiosession)
+
         start_time = time.time()
 
         messages = [{"role": "user", "content": prompt}]
