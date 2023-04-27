@@ -18,7 +18,7 @@ Feel free to reuse and expand. Pull requests are welcome.
 Clone this repository and install the package using pip:
 
 ```
-pip3 install pyllms
+pip install pyllms
 ```
 
 
