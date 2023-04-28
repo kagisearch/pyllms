@@ -25,7 +25,7 @@ class AnthropicClient(anthropic.Client):
         aiosession: Optional[aiohttp.ClientSession] = None,
     ) -> dict:
         if aiosession is None:
-            super()._arequest_as_json(
+            return super()._arequest_as_json(
                 method=method,
                 path=path,
                 params=params,
