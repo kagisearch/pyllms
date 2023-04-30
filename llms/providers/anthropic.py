@@ -19,10 +19,10 @@ class AnthropicClient(anthropic.Client):
         self,
         method: str,
         path: str,
-        params: dict,
         headers: Optional[Dict[str, str]] = None,
         request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
         aiosession: Optional[aiohttp.ClientSession] = None,
+        **params: dict,
     ) -> dict:
         if aiosession is None:
             return await super()._arequest_as_json(
@@ -48,6 +48,17 @@ class AnthropicClient(anthropic.Client):
                     _process_request_error(method, content, result.status)
                 json_body = json.loads(content)
                 return json_body
+
+    async def acompletion(self, **kwargs):
+        # Override original method which pass kwargs as params.
+        # We will pass kwargs in
+        # _arequest_as_json will strips-off the keyword arguments that it needs
+        # and pass the rest as params
+        return await self._arequest_as_json(
+            "post",
+            "/v1/complete",
+            **kwargs
+        )
 
 
 class AnthropicProvider(BaseProvider):
