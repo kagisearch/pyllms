@@ -60,6 +60,12 @@ class OpenAIProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
+        """
+        Args:
+            history: messages in OpenAI format, each dict must include role and content key.
+            system_message: system messages in OpenAI format, must have role and content key.
+              It can has name key to include few-shots examples.
+        """
         start_time = time.time()
         model_input = self._prepapre_model_input(prompt=prompt,
                                                  history=history,
@@ -104,6 +110,12 @@ class OpenAIProvider(BaseProvider):
         aiosession: Optional[aiohttp.ClientSession] = None,
         **kwargs,
     ):
+        """
+        Args:
+            history: messages in OpenAI format, each dict must include role and content key.
+            system_message: system messages in OpenAI format, must have role and content key.
+              It can has name key to include few-shots examples.
+        """
         if aiosession is not None:
             openai.aiosession.set(aiosession)
 
@@ -151,7 +163,12 @@ class OpenAIProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-
+        """
+        Args:
+            history: messages in OpenAI format, each dict must include role and content key.
+            system_message: system messages in OpenAI format, must have role and content key.
+              It can has name key to include few-shots examples.
+        """
         model_input = self._prepapre_model_input(prompt=prompt,
                                                  history=history,
                                                  system_message=system_message,
