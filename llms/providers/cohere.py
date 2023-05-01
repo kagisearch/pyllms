@@ -115,6 +115,8 @@ class CohereProvider(BaseProvider):
             model=self.model,
             **kwargs,
         )
+        first_text = next(response)
+        yield first_text.text.lstrip()
 
         for token in response:
             yield token.text
