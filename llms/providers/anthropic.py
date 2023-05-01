@@ -240,7 +240,10 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
 
-        last_completion = ""
+        first_completion = next(response)["completion"]
+        yield first_completion.lstrip()
+
+        last_completion = first_completion
         for data in response:
             new_chunk = data["completion"][len(last_completion) :]
             last_completion = data["completion"]
