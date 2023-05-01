@@ -168,6 +168,10 @@ class OpenAIProvider(BaseProvider):
             model=self.model, messages=messages, temperature=temperature, **kwargs
         )
 
-        yield from (
+        chunk_generator = (
             chunk["choices"][0].get("delta", {}).get("content") for chunk in response
         )
+        while not (first_text := next(chunk_generator)):
+            continue
+        yield first_text.lstrip()
+        yield from chunk_generator
