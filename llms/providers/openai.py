@@ -29,6 +29,7 @@ class OpenAIProvider(BaseProvider):
                               history: Optional[List[dict]] = None,
                               system_message: Optional[List[dict]] = None,
                               temperature: float = 0,
+                              max_tokens: int = 300,
                               stream: bool = False,
                               **kwargs,
                               ):
@@ -44,6 +45,7 @@ class OpenAIProvider(BaseProvider):
         model_input = {
             "messages": messages,
             "temperature": temperature,
+            "max_tokens": max_tokens,
             "stream": stream,
             **kwargs,
         }
@@ -55,6 +57,7 @@ class OpenAIProvider(BaseProvider):
         history: Optional[List[dict]] = None,
         system_message: Optional[List[dict]] = None,
         temperature: float = 0,
+        max_tokens: int = 300,
         **kwargs,
     ):
         start_time = time.time()
@@ -62,6 +65,7 @@ class OpenAIProvider(BaseProvider):
                                                  history=history,
                                                  system_message=system_message,
                                                  temperature=temperature,
+                                                 max_tokens=max_tokens,
                                                  **kwargs
                                                  )
         response = openai.ChatCompletion.create(model=self.model, **model_input)
@@ -96,6 +100,7 @@ class OpenAIProvider(BaseProvider):
         history: Optional[List[dict]] = None,
         system_message: Optional[List[dict]] = None,
         temperature: float = 0,
+        max_tokens: int = 300,
         aiosession: Optional[aiohttp.ClientSession] = None,
         **kwargs,
     ):
@@ -108,6 +113,7 @@ class OpenAIProvider(BaseProvider):
                                                  history=history,
                                                  system_message=system_message,
                                                  temperature=temperature,
+                                                 max_tokens=max_tokens,
                                                  **kwargs
                                                  )
 
@@ -142,6 +148,7 @@ class OpenAIProvider(BaseProvider):
         history: Optional[List[tuple]] = None,
         system_message: str = None,
         temperature: float = 0,
+        max_tokens: int = 300,
         **kwargs,
     ):
 
@@ -149,6 +156,7 @@ class OpenAIProvider(BaseProvider):
                                                  history=history,
                                                  system_message=system_message,
                                                  temperature=temperature,
+                                                 max_tokens=max_tokens,
                                                  stream=True,
                                                  **kwargs
                                                  )
