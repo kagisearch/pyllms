@@ -1,6 +1,5 @@
 # llms/providers/anthropic.py
 
-import itertools
 import json
 import os
 import time
@@ -79,49 +78,89 @@ class AnthropicProvider(BaseProvider):
     def count_tokens(self, content: str):
         return anthropic.count_tokens(content)
 
+    def _prepare_model_input(self,
+                             prompt: str,
+                             history: Optional[List[dict]] = None,
+                             temperature: float = 0,
+                             max_tokens: int = 300,
+                             stop_sequences: Optional[List[str]] = None,
+                             ai_prompt: str = "",
+                             stream: bool = False,
+                             **kwargs,
+                             ):
+
+        formatted_prompt = (
+            f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
+        )
+
+        if history is not None:
+            history_text_list = []
+            for message in history:
+                role = message["role"]
+                content = message["content"]
+                if role == "user":
+                    role_prompt = anthropic.HUMAN_PROMPT
+                elif role == "assistant":
+                    role_prompt = anthropic.AI_PROMPT
+                else:
+                    raise ValueError(
+                        f"Invalid role {role}, role must be user or assistant."
+                    )
+
+                formatted_message = f"{role_prompt}{content}"
+                history_text_list.append(formatted_message)
+
+            history_prompt = "".join(history_text_list).lstrip()
+            formatted_prompt = f"{history_prompt}{formatted_prompt}"
+
+        max_tokens_to_sample = kwargs.pop("max_tokens_to_sample", max_tokens)
+
+        if stop_sequences is None:
+            stop_sequences = [anthropic.HUMAN_PROMPT]
+        model_input = {
+            "prompt": formatted_prompt,
+            "temperature": temperature,
+            "max_tokens_to_sample": max_tokens_to_sample,
+            "stop_sequences": stop_sequences,
+            "stream": stream,
+            **kwargs
+        }
+        return model_input
+
     def complete(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
+        history: Optional[List[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
         **kwargs,
     ):
-        formatted_prompt = (
-            f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
-        )
-        if history is not None:
-            role_cycle = itertools.cycle((anthropic.HUMAN_PROMPT, anthropic.AI_PROMPT))
-            history_messages = itertools.chain.from_iterable(history)
-            history_prompt = "".join(
-                itertools.chain.from_iterable(zip(role_cycle, history_messages))
-            )
-            formatted_prompt = f"{history_prompt}{formatted_prompt}"
-
-        if "max_tokens_to_sample" not in kwargs:
-            kwargs[
-                "max_tokens_to_sample"
-            ] = max_tokens  # Add maxTokens to kwargs if not present
-
-        if stop_sequences is None:
-            stop_sequences = [anthropic.HUMAN_PROMPT]
+        """
+        Args:
+            history: messages in OpenAI format,
+              each dict must include role and content key.
+            ai_prompt: prefix of AI response, for finer control on the output.
+        """
 
         start_time = time.time()
-        response = self.client.completion(
-            prompt=formatted_prompt,
+        model_input = self._prepare_model_input(
+            prompt=prompt,
+            history=history,
             temperature=temperature,
-            model=self.model,
+            max_tokens=max_tokens,
             stop_sequences=stop_sequences,
+            ai_prompt=ai_prompt,
             **kwargs,
         )
+        response = self.client.completion(model=self.model, **model_input)
         latency = time.time() - start_time
         completion = response["completion"].strip()
 
         # Calculate tokens and cost
-        prompt_tokens = anthropic.count_tokens(formatted_prompt)
-        completion_tokens = anthropic.count_tokens(completion)
+        prompt_tokens = anthropic.count_tokens(model_input["prompt"])
+        completion_tokens = anthropic.count_tokens(response["completion"])
         total_tokens = prompt_tokens + completion_tokens
         cost_per_token = self.MODEL_INFO[self.model]
         cost = (
@@ -144,46 +183,36 @@ class AnthropicProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
+        history: Optional[List[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
         **kwargs,
     ):
-        formatted_prompt = (
-            f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
-        )
-        if history is not None:
-            role_cycle = itertools.cycle((anthropic.HUMAN_PROMPT, anthropic.AI_PROMPT))
-            history_messages = itertools.chain.from_iterable(history)
-            history_prompt = "".join(
-                itertools.chain.from_iterable(zip(role_cycle, history_messages))
-            )
-            formatted_prompt = f"{history_prompt}{formatted_prompt}"
-
-        if "max_tokens_to_sample" not in kwargs:
-            kwargs[
-                "max_tokens_to_sample"
-            ] = max_tokens  # Add maxTokens to kwargs if not present
-
-        if stop_sequences is None:
-            stop_sequences = [anthropic.HUMAN_PROMPT]
-
+        """
+        Args:
+            history: messages in OpenAI format,
+              each dict must include role and content key.
+            ai_prompt: prefix of AI response, for finer control on the output.
+        """
         start_time = time.time()
-        response = await self.client.acompletion(
-            prompt=formatted_prompt,
+        model_input = self._prepare_model_input(
+            prompt=prompt,
+            history=history,
             temperature=temperature,
-            model=self.model,
+            max_tokens=max_tokens,
             stop_sequences=stop_sequences,
+            ai_prompt=ai_prompt,
             **kwargs,
         )
+        response = await self.client.acompletion(model=self.model, **model_input)
         latency = time.time() - start_time
         completion = response["completion"].strip()
 
         # Calculate tokens and cost
-        prompt_tokens = anthropic.count_tokens(formatted_prompt)
-        completion_tokens = anthropic.count_tokens(completion)
+        prompt_tokens = anthropic.count_tokens(model_input["prompt"])
+        completion_tokens = anthropic.count_tokens(response["completion"])
         total_tokens = prompt_tokens + completion_tokens
         cost_per_token = self.MODEL_INFO[self.model]
         cost = (
@@ -206,39 +235,31 @@ class AnthropicProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
+        history: Optional[List[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
+        ai_prompt: str = "",
         **kwargs,
     ):
-        formatted_prompt = f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}"
-        if history is not None:
-            role_cycle = itertools.cycle((anthropic.HUMAN_PROMPT, anthropic.AI_PROMPT))
-            history_messages = itertools.chain.from_iterable(history)
-            history_prompt = "".join(
-                itertools.chain.from_iterable(zip(role_cycle, history_messages))
-            )
-            formatted_prompt = f"{history_prompt}{formatted_prompt}"
-
-        if "max_tokens_to_sample" not in kwargs:
-            kwargs[
-                "max_tokens_to_sample"
-            ] = max_tokens  # Add maxTokens to kwargs if not present
-
-        if "stream" not in kwargs:
-            kwargs["stream"] = True  # Add stream param if not present
-
-        if stop_sequences is None:
-            stop_sequences = [anthropic.HUMAN_PROMPT]
-
-        response = self.client.completion_stream(
-            prompt=formatted_prompt,
-            stop_sequences=stop_sequences,
+        """
+        Args:
+            history: messages in OpenAI format,
+              each dict must include role and content key.
+            ai_prompt: prefix of AI response, for finer control on the output.
+        """
+        model_input = self._prepare_model_input(
+            prompt=prompt,
+            history=history,
             temperature=temperature,
-            model=self.model,
+            max_tokens=max_tokens,
+            stop_sequences=stop_sequences,
+            ai_prompt=ai_prompt,
+            stream=True,
             **kwargs,
         )
+
+        response = self.client.completion(model=self.model, **model_input)
 
         first_completion = next(response)["completion"]
         yield first_completion.lstrip()
