@@ -259,7 +259,7 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
 
-        response = self.client.completion(model=self.model, **model_input)
+        response = self.client.completion_stream(model=self.model, **model_input)
 
         first_completion = next(response)["completion"]
         yield first_completion.lstrip()
