@@ -1,9 +1,8 @@
 # llms/providers/anthropic.py
 
-import ai21
 import time
-import itertools
-from typing import List, Optional
+
+import ai21
 
 from .base_provider import BaseProvider
 
@@ -21,18 +20,19 @@ class AI21Provider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
-    def _prepare_model_input(self,
-                             prompt: str,
-                             temperature: float = 0,
-                             max_tokens: int = 300,
-                             **kwargs,
-                             ):
+    def _prepare_model_input(
+        self,
+        prompt: str,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        **kwargs,
+    ):
         maxTokens = kwargs.pop("maxTokens", max_tokens)
         model_input = {
             "prompt": prompt,
             "temperature": temperature,
             "maxTokens": maxTokens,
-            **kwargs
+            **kwargs,
         }
         return model_input
 
@@ -44,11 +44,12 @@ class AI21Provider(BaseProvider):
         **kwargs,
     ):
         start_time = time.time()
-        model_input = self._prepare_model_input(prompt=prompt,
-                                                temperature=temperature,
-                                                max_tokens=max_tokens,
-                                                **kwargs,
-                                                )
+        model_input = self._prepare_model_input(
+            prompt=prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs,
+        )
         response = ai21.Completion.execute(model=self.model, **model_input)
         latency = time.time() - start_time
 
