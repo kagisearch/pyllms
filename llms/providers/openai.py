@@ -38,15 +38,7 @@ class OpenAIProvider(BaseProvider):
         messages = [{"role": "user", "content": prompt}]
 
         if history:
-            role_cycle = itertools.cycle(("user", "assistant"))
-            history_messages = itertools.chain.from_iterable(history)
-
-            history = [
-                {"role": role, "content": message}
-                for role, message in zip(role_cycle, history_messages)
-                if message is not None
-            ]
-            messages = [*history, *messages]
+            messages = history + messages
 
         if system_message:
             messages = [{"role": "system", "content": system_message}, *messages]

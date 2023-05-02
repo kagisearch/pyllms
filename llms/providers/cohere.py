@@ -11,8 +11,8 @@ from .base_provider import BaseProvider
 
 class CohereProvider(BaseProvider):
     MODEL_INFO = {
-        "command-xlarge-beta": {"prompt": 25.0, "completion": 25, "token_limit": 2048},
-        "command-xlarge-nightly": {
+        "command": {"prompt": 25.0, "completion": 25, "token_limit": 2048},
+        "command-nightly": {
             "prompt": 25.0,
             "completion": 25,
             "token_limit": 4096,
