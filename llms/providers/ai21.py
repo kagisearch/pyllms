@@ -1,9 +1,8 @@
 # llms/providers/anthropic.py
 
-import ai21
 import time
-import itertools
-from typing import List, Optional
+
+import ai21
 
 from .base_provider import BaseProvider
 
@@ -21,32 +20,37 @@ class AI21Provider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
-    def complete(
+    def _prepare_model_input(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
     ):
-        HUMAN_PROMPT = "\n\nHuman:"
-        AI_PROMPT = "\n\nAssistant:"
+        maxTokens = kwargs.pop("maxTokens", max_tokens)
+        model_input = {
+            "prompt": prompt,
+            "temperature": temperature,
+            "maxTokens": maxTokens,
+            **kwargs,
+        }
+        return model_input
 
-        if history is not None:
-            role_cycle = itertools.cycle((HUMAN_PROMPT, AI_PROMPT))
-            history_messages = itertools.chain.from_iterable(history)
-            history_prompt = "".join(
-                itertools.chain.from_iterable(zip(role_cycle, history_messages))
-            )
-            prompt = f"{history_prompt}{prompt}"
-
-        if "maxTokens" not in kwargs:
-            kwargs["maxTokens"] = max_tokens  # Add maxTokens to kwargs if not present
-
+    def complete(
+        self,
+        prompt: str,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        **kwargs,
+    ):
         start_time = time.time()
-        response = ai21.Completion.execute(
-            model=self.model, prompt=prompt, temperature=temperature, **kwargs
+        model_input = self._prepare_model_input(
+            prompt=prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs,
         )
+        response = ai21.Completion.execute(model=self.model, **model_input)
         latency = time.time() - start_time
 
         completion = response.completions[0].data.text.strip()

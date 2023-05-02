@@ -1,5 +1,4 @@
 import aiohttp
-import itertools
 import openai
 import tiktoken
 import time
@@ -25,29 +24,59 @@ class OpenAIProvider(BaseProvider):
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(content))
 
-    def complete(
-        self,
-        prompt: str,
-        history: Optional[List[tuple]] = None,
-        system_message: str = None,
-        temperature: float = 0,
-        **kwargs,
-    ):
-        start_time = time.time()
+    def _prepapre_model_input(self,
+                              prompt: str,
+                              history: Optional[List[dict]] = None,
+                              system_message: Optional[List[dict]] = None,
+                              temperature: float = 0,
+                              max_tokens: int = 300,
+                              stream: bool = False,
+                              **kwargs,
+                              ):
 
         messages = [{"role": "user", "content": prompt}]
 
         if history:
-            messages = history + messages
+            messages = [*history, *messages]
 
         if system_message:
-            messages = [{"role": "system", "content": system_message}, *messages]
+            messages = [*system_message, *messages]
 
-        response = openai.ChatCompletion.create(
-            model=self.model, messages=messages, temperature=temperature, **kwargs
-        )
+        model_input = {
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": stream,
+            **kwargs,
+        }
+        return model_input
 
+    def complete(
+        self,
+        prompt: str,
+        history: Optional[List[dict]] = None,
+        system_message: Optional[List[dict]] = None,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        **kwargs,
+    ):
+        """
+        Args:
+            history: messages in OpenAI format, each dict must include role and content key.
+            system_message: system messages in OpenAI format, must have role and content key.
+              It can has name key to include few-shots examples.
+        """
+        start_time = time.time()
+        model_input = self._prepapre_model_input(prompt=prompt,
+                                                 history=history,
+                                                 system_message=system_message,
+                                                 temperature=temperature,
+                                                 max_tokens=max_tokens,
+                                                 **kwargs
+                                                 )
+        response = openai.ChatCompletion.create(model=self.model, **model_input)
         latency = time.time() - start_time
+
         completion = response.choices[0].message.content.strip()
         usage = response.usage
         prompt_tokens = usage["prompt_tokens"]
@@ -74,37 +103,33 @@ class OpenAIProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
-        system_message: str = None,
+        history: Optional[List[dict]] = None,
+        system_message: Optional[List[dict]] = None,
         temperature: float = 0,
+        max_tokens: int = 300,
         aiosession: Optional[aiohttp.ClientSession] = None,
         **kwargs,
     ):
+        """
+        Args:
+            history: messages in OpenAI format, each dict must include role and content key.
+            system_message: system messages in OpenAI format, must have role and content key.
+              It can has name key to include few-shots examples.
+        """
         if aiosession is not None:
             openai.aiosession.set(aiosession)
 
         start_time = time.time()
 
-        messages = [{"role": "user", "content": prompt}]
+        model_input = self._prepapre_model_input(prompt=prompt,
+                                                 history=history,
+                                                 system_message=system_message,
+                                                 temperature=temperature,
+                                                 max_tokens=max_tokens,
+                                                 **kwargs
+                                                 )
 
-        if history:
-            role_cycle = itertools.cycle(("user", "assistant"))
-            history_messages = itertools.chain.from_iterable(history)
-
-            history = [
-                {"role": role, "content": message}
-                for role, message in zip(role_cycle, history_messages)
-                if message is not None
-            ]
-            messages = [*history, *messages]
-
-        if system_message:
-            messages = [{"role": "system", "content": system_message}, *messages]
-
-        response = await openai.ChatCompletion.acreate(
-            model=self.model, messages=messages, temperature=temperature, **kwargs
-        )
-
+        response = await openai.ChatCompletion.acreate(model=self.model, **model_input)
         latency = time.time() - start_time
         completion = response.choices[0].message.content.strip()
         usage = response.usage
@@ -135,31 +160,29 @@ class OpenAIProvider(BaseProvider):
         history: Optional[List[tuple]] = None,
         system_message: str = None,
         temperature: float = 0,
+        max_tokens: int = 300,
         **kwargs,
     ):
-        messages = [{"role": "user", "content": prompt}]
+        """
+        Args:
+            history: messages in OpenAI format, each dict must include role and content key.
+            system_message: system messages in OpenAI format, must have role and content key.
+              It can has name key to include few-shots examples.
+        """
+        model_input = self._prepapre_model_input(prompt=prompt,
+                                                 history=history,
+                                                 system_message=system_message,
+                                                 temperature=temperature,
+                                                 max_tokens=max_tokens,
+                                                 stream=True,
+                                                 **kwargs
+                                                 )
+        response = openai.ChatCompletion.create(model=self.model, **model_input)
 
-        if history:
-            role_cycle = itertools.cycle(("user", "assistant"))
-            history_messages = itertools.chain.from_iterable(history)
-
-            history = [
-                {"role": role, "content": message}
-                for role, message in zip(role_cycle, history_messages)
-                if message is not None
-            ]
-            messages = [*history, *messages]
-
-        if system_message:
-            messages = [{"role": "system", "content": system_message}, *messages]
-
-        if "stream" not in kwargs:
-            kwargs["stream"] = True  # Add stream param if not present
-
-        response = openai.ChatCompletion.create(
-            model=self.model, messages=messages, temperature=temperature, **kwargs
-        )
-
-        yield from (
+        chunk_generator = (
             chunk["choices"][0].get("delta", {}).get("content") for chunk in response
         )
+        while not (first_text := next(chunk_generator)):
+            continue
+        yield first_text.lstrip()
+        yield from chunk_generator
