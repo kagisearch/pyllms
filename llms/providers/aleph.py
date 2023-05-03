@@ -2,7 +2,7 @@
 
 import os
 
-from aleph_alpha_client import Client, CompletionRequest, Prompt
+from aleph_alpha_client import AsyncClient, Client, CompletionRequest, Prompt
 
 from .base_provider import BaseProvider
 
@@ -23,6 +23,7 @@ class AlephAlphaProvider(BaseProvider):
         if api_key is None:
             api_key = os.getenv("ALEPHALPHA_API_KEY")
         self.client = Client(api_key)
+        self.async_client = AsyncClient(api_key)
 
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
@@ -67,9 +68,47 @@ class AlephAlphaProvider(BaseProvider):
 
         total_tokens = prompt_tokens + completion_tokens
 
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
+
+        return {
+            "text": completion,
+            "meta": {
+                "model": self.model,
+                "tokens": total_tokens,
+                "tokens_prompt": prompt_tokens,
+                "tokens_completion": completion_tokens,
+                "cost": cost,
+                "latency": latency,
+            },
+        }
+
+    async def acomplete(
+        self,
+        prompt: str,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        **kwargs,
+    ):
+        model_input = self._prepare_model_input(
+            prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
+        )
+        with self.track_latency() as latency:
+            async with self.async_client as client:
+                response = await client.complete(request=model_input, model=self.model)
+
+        completion = response.completions[0].completion.strip()
+
+        # Calculate tokens and cost
+        prompt_tokens = -1
+        completion_tokens = -1
+
+        total_tokens = prompt_tokens + completion_tokens
+
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
 
         return {
             "text": completion,
