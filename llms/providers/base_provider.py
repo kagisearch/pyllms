@@ -16,7 +16,9 @@ class BaseProvider:
     @contextmanager
     def track_latency(self) -> float:
         start = time.perf_counter()
-        yield time.perf_counter() - start
+        elapsed = time.perf_counter() - start
+        elapsed = round(elapsed, 2)
+        yield elapsed
 
     def compute_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
         cost_per_token = self.MODEL_INFO[self.model]
@@ -24,6 +26,7 @@ class BaseProvider:
             (prompt_tokens * cost_per_token["prompt"]) +
             (completion_tokens * cost_per_token["completion"])
         ) / 1_000_000
+        cost = round(cost, 5)
         return cost
 
     def count_tokens(self):

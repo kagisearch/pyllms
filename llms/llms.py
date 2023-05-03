@@ -156,12 +156,6 @@ class LLMS:
         def _generate(provider):
             response = provider.complete(prompt, **kwargs)
 
-            formatted_cost = format(response["meta"]["cost"], ".5f")
-            formatted_latency = round(response["meta"]["latency"], 2)
-
-            response["meta"]["cost"] = formatted_cost
-            response["meta"]["latency"] = formatted_latency
-
             return {
                 "text": response["text"],
                 "meta": response["meta"],
@@ -188,12 +182,6 @@ class LLMS:
             raise NotImplementedError("acomplete not supported for multi-models yet.")
         provider = self._providers[0]
         response = await provider.acomplete(prompt, **kwargs)
-
-        formatted_cost = format(response["meta"]["cost"], ".5f")
-        formatted_latency = round(response["meta"]["latency"], 2)
-
-        response["meta"]["cost"] = formatted_cost
-        response["meta"]["latency"] = formatted_latency
 
         return Result(
             [
