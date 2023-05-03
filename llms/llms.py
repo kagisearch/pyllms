@@ -19,15 +19,17 @@ class Result:
 
     @property
     def text(self):
-        if len(self._results) == 1:
-            return self._results[0]["text"]
-        return [result["text"] for result in self._results]
+        if isinstance(self._results, list):
+            return [result["text"] for result in self._results]
+        else:
+            return self._results["text"]
 
     @property
     def meta(self):
-        if len(self._results) == 1:
-            return self._results[0]["meta"]
-        return [result["meta"] for result in self._results]
+        if isinstance(self._results, list):
+            return [result["meta"] for result in self._results]
+        else:
+            return self._results["meta"]
 
 
 class LLMS:
@@ -113,6 +115,10 @@ class LLMS:
     def __repr__(self) -> str:
         return f"LLMS({self.model})"
 
+    @property
+    def n_provider(self):
+        return len(self._providers)
+
     def list(self, query=None):
         model_info_list = []
 
@@ -148,41 +154,45 @@ class LLMS:
         results = []
         for provider in self._providers:
             results.append(provider.count_tokens(content))
-        if len(self._providers) > 1:
+        if self.n_provider > 1:
             return results
         else:
             return results[0]
 
     def complete(self, prompt, **kwargs):
         def _generate(provider):
-            response = provider.complete(prompt, **kwargs)
-            return response
+            result = provider.complete(prompt, **kwargs)
+            return result
 
-        results = []
-        with ThreadPoolExecutor() as executor:
-            futures = {
-                executor.submit(_generate, provider): provider
-                for provider in self._providers
-            }
-            for future in as_completed(futures):
-                results.append(future.result())
+        if self.n_provider > 1:
+            results = []
+            with ThreadPoolExecutor() as executor:
+                futures = {
+                    executor.submit(_generate, provider): provider
+                    for provider in self._providers
+                }
+                for future in as_completed(futures):
+                    results.append(future.result())
 
-        return Result(results)
+            return Result(results)
+        else:
+            result = self._providers[0].complete(prompt, **kwargs)
+            return Result(result)
 
     async def acomplete(
         self,
         prompt: str,
         **kwargs,
     ):
-        if len(self._providers) > 1:
+        if self.n_provider > 1:
             tasks = [provider.acomplete(prompt, **kwargs) for provider in self._providers]
-            responses = await asyncio.gather(*tasks, return_exceptions=False)
-            return Result(responses)
+            results = await asyncio.gather(*tasks, return_exceptions=False)
+            return Result(results)
 
         else:
             provider = self._providers[0]
-            response = await provider.acomplete(prompt, **kwargs)
-            return Result(response)
+            result = await provider.acomplete(prompt, **kwargs)
+            return Result(result)
 
     def complete_stream(self, prompt, **kwargs):
         if len(self._providers) > 1:
