@@ -1,9 +1,9 @@
 # llms/providers/aleph.py
 
-import itertools
 import os
-from aleph_alpha_client import Client, CompletionRequest, Prompt
 import time
+
+from aleph_alpha_client import Client, CompletionRequest, Prompt
 
 from .base_provider import BaseProvider
 
@@ -29,20 +29,22 @@ class AlephAlphaProvider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
-    def _prepare_model_input(self,
-                             prompt: str,
-                             temperature: float = 0,
-                             max_tokens: int = 300,
-                             **kwargs,
-                             ) -> CompletionRequest:
+    def _prepare_model_input(
+        self,
+        prompt: str,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        **kwargs,
+    ) -> CompletionRequest:
         prompt = Prompt.from_text(prompt)
         maximum_tokens = kwargs.pop("maximum_tokens", max_tokens)
 
-        model_input = CompletionRequest(prompt=prompt,
-                                        temperature=temperature,
-                                        maximum_tokens=maximum_tokens,
-                                        **kwargs
-                                        )
+        model_input = CompletionRequest(
+            prompt=prompt,
+            temperature=temperature,
+            maximum_tokens=maximum_tokens,
+            **kwargs,
+        )
         return model_input
 
     def complete(
@@ -54,10 +56,7 @@ class AlephAlphaProvider(BaseProvider):
     ):
         start_time = time.time()
         model_input = self._prepare_model_input(
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs
+            prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
         response = self.client.complete(request=model_input, model=self.model)
 
