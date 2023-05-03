@@ -156,12 +156,7 @@ class LLMS:
     def complete(self, prompt, **kwargs):
         def _generate(provider):
             response = provider.complete(prompt, **kwargs)
-
-            return {
-                "text": response["text"],
-                "meta": response["meta"],
-                "provider": provider,
-            }
+            return response
 
         results = []
         with ThreadPoolExecutor() as executor:
@@ -182,27 +177,12 @@ class LLMS:
         if len(self._providers) > 1:
             tasks = [provider.acomplete(prompt, **kwargs) for provider in self._providers]
             responses = await asyncio.gather(*tasks, return_exceptions=False)
-            return Result([
-                {
-                    "text": response["text"],
-                    "meta": response["meta"],
-                    "provider": provider,
-                }
-                for provider, response in zip(self._providers, responses)
-            ])
+            return Result(responses)
 
         else:
             provider = self._providers[0]
             response = await provider.acomplete(prompt, **kwargs)
-            return Result(
-                [
-                    {
-                        "text": response["text"],
-                        "meta": response["meta"],
-                        "provider": provider,
-                    }
-                ]
-            )
+            return Result(response)
 
     def complete_stream(self, prompt, **kwargs):
         if len(self._providers) > 1:

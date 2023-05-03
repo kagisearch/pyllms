@@ -82,6 +82,7 @@ class AlephAlphaProvider(BaseProvider):
                 "cost": cost,
                 "latency": latency,
             },
+            "provider": str(self),
         }
 
     async def acomplete(
@@ -120,4 +121,5 @@ class AlephAlphaProvider(BaseProvider):
                 "cost": cost,
                 "latency": latency,
             },
+            "provider": str(self),
         }

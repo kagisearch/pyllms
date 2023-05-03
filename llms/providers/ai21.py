@@ -69,4 +69,5 @@ class AI21Provider(BaseProvider):
                 "cost": cost,
                 "latency": latency,
             },
+            "provider": str(self),
         }

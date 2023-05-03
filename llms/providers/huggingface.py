@@ -85,6 +85,11 @@ class HuggingfaceHubProvider(BaseProvider):
         cost = self.compute_cost(prompt_tokens=prompt_tokens,
                                  completion_tokens=completion_tokens
                                  )
+        cost_per_token = self.MODEL_INFO[self.model]
+        cost = (
+            (prompt_tokens * cost_per_token["prompt"])
+            + (completion_tokens * cost_per_token["completion"])
+        ) / 1_000_000
 
         return {
             "text": completion,
@@ -96,4 +101,5 @@ class HuggingfaceHubProvider(BaseProvider):
                 "cost": cost,
                 "latency": latency,
             },
+            "provider": str(self),
         }
