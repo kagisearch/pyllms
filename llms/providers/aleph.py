@@ -5,7 +5,6 @@ import os
 from aleph_alpha_client import Client, CompletionRequest, Prompt
 import time
 
-from typing import List, Optional
 from .base_provider import BaseProvider
 
 
@@ -30,32 +29,37 @@ class AlephAlphaProvider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
+    def _prepare_model_input(self,
+                             prompt: str,
+                             temperature: float = 0,
+                             max_tokens: int = 300,
+                             **kwargs,
+                             ) -> CompletionRequest:
+        prompt = Prompt.from_text(prompt)
+        maximum_tokens = kwargs.pop("maximum_tokens", max_tokens)
+
+        model_input = CompletionRequest(prompt=prompt,
+                                        temperature=temperature,
+                                        maximum_tokens=maximum_tokens,
+                                        **kwargs
+                                        )
+        return model_input
+
     def complete(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
     ):
-        if history is not None:
-            HUMAN_PROMPT = "\n\nHuman:"
-            AI_PROMPT = "\n\nAssistant:"
-            role_cycle = itertools.cycle((HUMAN_PROMPT, AI_PROMPT))
-            history_messages = itertools.chain.from_iterable(history)
-            history_prompt = "".join(
-                itertools.chain.from_iterable(zip(role_cycle, history_messages))
-            )
-            prompt = f"{history_prompt}{prompt}"
-
-        if "maximum_tokens" not in kwargs:
-            kwargs["maximum_tokens"] = max_tokens
-
         start_time = time.time()
-        response = self.client.complete(
-            CompletionRequest(prompt=Prompt.from_text(prompt), temperature=temperature, **kwargs),
-            model=self.model,
+        model_input = self._prepare_model_input(
+            prompt=prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
         )
+        response = self.client.complete(request=model_input, model=self.model)
 
         latency = time.time() - start_time
 
