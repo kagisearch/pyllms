@@ -1,3 +1,4 @@
+import asyncio
 import os
 import statistics
 from prettytable import PrettyTable
@@ -179,19 +180,29 @@ class LLMS:
         **kwargs,
     ):
         if len(self._providers) > 1:
-            raise NotImplementedError("acomplete not supported for multi-models yet.")
-        provider = self._providers[0]
-        response = await provider.acomplete(prompt, **kwargs)
-
-        return Result(
-            [
+            tasks = [provider.acomplete(prompt, **kwargs) for provider in self._providers]
+            responses = await asyncio.gather(*tasks, return_exceptions=False)
+            return Result([
                 {
                     "text": response["text"],
                     "meta": response["meta"],
                     "provider": provider,
                 }
-            ]
-        )
+                for provider, response in zip(self._providers, responses)
+            ])
+
+        else:
+            provider = self._providers[0]
+            response = await provider.acomplete(prompt, **kwargs)
+            return Result(
+                [
+                    {
+                        "text": response["text"],
+                        "meta": response["meta"],
+                        "provider": provider,
+                    }
+                ]
+            )
 
     def complete_stream(self, prompt, **kwargs):
         if len(self._providers) > 1:
