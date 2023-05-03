@@ -162,11 +162,9 @@ class AnthropicProvider(BaseProvider):
         prompt_tokens = anthropic.count_tokens(model_input["prompt"])
         completion_tokens = anthropic.count_tokens(response["completion"])
         total_tokens = prompt_tokens + completion_tokens
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (
-            (prompt_tokens * cost_per_token["prompt"])
-            + (completion_tokens * cost_per_token["completion"])
-        ) / 1_000_000
+        cost = self.compute_cost(prompt_tokens=prompt_tokens,
+                                 completion_tokens=completion_tokens
+                                 )
 
         return {
             "text": completion,
@@ -213,12 +211,10 @@ class AnthropicProvider(BaseProvider):
         prompt_tokens = anthropic.count_tokens(model_input["prompt"])
         completion_tokens = anthropic.count_tokens(response["completion"])
         total_tokens = prompt_tokens + completion_tokens
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (
-            (prompt_tokens * cost_per_token["prompt"])
-            + (completion_tokens * cost_per_token["completion"])
-        ) / 1_000_000
 
+        cost = self.compute_cost(prompt_tokens=prompt_tokens,
+                                 completion_tokens=completion_tokens
+                                 )
         return {
             "text": completion,
             "meta": {

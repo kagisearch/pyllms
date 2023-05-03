@@ -18,6 +18,14 @@ class BaseProvider:
         start = time.perf_counter()
         yield time.perf_counter() - start
 
+    def compute_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        cost_per_token = self.MODEL_INFO[self.model]
+        cost = (
+            (prompt_tokens * cost_per_token["prompt"]) +
+            (completion_tokens * cost_per_token["completion"])
+        ) / 1_000_000
+        return cost
+
     def count_tokens(self):
         raise NotImplementedError(
             f"Count tokens is currently not supported with {self.__name__}"

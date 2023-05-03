@@ -66,11 +66,10 @@ class AlephAlphaProvider(BaseProvider):
         completion_tokens = -1
 
         total_tokens = prompt_tokens + completion_tokens
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (
-            (prompt_tokens * cost_per_token["prompt"])
-            + (completion_tokens * cost_per_token["completion"])
-        ) / 1_000_000
+
+        cost = self.compute_cost(prompt_tokens=prompt_tokens,
+                                 completion_tokens=completion_tokens
+                                 )
 
         return {
             "text": completion,

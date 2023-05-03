@@ -84,10 +84,9 @@ class OpenAIProvider(BaseProvider):
         completion_tokens = usage["completion_tokens"]
         total_tokens = usage["total_tokens"]
 
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (prompt_tokens * cost_per_token["prompt"] / 1000000) + (
-            completion_tokens * cost_per_token["completion"] / 1000000
-        )
+        cost = self.compute_cost(prompt_tokens=prompt_tokens,
+                                 completion_tokens=completion_tokens
+                                 )
 
         return {
             "text": completion,
@@ -138,10 +137,9 @@ class OpenAIProvider(BaseProvider):
         completion_tokens = usage["completion_tokens"]
         total_tokens = usage["total_tokens"]
 
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (prompt_tokens * cost_per_token["prompt"] / 1000000) + (
-            completion_tokens * cost_per_token["completion"] / 1000000
-        )
+        cost = self.compute_cost(prompt_tokens=prompt_tokens,
+                                 completion_tokens=completion_tokens
+                                 )
 
         return {
             "text": completion,

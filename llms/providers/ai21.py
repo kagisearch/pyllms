@@ -55,10 +55,9 @@ class AI21Provider(BaseProvider):
         completion_tokens = len(response.completions[0].data.tokens)
         total_tokens = prompt_tokens + completion_tokens
 
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (prompt_tokens * cost_per_token["prompt"] / 1000000) + (
-            completion_tokens * cost_per_token["completion"] / 1000000
-        )
+        cost = self.compute_cost(prompt_tokens=prompt_tokens,
+                                 completion_tokens=completion_tokens
+                                 )
 
         return {
             "text": completion,
