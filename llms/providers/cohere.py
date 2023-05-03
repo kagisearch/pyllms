@@ -1,11 +1,10 @@
 # llms/providers/cohere.py
 
-import itertools
 import os
-import cohere
 import time
 
-from typing import List, Optional
+import cohere
+
 from .base_provider import BaseProvider
 
 
@@ -32,31 +31,40 @@ class CohereProvider(BaseProvider):
         tokens = self.client.tokenize(content)
         return len(tokens)
 
+    def _prepare_model_input(
+        self,
+        prompt: str,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        stream: bool = False,
+        **kwargs,
+    ):
+        model_input = {
+            "prompt": prompt,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": stream,
+            **kwargs,
+        }
+        return model_input
+
     def complete(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
     ):
-        if history is not None:
-            HUMAN_PROMPT = "\n\nHuman:"
-            AI_PROMPT = "\n\nAssistant:"
-            role_cycle = itertools.cycle((HUMAN_PROMPT, AI_PROMPT))
-            history_messages = itertools.chain.from_iterable(history)
-            history_prompt = "".join(
-                itertools.chain.from_iterable(zip(role_cycle, history_messages))
-            )
-            prompt = f"{history_prompt}{prompt}"
-
         start_time = time.time()
-        response = self.client.generate(
+        model_input = self._prepare_model_input(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
-            model=self.model,
             **kwargs,
+        )
+        response = self.client.generate(
+            model=self.model,
+            **model_input,
         )
         latency = time.time() - start_time
 
@@ -90,31 +98,22 @@ class CohereProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[tuple]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
     ):
-        if history is not None:
-            HUMAN_PROMPT = "\n\nHuman:"
-            AI_PROMPT = "\n\nAssistant:"
-            role_cycle = itertools.cycle((HUMAN_PROMPT, AI_PROMPT))
-            history_messages = itertools.chain.from_iterable(history)
-            history_prompt = "".join(
-                itertools.chain.from_iterable(zip(role_cycle, history_messages))
-            )
-            prompt = f"{history_prompt}{prompt}"
-
-        if "stream" not in kwargs:
-            kwargs["stream"] = True  # Add stream param if not present
-
-        response = self.client.generate(
+        model_input = self._prepare_model_input(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
-            model=self.model,
+            stream=True,
             **kwargs,
         )
+        response = self.client.generate(
+            model=self.model,
+            **model_input,
+        )
+
         first_text = next(response)
         yield first_text.text.lstrip()
 
