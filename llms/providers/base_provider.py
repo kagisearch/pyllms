@@ -14,7 +14,7 @@ class BaseProvider:
         return f"{self.__name__} ({self.model})"
 
     @contextmanager
-    def track_latency() -> float:
+    def track_latency(self) -> float:
         start = time.perf_counter()
         yield time.perf_counter() - start
 
