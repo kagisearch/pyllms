@@ -11,6 +11,7 @@ class OpenAIProvider(BaseProvider):
     MODEL_INFO = {
         "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4000},
         "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8000},
+        "text-davinci-003": {"prompt": 20.0, "completion": 20.0, "token_limit": 4097}
     }
 
     def __init__(self, api_key, model=None):
@@ -18,6 +19,11 @@ class OpenAIProvider(BaseProvider):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
+        self.client = openai.ChatCompletion if self.is_chat_model else openai.Completion
+
+    @property
+    def is_chat_model(self):
+        return self.model.startswith("gpt")
 
     def count_tokens(self, content: str):
         enc = tiktoken.encoding_for_model(self.model)
@@ -33,21 +39,30 @@ class OpenAIProvider(BaseProvider):
                               **kwargs,
                               ):
 
-        messages = [{"role": "user", "content": prompt}]
+        if self.is_chat_model:
+            messages = [{"role": "user", "content": prompt}]
 
-        if history:
-            messages = [*history, *messages]
+            if history:
+                messages = [*history, *messages]
 
-        if system_message:
-            messages = [*system_message, *messages]
+            if system_message:
+                messages = [*system_message, *messages]
 
-        model_input = {
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": stream,
-            **kwargs,
-        }
+            model_input = {
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "stream": stream,
+                **kwargs,
+            }
+        else:
+            model_input = {
+                "prompt": prompt,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "stream": stream,
+                **kwargs,
+            }
         return model_input
 
     def complete(
@@ -76,9 +91,13 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency() as latency:
-            response = openai.ChatCompletion.create(model=self.model, **model_input)
+            response = self.client.create(model=self.model, **model_input)
 
-        completion = response.choices[0].message.content.strip()
+        if self.is_chat_model:
+            completion = response.choices[0].message.content.strip()
+        else:
+            completion = response.choices[0].text.strip()
+
         usage = response.usage
         prompt_tokens = usage["prompt_tokens"]
         completion_tokens = usage["completion_tokens"]
@@ -129,9 +148,13 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency() as latency:
-            response = await openai.ChatCompletion.acreate(model=self.model, **model_input)
+            response = await self.client.acreate(model=self.model, **model_input)
 
-        completion = response.choices[0].message.content.strip()
+        if self.is_chat_model:
+            completion = response.choices[0].message.content.strip()
+        else:
+            completion = response.choices[0].text.strip()
+
         usage = response.usage
         prompt_tokens = usage["prompt_tokens"]
         completion_tokens = usage["completion_tokens"]
@@ -176,11 +199,17 @@ class OpenAIProvider(BaseProvider):
                                                  stream=True,
                                                  **kwargs
                                                  )
-        response = openai.ChatCompletion.create(model=self.model, **model_input)
+        response = self.client.create(model=self.model, **model_input)
 
-        chunk_generator = (
-            chunk["choices"][0].get("delta", {}).get("content") for chunk in response
-        )
+        if self.is_chat_model:
+            chunk_generator = (
+                chunk["choices"][0].get("delta", {}).get("content") for chunk in response
+            )
+        else:
+            chunk_generator = (
+                chunk["choices"][0].get("text", "") for chunk in response
+            )
+
         while not (first_text := next(chunk_generator)):
             continue
         yield first_text.lstrip()
