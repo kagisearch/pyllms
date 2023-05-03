@@ -56,6 +56,16 @@ class OpenAIProvider(BaseProvider):
                 **kwargs,
             }
         else:
+            if history:
+                raise ValueError(
+                    f"history argument is not supported for {self.model} model"
+                )
+
+            if system_message:
+                raise ValueError(
+                    f"system_message argument is not supported for {self.model} model"
+                )
+
             model_input = {
                 "prompt": prompt,
                 "temperature": temperature,
