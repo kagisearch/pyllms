@@ -53,7 +53,7 @@ class AlephAlphaProvider(BaseProvider):
 
         start_time = time.time()
         response = self.client.complete(
-            CompletionRequest(prompt=Prompt.from_text(prompt), **kwargs),
+            CompletionRequest(prompt=Prompt.from_text(prompt), temperature=temperature, **kwargs),
             model=self.model,
         )
 
