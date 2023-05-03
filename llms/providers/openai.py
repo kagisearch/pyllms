@@ -1,7 +1,6 @@
 import aiohttp
 import openai
 import tiktoken
-import time
 from typing import List, Optional
 
 from .base_provider import BaseProvider
@@ -66,16 +65,18 @@ class OpenAIProvider(BaseProvider):
             system_message: system messages in OpenAI format, must have role and content key.
               It can has name key to include few-shots examples.
         """
-        start_time = time.time()
-        model_input = self._prepapre_model_input(prompt=prompt,
-                                                 history=history,
-                                                 system_message=system_message,
-                                                 temperature=temperature,
-                                                 max_tokens=max_tokens,
-                                                 **kwargs
-                                                 )
-        response = openai.ChatCompletion.create(model=self.model, **model_input)
-        latency = time.time() - start_time
+
+        model_input = self._prepapre_model_input(
+            prompt=prompt,
+            history=history,
+            system_message=system_message,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
+        )
+
+        with self.track_latency() as latency:
+            response = openai.ChatCompletion.create(model=self.model, **model_input)
 
         completion = response.choices[0].message.content.strip()
         usage = response.usage
@@ -119,18 +120,18 @@ class OpenAIProvider(BaseProvider):
         if aiosession is not None:
             openai.aiosession.set(aiosession)
 
-        start_time = time.time()
+        model_input = self._prepapre_model_input(
+            prompt=prompt,
+            history=history,
+            system_message=system_message,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
+        )
 
-        model_input = self._prepapre_model_input(prompt=prompt,
-                                                 history=history,
-                                                 system_message=system_message,
-                                                 temperature=temperature,
-                                                 max_tokens=max_tokens,
-                                                 **kwargs
-                                                 )
+        with self.track_latency() as latency:
+            response = await openai.ChatCompletion.acreate(model=self.model, **model_input)
 
-        response = await openai.ChatCompletion.acreate(model=self.model, **model_input)
-        latency = time.time() - start_time
         completion = response.choices[0].message.content.strip()
         usage = response.usage
         prompt_tokens = usage["prompt_tokens"]

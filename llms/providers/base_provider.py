@@ -1,3 +1,7 @@
+import time
+from contextlib import contextmanager
+
+
 class BaseProvider:
     """Base class for all providers.
     Methods will raise NotImplementedError if they are not overwritten.
@@ -8,6 +12,11 @@ class BaseProvider:
 
     def __str__(self):
         return f"{self.__name__} ({self.model})"
+
+    @contextmanager
+    def track_latency() -> float:
+        start = time.perf_counter()
+        yield time.perf_counter() - start
 
     def count_tokens(self):
         raise NotImplementedError(

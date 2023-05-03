@@ -2,7 +2,6 @@
 
 import json
 import os
-import time
 import aiohttp
 import anthropic
 
@@ -144,7 +143,6 @@ class AnthropicProvider(BaseProvider):
             ai_prompt: prefix of AI response, for finer control on the output.
         """
 
-        start_time = time.time()
         model_input = self._prepare_model_input(
             prompt=prompt,
             history=history,
@@ -154,8 +152,10 @@ class AnthropicProvider(BaseProvider):
             ai_prompt=ai_prompt,
             **kwargs,
         )
-        response = self.client.completion(model=self.model, **model_input)
-        latency = time.time() - start_time
+
+        with self.track_latency() as latency:
+            response = self.client.completion(model=self.model, **model_input)
+
         completion = response["completion"].strip()
 
         # Calculate tokens and cost
@@ -196,7 +196,6 @@ class AnthropicProvider(BaseProvider):
               each dict must include role and content key.
             ai_prompt: prefix of AI response, for finer control on the output.
         """
-        start_time = time.time()
         model_input = self._prepare_model_input(
             prompt=prompt,
             history=history,
@@ -206,8 +205,8 @@ class AnthropicProvider(BaseProvider):
             ai_prompt=ai_prompt,
             **kwargs,
         )
-        response = await self.client.acompletion(model=self.model, **model_input)
-        latency = time.time() - start_time
+        with self.track_latency() as latency:
+            response = await self.client.acompletion(model=self.model, **model_input)
         completion = response["completion"].strip()
 
         # Calculate tokens and cost

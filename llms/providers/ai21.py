@@ -1,6 +1,4 @@
-# llms/providers/anthropic.py
-
-import time
+# llms/providers/ai21.py
 
 import ai21
 
@@ -43,15 +41,14 @@ class AI21Provider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        start_time = time.time()
         model_input = self._prepare_model_input(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
             **kwargs,
         )
-        response = ai21.Completion.execute(model=self.model, **model_input)
-        latency = time.time() - start_time
+        with self.track_latency() as latency:
+            response = ai21.Completion.execute(model=self.model, **model_input)
 
         completion = response.completions[0].data.text.strip()
         prompt_tokens = len(response.prompt.tokens)

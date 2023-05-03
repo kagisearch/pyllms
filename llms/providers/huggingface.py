@@ -1,7 +1,6 @@
 # llms/providers/huggingface.py
 
 import os
-import time
 
 from huggingface_hub.inference_api import InferenceApi
 
@@ -68,10 +67,9 @@ class HuggingfaceHubProvider(BaseProvider):
             max_tokens=max_tokens,
             **kwargs,
         )
-        start_time = time.time()
-        response = self.client(inputs=prompt, params=params)
-        latency = time.time() - start_time
-        # print(response)
+        with self.track_latency as latency:
+            response = self.client(inputs=prompt, params=params)
+
         if "error" in response:
             print("Error: ", response["error"])
             return {}

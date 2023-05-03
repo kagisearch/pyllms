@@ -1,7 +1,6 @@
 # llms/providers/aleph.py
 
 import os
-import time
 
 from aleph_alpha_client import Client, CompletionRequest, Prompt
 
@@ -54,13 +53,11 @@ class AlephAlphaProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        start_time = time.time()
         model_input = self._prepare_model_input(
             prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
-        response = self.client.complete(request=model_input, model=self.model)
-
-        latency = time.time() - start_time
+        with self.track_latency() as latency:
+            response = self.client.complete(request=model_input, model=self.model)
 
         completion = response.completions[0].completion.strip()
 
