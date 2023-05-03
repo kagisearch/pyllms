@@ -1,15 +1,14 @@
-# llms/providers/cohere.py
+# llms/providers/huggingface.py
 
-import itertools
 import os
-from huggingface_hub.inference_api import InferenceApi
 import time
 
-from typing import List, Optional
+from huggingface_hub.inference_api import InferenceApi
+
 from .base_provider import BaseProvider
 
 
-class HuggingfaceHubProvider:
+class HuggingfaceHubProvider(BaseProvider):
     MODEL_INFO = {
         "hf_pythia": {
             "full": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
@@ -38,7 +37,7 @@ class HuggingfaceHubProvider:
             repo_id=self.MODEL_INFO[model]["full"], token=api_key
         )
 
-    def complete(
+    def _prepare_model_input(
         self,
         prompt: str,
         temperature: float = 0.01,
@@ -47,18 +46,30 @@ class HuggingfaceHubProvider:
     ):
         if self.model == "hf_pythia":
             prompt = "<|prompter|" + prompt + "<|endoftext|><|assistant|>"
+        temperature = max(temperature, 0.01)
+        max_new_tokens = kwargs.pop("max_new_tokens", max_tokens)
+        params = {
+            "temperature": temperature,
+            "max_new_tokens": max_new_tokens,
+            **kwargs,
+        }
+        return prompt, params
 
-        if temperature <= 0:
-            temperature = 0.01
-
-        if "temperature" not in kwargs:
-            kwargs["temperature"] = temperature
-
-        if "max_new_tokens" not in kwargs:
-            kwargs["max_new_tokens"] = max_tokens
-
+    def complete(
+        self,
+        prompt: str,
+        temperature: float = 0.01,
+        max_tokens: int = 300,
+        **kwargs,
+    ):
+        prompt, params = self._prepare_model_input(
+            prompt=prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs,
+        )
         start_time = time.time()
-        response = self.client(inputs=prompt, params={**kwargs})
+        response = self.client(inputs=prompt, params=params)
         latency = time.time() - start_time
         # print(response)
         if "error" in response:
