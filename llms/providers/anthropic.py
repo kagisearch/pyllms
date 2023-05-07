@@ -109,7 +109,7 @@ class AnthropicProvider(BaseProvider):
                 formatted_message = f"{role_prompt}{content}"
                 history_text_list.append(formatted_message)
 
-            history_prompt = "".join(history_text_list).lstrip()
+            history_prompt = "".join(history_text_list)
             formatted_prompt = f"{history_prompt}{formatted_prompt}"
 
         max_tokens_to_sample = kwargs.pop("max_tokens_to_sample", max_tokens)
