@@ -8,10 +8,10 @@ class BaseProvider:
     """
 
     def __repr__(self) -> str:
-        return f"{self.__name__} ({self.model})"
+        return f"{self.__class__.__name__} ({self.model})"
 
     def __str__(self):
-        return f"{self.__name__} ({self.model})"
+        return f"{self.__class__.__name__} ({self.model})"
 
     @contextmanager
     def track_latency(self) -> float:
