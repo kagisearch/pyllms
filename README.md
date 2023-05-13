@@ -154,7 +154,7 @@ PyLLMs icludes an automated benchmark system. The quality of models is evaluated
 
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'command-xlarge-nightly'])
+models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
 
 gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
 
@@ -249,8 +249,9 @@ Here is a pretty table of supported models (in alphabetical order).
 | AlephAlphaProvider  | luminous-supreme-control |      48.5 |            53.6 |        2048 |
 | AnthropicProvider   | claude-instant-v1      |        1.63 |            5.51 |        9000 |
 | AnthropicProvider   | claude-v1              |       11.02 |           32.68 |        9000 |
-| CohereProvider      | command-xlarge-beta    |        25.0 |            25.0 |        8192 |
-| CohereProvider      | command-xlarge-nightly |        25.0 |            25.0 |        8192 |
+| CohereProvider      | command                |        25.0 |            25.0 |        8192 |
+| CohereProvider      | command-nightly        |        25.0 |            25.0 |        8192 |
+| GoogleProvider      | chat-bison             |         0.5 |             0.5 |        2048 |
 | HuggingfaceHub      | hf_pythia              |         0.0 |             0.0 |        2048 |
 | OpenAIProvider      | gpt-3.5-turbo          |         2.0 |             2.0 |        4000 |
 | OpenAIProvider      | gpt-4                  |        30.0 |            60.0 |        8000 |
