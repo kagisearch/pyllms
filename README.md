@@ -216,6 +216,24 @@ models.benchmark(evaluator=gpt4)
 | GoogleProvider (chat-bison) |        50.25         |       0.00010       |         2.22         |          22.64          |        5        |
 | GoogleProvider (chat-bison) | Total Tokens: 2521.0 | Total Cost: 0.00504 | Median Latency: 5.65 | Aggregated speed: 33.47 | Total Score: 43 |
 +-----------------------------+----------------------+---------------------+----------------------+-------------------------+-----------------+
++------------------------+--------------------+---------------------+-----------------------+-------------------------+-----------------+
+|         Model          |       Tokens       |       Cost ($)      |      Latency (s)      |    Speed (tokens/sec)   |    Evaluation   |
++------------------------+--------------------+---------------------+-----------------------+-------------------------+-----------------+
+| OpenAIProvider (gpt-4) |         45         |       0.00210       |          5.03         |           8.95          |        5        |
+| OpenAIProvider (gpt-4) |         76         |       0.00366       |          6.34         |          11.99          |        0        |
+| OpenAIProvider (gpt-4) |        123         |       0.00660       |         16.21         |           7.59          |        5        |
+| OpenAIProvider (gpt-4) |        153         |       0.00849       |         17.98         |           8.51          |        5        |
+| OpenAIProvider (gpt-4) |        115         |       0.00525       |          7.92         |          14.52          |        4        |
+| OpenAIProvider (gpt-4) |         67         |       0.00312       |          6.38         |          10.50          |        5        |
+| OpenAIProvider (gpt-4) |         80         |       0.00309       |          4.28         |          18.69          |        5        |
+| OpenAIProvider (gpt-4) |        258         |       0.00813       |          2.54         |          101.57         |        5        |
+| OpenAIProvider (gpt-4) |        250         |       0.01227       |         25.49         |           9.81          |        5        |
+| OpenAIProvider (gpt-4) |        185         |       0.00858       |         15.18         |          12.19          |        5        |
+| OpenAIProvider (gpt-4) |        433         |       0.02322       |         45.97         |           9.42          |        5        |
+| OpenAIProvider (gpt-4) |        220         |       0.00876       |         13.10         |          16.79          |        5        |
+| OpenAIProvider (gpt-4) |         88         |       0.00483       |         12.06         |           7.30          |        5        |
+| OpenAIProvider (gpt-4) | Total Tokens: 2093 | Total Cost: 0.09810 | Median Latency: 12.06 | Aggregated speed: 11.73 | Total Score: 59 |
++------------------------+--------------------+---------------------+-----------------------+-------------------------+-----------------+
 ```
 
 To evaluate models on your own prompts, simply pass a list of questions. The evaluator will automatically evaluate the responses:
