@@ -33,7 +33,6 @@ class HuggingfaceHubProvider(BaseProvider):
             "completion": 0,
             "token_limit": 2048,
         },
-
         "hf_dolly": {
             "full": "databricks/dolly-v2-12b",
             "prompt": 0,
@@ -86,7 +85,7 @@ class HuggingfaceHubProvider(BaseProvider):
             max_tokens=max_tokens,
             **kwargs,
         )
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = self.client(inputs=prompt, params=params)
 
         if "error" in response:
@@ -101,9 +100,9 @@ class HuggingfaceHubProvider(BaseProvider):
 
         total_tokens = prompt_tokens + completion_tokens
 
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
         cost_per_token = self.MODEL_INFO[self.model]
         cost = (
             (prompt_tokens * cost_per_token["prompt"])
@@ -118,7 +117,7 @@ class HuggingfaceHubProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,
                 "tokens_completion": completion_tokens,
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }

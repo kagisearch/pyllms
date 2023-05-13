@@ -8,6 +8,7 @@ from .providers import AI21Provider
 from .providers import CohereProvider
 from .providers import AlephAlphaProvider
 from .providers import HuggingfaceHubProvider
+from .providers import GoogleProvider
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional, Tuple
@@ -109,6 +110,8 @@ class LLMS:
                         api_key=huggingfacehub_api_key, model=single_model
                     )
                 )
+            elif single_model in GoogleProvider.MODEL_INFO:
+                self._providers.append(GoogleProvider(model=single_model))
             else:
                 raise ValueError("Invalid API key and model combination", single_model)
 
@@ -129,6 +132,7 @@ class LLMS:
             CohereProvider,
             AlephAlphaProvider,
             HuggingfaceHubProvider,
+            GoogleProvider,
         ]
 
         for provider in all_providers:
@@ -185,7 +189,9 @@ class LLMS:
         **kwargs,
     ):
         if self.n_provider > 1:
-            tasks = [provider.acomplete(prompt, **kwargs) for provider in self._providers]
+            tasks = [
+                provider.acomplete(prompt, **kwargs) for provider in self._providers
+            ]
             results = await asyncio.gather(*tasks, return_exceptions=False)
             return Result(results)
 
@@ -224,6 +230,7 @@ janesmith en email punto com\
 texto aleatorio 3\
 Bob Johnson - first name dot last name dot wild🐻@email.com\
 texto aleatorio 4 código de área five-five-five teléfono: eins-eins-eins-zwei-zwei-zwei-zwei",
+                "write three sentences ending in the word apple",
             ]
 
         def evaluate_answers(
@@ -252,8 +259,10 @@ Your only output should be a list of comma seperated integers representing your 
 
 """
 
-            prompt = "".join(f"Query #{i}: {query}\nAnswer #{i}: {answer}\n\n"
-                             for i, (query, answer) in enumerate(query_answer_pairs, start=1))
+            prompt = "".join(
+                f"Query #{i}: {query}\nAnswer #{i}: {answer}\n\n"
+                for i, (query, answer) in enumerate(query_answer_pairs, start=1)
+            )
 
             evaluator_result = evaluator.complete(prompt, system_message=system).text
             scores = evaluator_result.split(",")

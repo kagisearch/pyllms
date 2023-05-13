@@ -4,3 +4,4 @@ from .ai21 import AI21Provider
 from .cohere import CohereProvider
 from .aleph import AlephAlphaProvider
 from .huggingface import HuggingfaceHubProvider
+from .google import GoogleProvider

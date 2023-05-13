@@ -61,7 +61,7 @@ class CohereProvider(BaseProvider):
             max_tokens=max_tokens,
             **kwargs,
         )
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = self.client.generate(
                 model=self.model,
                 **model_input,
@@ -75,9 +75,9 @@ class CohereProvider(BaseProvider):
         prompt_tokens = -1
         completion_tokens = -1
         total_tokens = prompt_tokens + completion_tokens
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
 
         return {
             "text": completion,
@@ -87,7 +87,7 @@ class CohereProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,
                 "tokens_completion": completion_tokens,
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }
@@ -105,7 +105,7 @@ class CohereProvider(BaseProvider):
             max_tokens=max_tokens,
             **kwargs,
         )
-        with self.track_latency() as latency:
+        with self.track_latency():
             async with self.async_client() as client:
                 response = await client.generate(
                     model=self.model,
@@ -120,9 +120,9 @@ class CohereProvider(BaseProvider):
         prompt_tokens = -1
         completion_tokens = -1
         total_tokens = prompt_tokens + completion_tokens
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
 
         return {
             "text": completion,
@@ -132,7 +132,7 @@ class CohereProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,
                 "tokens_completion": completion_tokens,
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }

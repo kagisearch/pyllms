@@ -47,7 +47,7 @@ class AI21Provider(BaseProvider):
             max_tokens=max_tokens,
             **kwargs,
         )
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = ai21.Completion.execute(model=self.model, **model_input)
 
         completion = response.completions[0].data.text.strip()
@@ -55,9 +55,9 @@ class AI21Provider(BaseProvider):
         completion_tokens = len(response.completions[0].data.tokens)
         total_tokens = prompt_tokens + completion_tokens
 
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
 
         return {
             "text": completion,
@@ -67,7 +67,7 @@ class AI21Provider(BaseProvider):
                 "tokens_prompt": prompt_tokens,
                 "tokens_completion": completion_tokens,
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }

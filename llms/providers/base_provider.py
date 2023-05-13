@@ -7,6 +7,9 @@ class BaseProvider:
     Methods will raise NotImplementedError if they are not overwritten.
     """
 
+    def __init__(self):
+        self.latency = None
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} ({self.model})"
 
@@ -14,17 +17,18 @@ class BaseProvider:
         return f"{self.__class__.__name__} ({self.model})"
 
     @contextmanager
-    def track_latency(self) -> float:
+    def track_latency(self):
         start = time.perf_counter()
-        elapsed = time.perf_counter() - start
-        elapsed = round(elapsed, 2)
-        yield elapsed
+        try:
+            yield
+        finally:
+            self.latency = round(time.perf_counter() - start, 2)
 
     def compute_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
         cost_per_token = self.MODEL_INFO[self.model]
         cost = (
-            (prompt_tokens * cost_per_token["prompt"]) +
-            (completion_tokens * cost_per_token["completion"])
+            (prompt_tokens * cost_per_token["prompt"])
+            + (completion_tokens * cost_per_token["completion"])
         ) / 1_000_000
         cost = round(cost, 5)
         return cost

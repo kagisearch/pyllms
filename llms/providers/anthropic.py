@@ -52,16 +52,16 @@ class AnthropicClient(anthropic.Client):
         # We will pass kwargs in
         # _arequest_as_json will strips-off the keyword arguments that it needs
         # and pass the rest as params
-        return await self._arequest_as_json(
-            "post",
-            "/v1/complete",
-            **kwargs
-        )
+        return await self._arequest_as_json("post", "/v1/complete", **kwargs)
 
 
 class AnthropicProvider(BaseProvider):
     MODEL_INFO = {
-        "claude-instant-v1.1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
+        "claude-instant-v1.1": {
+            "prompt": 1.63,
+            "completion": 5.51,
+            "token_limit": 9000,
+        },
         "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
         "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
     }
@@ -78,17 +78,17 @@ class AnthropicProvider(BaseProvider):
     def count_tokens(self, content: str):
         return anthropic.count_tokens(content)
 
-    def _prepare_model_input(self,
-                             prompt: str,
-                             history: Optional[List[dict]] = None,
-                             temperature: float = 0,
-                             max_tokens: int = 300,
-                             stop_sequences: Optional[List[str]] = None,
-                             ai_prompt: str = "",
-                             stream: bool = False,
-                             **kwargs,
-                             ):
-
+    def _prepare_model_input(
+        self,
+        prompt: str,
+        history: Optional[List[dict]] = None,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        stop_sequences: Optional[List[str]] = None,
+        ai_prompt: str = "",
+        stream: bool = False,
+        **kwargs,
+    ):
         formatted_prompt = (
             f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
         )
@@ -123,7 +123,7 @@ class AnthropicProvider(BaseProvider):
             "max_tokens_to_sample": max_tokens_to_sample,
             "stop_sequences": stop_sequences,
             "stream": stream,
-            **kwargs
+            **kwargs,
         }
         return model_input
 
@@ -154,7 +154,7 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
 
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = self.client.completion(model=self.model, **model_input)
 
         completion = response["completion"].strip()
@@ -163,9 +163,9 @@ class AnthropicProvider(BaseProvider):
         prompt_tokens = anthropic.count_tokens(model_input["prompt"])
         completion_tokens = anthropic.count_tokens(response["completion"])
         total_tokens = prompt_tokens + completion_tokens
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
 
         return {
             "text": completion,
@@ -175,7 +175,7 @@ class AnthropicProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,
                 "tokens_completion": completion_tokens,
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }
@@ -205,7 +205,7 @@ class AnthropicProvider(BaseProvider):
             ai_prompt=ai_prompt,
             **kwargs,
         )
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = await self.client.acompletion(model=self.model, **model_input)
         completion = response["completion"].strip()
 
@@ -214,9 +214,9 @@ class AnthropicProvider(BaseProvider):
         completion_tokens = anthropic.count_tokens(response["completion"])
         total_tokens = prompt_tokens + completion_tokens
 
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
         return {
             "text": completion,
             "meta": {
@@ -225,7 +225,7 @@ class AnthropicProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,
                 "tokens_completion": completion_tokens,
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }

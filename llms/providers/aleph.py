@@ -57,7 +57,7 @@ class AlephAlphaProvider(BaseProvider):
         model_input = self._prepare_model_input(
             prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = self.client.complete(request=model_input, model=self.model)
 
         completion = response.completions[0].completion.strip()
@@ -80,7 +80,7 @@ class AlephAlphaProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,
                 "tokens_completion": completion_tokens,
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }

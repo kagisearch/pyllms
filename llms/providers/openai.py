@@ -11,7 +11,7 @@ class OpenAIProvider(BaseProvider):
     MODEL_INFO = {
         "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4000},
         "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8000},
-        "text-davinci-003": {"prompt": 20.0, "completion": 20.0, "token_limit": 4097}
+        "text-davinci-003": {"prompt": 20.0, "completion": 20.0, "token_limit": 4097},
     }
 
     def __init__(self, api_key, model=None):
@@ -29,16 +29,16 @@ class OpenAIProvider(BaseProvider):
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(content))
 
-    def _prepapre_model_input(self,
-                              prompt: str,
-                              history: Optional[List[dict]] = None,
-                              system_message: Optional[List[dict]] = None,
-                              temperature: float = 0,
-                              max_tokens: int = 300,
-                              stream: bool = False,
-                              **kwargs,
-                              ):
-
+    def _prepapre_model_input(
+        self,
+        prompt: str,
+        history: Optional[List[dict]] = None,
+        system_message: str = None,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        stream: bool = False,
+        **kwargs,
+    ):
         if self.is_chat_model:
             messages = [{"role": "user", "content": prompt}]
 
@@ -46,7 +46,7 @@ class OpenAIProvider(BaseProvider):
                 messages = [*history, *messages]
 
             if system_message:
-                messages = [*system_message, *messages]
+                messages = [{"role": "system", "content": system_message}, *messages]
 
             model_input = {
                 "messages": messages,
@@ -97,10 +97,10 @@ class OpenAIProvider(BaseProvider):
             system_message=system_message,
             temperature=temperature,
             max_tokens=max_tokens,
-            **kwargs
+            **kwargs,
         )
 
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = self.client.create(model=self.model, **model_input)
 
         if self.is_chat_model:
@@ -113,9 +113,9 @@ class OpenAIProvider(BaseProvider):
         completion_tokens = usage["completion_tokens"]
         total_tokens = usage["total_tokens"]
 
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
 
         return {
             "text": completion,
@@ -125,7 +125,7 @@ class OpenAIProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,  # Add tokens_prompt to meta
                 "tokens_completion": completion_tokens,  # Add tokens_completion to meta
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }
@@ -155,10 +155,10 @@ class OpenAIProvider(BaseProvider):
             system_message=system_message,
             temperature=temperature,
             max_tokens=max_tokens,
-            **kwargs
+            **kwargs,
         )
 
-        with self.track_latency() as latency:
+        with self.track_latency():
             response = await self.client.acreate(model=self.model, **model_input)
 
         if self.is_chat_model:
@@ -171,9 +171,9 @@ class OpenAIProvider(BaseProvider):
         completion_tokens = usage["completion_tokens"]
         total_tokens = usage["total_tokens"]
 
-        cost = self.compute_cost(prompt_tokens=prompt_tokens,
-                                 completion_tokens=completion_tokens
-                                 )
+        cost = self.compute_cost(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
 
         return {
             "text": completion,
@@ -183,7 +183,7 @@ class OpenAIProvider(BaseProvider):
                 "tokens_prompt": prompt_tokens,  # Add tokens_prompt to meta
                 "tokens_completion": completion_tokens,  # Add tokens_completion to meta
                 "cost": cost,
-                "latency": latency,
+                "latency": self.latency,
             },
             "provider": str(self),
         }
@@ -203,19 +203,21 @@ class OpenAIProvider(BaseProvider):
             system_message: system messages in OpenAI format, must have role and content key.
               It can has name key to include few-shots examples.
         """
-        model_input = self._prepapre_model_input(prompt=prompt,
-                                                 history=history,
-                                                 system_message=system_message,
-                                                 temperature=temperature,
-                                                 max_tokens=max_tokens,
-                                                 stream=True,
-                                                 **kwargs
-                                                 )
+        model_input = self._prepapre_model_input(
+            prompt=prompt,
+            history=history,
+            system_message=system_message,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=True,
+            **kwargs,
+        )
         response = self.client.create(model=self.model, **model_input)
 
         if self.is_chat_model:
             chunk_generator = (
-                chunk["choices"][0].get("delta", {}).get("content") for chunk in response
+                chunk["choices"][0].get("delta", {}).get("content")
+                for chunk in response
             )
         else:
             chunk_generator = (

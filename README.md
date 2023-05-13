@@ -55,6 +55,7 @@ Alternatively, you can pass initialization values to the init() method:
 model=llms.init(openai_api_key='your_api_key_here', model='gpt-4')
 ```
 
+For using Google LLMs through Vertex AI API, see "Using Google AI models" below.
 
 You can also pass optional parameters to the complete method. 'temperature' and 'max_tokens' are standardized across all APIs and get converted to the corresponding API params. 
 
@@ -161,58 +162,60 @@ models.benchmark(evaluator=gpt4)
 ```
 
 ```
++-----------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
+|                  Model                  |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)    |    Evaluation   |
++-----------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
+| AnthropicProvider (claude-instant-v1.1) |         49         |       0.00019       |         0.98         |          50.00           |        5        |
+| AnthropicProvider (claude-instant-v1.1) |        211         |       0.00104       |         2.50         |          84.40           |        0        |
+| AnthropicProvider (claude-instant-v1.1) |        204         |       0.00103       |         2.06         |          99.03           |        5        |
+| AnthropicProvider (claude-instant-v1.1) |        139         |       0.00068       |         1.66         |          83.73           |        5        |
+| AnthropicProvider (claude-instant-v1.1) |        138         |       0.00053       |         3.85         |          35.84           |        4        |
+| AnthropicProvider (claude-instant-v1.1) |        156         |       0.00074       |         1.75         |          89.14           |        5        |
+| AnthropicProvider (claude-instant-v1.1) |        284         |       0.00134       |         2.94         |          96.60           |        3        |
+| AnthropicProvider (claude-instant-v1.1) |        266         |       0.00048       |         0.57         |          466.67          |        5        |
+| AnthropicProvider (claude-instant-v1.1) |        247         |       0.00100       |         1.73         |          142.77          |        0        |
+| AnthropicProvider (claude-instant-v1.1) |        211         |       0.00084       |         1.53         |          137.91          |        5        |
+| AnthropicProvider (claude-instant-v1.1) |        180         |       0.00064       |         1.37         |          131.39          |        0        |
+| AnthropicProvider (claude-instant-v1.1) |        300         |       0.00099       |         1.43         |          209.79          |        5        |
+| AnthropicProvider (claude-instant-v1.1) |         63         |       0.00029       |         0.91         |          69.23           |        5        |
+| AnthropicProvider (claude-instant-v1.1) | Total Tokens: 2448 | Total Cost: 0.00979 | Median Latency: 1.66 | Aggregated speed: 105.15 | Total Score: 47 |
++-----------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
 +--------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
 |             Model              |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)   |    Evaluation   |
 +--------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
-| OpenAIProvider (gpt-3.5-turbo) |         37         |       0.00007       |         1.47         |          25.19          |        1        |
-| OpenAIProvider (gpt-3.5-turbo) |         93         |       0.00019       |         4.13         |          22.53          |        0        |
-| OpenAIProvider (gpt-3.5-turbo) |        360         |       0.00072       |        18.42         |          19.54          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |        143         |       0.00029       |         6.76         |          21.15          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |        112         |       0.00022       |         3.87         |          28.95          |        4        |
-| OpenAIProvider (gpt-3.5-turbo) |         47         |       0.00009       |         1.57         |          29.86          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |         78         |       0.00016       |         1.52         |          51.19          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |        254         |       0.00051       |         1.08         |          235.22         |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |        284         |       0.00057       |        11.39         |          24.94          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |        358         |       0.00072       |        15.77         |          22.71          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |        485         |       0.00097       |        23.84         |          20.34          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) |        222         |       0.00044       |         3.87         |          57.37          |        5        |
-| OpenAIProvider (gpt-3.5-turbo) | Total Tokens: 2473 | Total Cost: 0.00495 | Median Latency: 4.00 | Aggregated speed: 26.40 | Total Score: 50 |
+| OpenAIProvider (gpt-3.5-turbo) |         37         |       0.00007       |         2.08         |          17.79          |        1        |
+| OpenAIProvider (gpt-3.5-turbo) |         93         |       0.00019       |         5.69         |          16.34          |        0        |
+| OpenAIProvider (gpt-3.5-turbo) |        360         |       0.00072       |        26.75         |          13.46          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        143         |       0.00029       |        10.39         |          13.76          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        112         |       0.00022       |         4.82         |          23.24          |        3        |
+| OpenAIProvider (gpt-3.5-turbo) |         47         |       0.00009       |         1.78         |          26.40          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |         78         |       0.00016       |         1.87         |          41.71          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        254         |       0.00051       |         1.17         |          217.09         |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        284         |       0.00057       |        16.16         |          17.57          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        358         |       0.00072       |        25.45         |          14.07          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        485         |       0.00097       |        32.18         |          15.07          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |        222         |       0.00044       |         6.13         |          36.22          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) |         66         |       0.00013       |         7.73         |           8.54          |        5        |
+| OpenAIProvider (gpt-3.5-turbo) | Total Tokens: 2539 | Total Cost: 0.00508 | Median Latency: 6.13 | Aggregated speed: 17.86 | Total Score: 54 |
 +--------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
-+---------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
-|                 Model                 |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)    |    Evaluation   |
-+---------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
-| AnthropicProvider (claude-instant-v1) |         33         |       0.00010       |         0.85         |          38.63           |        1        |
-| AnthropicProvider (claude-instant-v1) |        152         |       0.00072       |         1.69         |          89.97           |        5        |
-| AnthropicProvider (claude-instant-v1) |         59         |       0.00024       |         0.70         |          84.55           |        5        |
-| AnthropicProvider (claude-instant-v1) |        112         |       0.00054       |         1.31         |          85.18           |        5        |
-| AnthropicProvider (claude-instant-v1) |        191         |       0.00082       |         1.54         |          124.30          |        0        |
-| AnthropicProvider (claude-instant-v1) |         65         |       0.00024       |         0.68         |          95.35           |        5        |
-| AnthropicProvider (claude-instant-v1) |        190         |       0.00082       |         1.54         |          123.19          |        5        |
-| AnthropicProvider (claude-instant-v1) |        276         |       0.00053       |         0.69         |          398.39          |        5        |
-| AnthropicProvider (claude-instant-v1) |        220         |       0.00085       |         1.52         |          144.87          |        5        |
-| AnthropicProvider (claude-instant-v1) |        189         |       0.00072       |         1.21         |          156.10          |        5        |
-| AnthropicProvider (claude-instant-v1) |        326         |       0.00145       |         2.65         |          122.87          |        0        |
-| AnthropicProvider (claude-instant-v1) |        281         |       0.00089       |         1.37         |          204.61          |        5        |
-| AnthropicProvider (claude-instant-v1) | Total Tokens: 2094 | Total Cost: 0.00791 | Median Latency: 1.34 | Aggregated speed: 132.82 | Total Score: 46 |
-+---------------------------------------+--------------------+---------------------+----------------------+--------------------------+-----------------+
-
-+-----------------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
-|                  Model                  |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)   |    Evaluation   |
-+-----------------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
-| CohereProvider (command-xlarge-nightly) |         27         |       0.00068       |         0.73         |          37.23          |        1        |
-| CohereProvider (command-xlarge-nightly) |         49         |       0.00122       |         1.04         |          47.03          |        5        |
-| CohereProvider (command-xlarge-nightly) |         31         |       0.00077       |         0.67         |          46.10          |        0        |
-| CohereProvider (command-xlarge-nightly) |         30         |       0.00075       |         0.73         |          41.35          |        0        |
-| CohereProvider (command-xlarge-nightly) |        128         |       0.00320       |         2.89         |          44.27          |        0        |
-| CohereProvider (command-xlarge-nightly) |         38         |       0.00095       |         0.70         |          54.29          |        4        |
-| CohereProvider (command-xlarge-nightly) |         57         |       0.00143       |         0.51         |          111.13         |        5        |
-| CohereProvider (command-xlarge-nightly) |        269         |       0.00673       |         0.98         |          274.23         |        3        |
-| CohereProvider (command-xlarge-nightly) |        230         |       0.00575       |         4.55         |          50.54          |        0        |
-| CohereProvider (command-xlarge-nightly) |        170         |       0.00425       |         2.45         |          69.41          |        0        |
-| CohereProvider (command-xlarge-nightly) |        1502        |       0.03755       |        30.80         |          48.77          |        0        |
-| CohereProvider (command-xlarge-nightly) |        218         |       0.00545       |         2.01         |          108.49         |        4        |
-| CohereProvider (command-xlarge-nightly) | Total Tokens: 2749 | Total Cost: 0.06872 | Median Latency: 1.01 | Aggregated speed: 57.20 | Total Score: 22 |
-+-----------------------------------------+--------------------+---------------------+----------------------+-------------------------+-----------------+
++-----------------------------+----------------------+---------------------+----------------------+-------------------------+-----------------+
+|            Model            |        Tokens        |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)   |    Evaluation   |
++-----------------------------+----------------------+---------------------+----------------------+-------------------------+-----------------+
+| GoogleProvider (chat-bison) |        36.75         |       0.00007       |         1.86         |          19.76          |        5        |
+| GoogleProvider (chat-bison) |        229.5         |       0.00046       |         5.65         |          40.62          |        0        |
+| GoogleProvider (chat-bison) |        131.5         |       0.00026       |         4.84         |          27.17          |        5        |
+| GoogleProvider (chat-bison) |        34.75         |       0.00007       |         2.22         |          15.65          |        4        |
+| GoogleProvider (chat-bison) |        407.25        |       0.00081       |        12.62         |          32.27          |        0        |
+| GoogleProvider (chat-bison) |         67.0         |       0.00013       |         9.49         |           7.06          |        5        |
+| GoogleProvider (chat-bison) |        103.25        |       0.00021       |         2.60         |          39.71          |        4        |
+| GoogleProvider (chat-bison) |        285.0         |       0.00057       |         1.55         |          183.87         |        5        |
+| GoogleProvider (chat-bison) |        282.75        |       0.00057       |         7.44         |          38.00          |        5        |
+| GoogleProvider (chat-bison) |        275.5         |       0.00055       |         7.39         |          37.28          |        0        |
+| GoogleProvider (chat-bison) |        283.75        |       0.00057       |         9.22         |          30.78          |        0        |
+| GoogleProvider (chat-bison) |        333.75        |       0.00067       |         8.21         |          40.65          |        5        |
+| GoogleProvider (chat-bison) |        50.25         |       0.00010       |         2.22         |          22.64          |        5        |
+| GoogleProvider (chat-bison) | Total Tokens: 2521.0 | Total Cost: 0.00504 | Median Latency: 5.65 | Aggregated speed: 33.47 | Total Score: 43 |
++-----------------------------+----------------------+---------------------+----------------------+-------------------------+-----------------+
 ```
 
 To evaluate models on your own prompts, simply pass a list of questions. The evaluator will automatically evaluate the responses:
@@ -260,6 +263,21 @@ Useful links:\
 [AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)\
 [Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)\
 [Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)
+[Google AI documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts)
+
+
+## Using Google LLM models
+
+0. (Set up a GCP account and create a project)
+1. Enable Vertex AI APIs in your GCP project - https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com
+1. Install gcloud CLI tool - https://cloud.google.com/sdk/docs/install
+2. Set up Application Default Credentials - https://cloud.google.com/docs/authentication/provide-credentials-adc#how-to
+3. Now you should be able to init Google LLM 
+
+```
+model = llms.init('chat-bison')
+result = model.complete("hello!")
+```
 
 ## License
 

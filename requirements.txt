@@ -7,3 +7,4 @@ aleph-alpha-client
 huggingface_hub
 prettytable
 aiohttp
+google-cloud-aiplatform
