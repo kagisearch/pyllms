@@ -3,7 +3,7 @@
 
 [![](https://dcbadge.vercel.app/api/server/aDNg6E9szy?compact=true&style=flat)](https://discord.gg/aDNg6E9szy) [![Twitter](https://img.shields.io/twitter/follow/KagiHQ?style=social)](https://twitter.com/KagiHQ) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit/) 
 
-PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark. 
+PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark. 
 
 It is ideal for fast prototyping and evaluating different models thanks to:
 - Connect to top LLMs in a few lines of code
@@ -15,7 +15,7 @@ Feel free to reuse and expand. Pull requests are welcome.
 
 ## Installation
 
-Clone this repository and install the package using pip:
+Install the package using pip:
 
 ```
 pip install pyllms
@@ -154,7 +154,7 @@ PyLLMs icludes an automated benchmark system. The quality of models is evaluated
 
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1', 'command-xlarge-nightly'])
+models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
 
 gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
 
@@ -216,6 +216,24 @@ models.benchmark(evaluator=gpt4)
 | GoogleProvider (chat-bison) |        50.25         |       0.00010       |         2.22         |          22.64          |        5        |
 | GoogleProvider (chat-bison) | Total Tokens: 2521.0 | Total Cost: 0.00504 | Median Latency: 5.65 | Aggregated speed: 33.47 | Total Score: 43 |
 +-----------------------------+----------------------+---------------------+----------------------+-------------------------+-----------------+
++------------------------+--------------------+---------------------+-----------------------+-------------------------+-----------------+
+|         Model          |       Tokens       |       Cost ($)      |      Latency (s)      |    Speed (tokens/sec)   |    Evaluation   |
++------------------------+--------------------+---------------------+-----------------------+-------------------------+-----------------+
+| OpenAIProvider (gpt-4) |         45         |       0.00210       |          5.03         |           8.95          |        5        |
+| OpenAIProvider (gpt-4) |         76         |       0.00366       |          6.34         |          11.99          |        0        |
+| OpenAIProvider (gpt-4) |        123         |       0.00660       |         16.21         |           7.59          |        5        |
+| OpenAIProvider (gpt-4) |        153         |       0.00849       |         17.98         |           8.51          |        5        |
+| OpenAIProvider (gpt-4) |        115         |       0.00525       |          7.92         |          14.52          |        4        |
+| OpenAIProvider (gpt-4) |         67         |       0.00312       |          6.38         |          10.50          |        5        |
+| OpenAIProvider (gpt-4) |         80         |       0.00309       |          4.28         |          18.69          |        5        |
+| OpenAIProvider (gpt-4) |        258         |       0.00813       |          2.54         |          101.57         |        5        |
+| OpenAIProvider (gpt-4) |        250         |       0.01227       |         25.49         |           9.81          |        5        |
+| OpenAIProvider (gpt-4) |        185         |       0.00858       |         15.18         |          12.19          |        5        |
+| OpenAIProvider (gpt-4) |        433         |       0.02322       |         45.97         |           9.42          |        5        |
+| OpenAIProvider (gpt-4) |        220         |       0.00876       |         13.10         |          16.79          |        5        |
+| OpenAIProvider (gpt-4) |         88         |       0.00483       |         12.06         |           7.30          |        5        |
+| OpenAIProvider (gpt-4) | Total Tokens: 2093 | Total Cost: 0.09810 | Median Latency: 12.06 | Aggregated speed: 11.73 | Total Score: 59 |
++------------------------+--------------------+---------------------+-----------------------+-------------------------+-----------------+
 ```
 
 To evaluate models on your own prompts, simply pass a list of questions. The evaluator will automatically evaluate the responses:
@@ -249,8 +267,9 @@ Here is a pretty table of supported models (in alphabetical order).
 | AlephAlphaProvider  | luminous-supreme-control |      48.5 |            53.6 |        2048 |
 | AnthropicProvider   | claude-instant-v1      |        1.63 |            5.51 |        9000 |
 | AnthropicProvider   | claude-v1              |       11.02 |           32.68 |        9000 |
-| CohereProvider      | command-xlarge-beta    |        25.0 |            25.0 |        8192 |
-| CohereProvider      | command-xlarge-nightly |        25.0 |            25.0 |        8192 |
+| CohereProvider      | command                |        25.0 |            25.0 |        8192 |
+| CohereProvider      | command-nightly        |        25.0 |            25.0 |        8192 |
+| GoogleProvider      | chat-bison             |         0.5 |             0.5 |        2048 |
 | HuggingfaceHub      | hf_pythia              |         0.0 |             0.0 |        2048 |
 | OpenAIProvider      | gpt-3.5-turbo          |         2.0 |             2.0 |        4000 |
 | OpenAIProvider      | gpt-4                  |        30.0 |            60.0 |        8000 |
@@ -262,7 +281,7 @@ Useful links:\
 [Anthropic documentation](https://console.anthropic.com/docs/api/reference#-v1-complete)\
 [AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)\
 [Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)\
-[Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)
+[Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)\
 [Google AI documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts)
 
 
