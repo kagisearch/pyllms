@@ -15,6 +15,25 @@ class HuggingfaceHubProvider(BaseProvider):
             "completion": 0,
             "token_limit": 2048,
         },
+        "hf_mptinstruct": {
+            "full": "mosaicml/mpt-7b-instruct",
+            "prompt": 0,
+            "completion": 0,
+            "token_limit": 2048,
+        },
+        "hf_mptchat": {
+            "full": "mosaicml/mpt-7b-chat",
+            "prompt": 0,
+            "completion": 0,
+            "token_limit": 2048,
+        },
+        "hf_llava": {
+            "full": "liuhaotian/LLaVA-Lightning-MPT-7B-preview",
+            "prompt": 0,
+            "completion": 0,
+            "token_limit": 2048,
+        },
+
         "hf_dolly": {
             "full": "databricks/dolly-v2-12b",
             "prompt": 0,
@@ -67,7 +86,7 @@ class HuggingfaceHubProvider(BaseProvider):
             max_tokens=max_tokens,
             **kwargs,
         )
-        with self.track_latency as latency:
+        with self.track_latency() as latency:
             response = self.client(inputs=prompt, params=params)
 
         if "error" in response:

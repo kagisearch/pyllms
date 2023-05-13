@@ -24,6 +24,7 @@ setup(
         "cohere",
         "aleph-alpha-client",
         "huggingface_hub",
+        "install google-cloud-aiplatform",
         "prettytable",
     ],
     classifiers=[
