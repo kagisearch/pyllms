@@ -231,6 +231,10 @@ texto aleatorio 3\
 Bob Johnson - first name dot last name dot wild🐻@email.com\
 texto aleatorio 4 código de área five-five-five teléfono: eins-eins-eins-zwei-zwei-zwei-zwei",
                 "write three sentences ending in the word apple",
+                "Please count the number of t in eeooeotetto",
+                "Use m to substitute p, a to substitute e, n to substitute a, g to substitute c, o to substitute h,\
+how to spell peach under this rule?",
+
             ]
 
         def evaluate_answers(
