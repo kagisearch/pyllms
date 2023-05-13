@@ -61,6 +61,7 @@ class AnthropicClient(anthropic.Client):
 
 class AnthropicProvider(BaseProvider):
     MODEL_INFO = {
+        "claude-instant-v1.1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
         "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
         "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
     }
