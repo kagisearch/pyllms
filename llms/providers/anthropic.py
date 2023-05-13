@@ -64,7 +64,7 @@ class AnthropicProvider(BaseProvider):
         },
         "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
         "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
-        "claude-v1-100k": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
+        "claude-v1-100k": {"prompt": 11.02, "completion": 32.68, "token_limit": 100000},
     }
 
     def __init__(self, api_key=None, model=None):
