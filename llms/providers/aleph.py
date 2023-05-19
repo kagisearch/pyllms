@@ -5,7 +5,7 @@ import os
 from aleph_alpha_client import AsyncClient, Client, CompletionRequest, Prompt
 
 from .base_provider import BaseProvider
-
+import tiktoken
 
 class AlephAlphaProvider(BaseProvider):
     MODEL_INFO = {
@@ -28,6 +28,10 @@ class AlephAlphaProvider(BaseProvider):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
+
+    def count_tokens(self, content: str):
+        enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
+        return len(enc.encode(content))
 
     def _prepare_model_input(
         self,
@@ -63,8 +67,8 @@ class AlephAlphaProvider(BaseProvider):
         completion = response.completions[0].completion.strip()
 
         # Calculate tokens and cost
-        prompt_tokens = -1
-        completion_tokens = -1
+        prompt_tokens = self.count_tokens(prompt)
+        completion_tokens = self.count_tokens(completion)
 
         total_tokens = prompt_tokens + completion_tokens
 

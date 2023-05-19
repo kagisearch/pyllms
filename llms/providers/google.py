@@ -1,3 +1,6 @@
+# we could switch to genai  https://developers.generativeai.google/api/python/google/generativeai
+
+
 import vertexai
 from vertexai.preview.language_models import ChatModel
 
@@ -5,7 +8,6 @@ from typing import List, Optional
 
 
 from .base_provider import BaseProvider
-
 
 class GoogleProvider(BaseProvider):
     # cost is per million tokens

@@ -70,10 +70,10 @@ class CohereProvider(BaseProvider):
         completion = response.generations[0].text.strip()
 
         # Calculate tokens and cost
-        # prompt_tokens = len(self.client.tokenize(prompt)) # too slow for normal use
-        # completion_tokens =len(self.client.tokenize(completion))
-        prompt_tokens = -1
-        completion_tokens = -1
+        prompt_tokens = self.count_tokens(prompt) # too slow for normal use
+        completion_tokens = self.count_tokens(completion)
+        #prompt_tokens = -1
+        #completion_tokens = -1
         total_tokens = prompt_tokens + completion_tokens
         cost = self.compute_cost(
             prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
