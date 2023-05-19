@@ -161,6 +161,8 @@ gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case on
 models.benchmark(evaluator=gpt4)
 ```
 
+![](./llm_benchmark.png)
+
 ```
 +---------------------------------------+--------------------+---------------------+----------------------+--------------------------+------------------+
 |                 Model                 |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)    |    Evaluation    |
