@@ -9,6 +9,7 @@ from typing import List, Optional
 
 from .base_provider import BaseProvider
 
+
 class GoogleProvider(BaseProvider):
     # cost is per million tokens
     MODEL_INFO = {

@@ -209,9 +209,7 @@ class LLMS:
 
     def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False):
         if not problems:
-          
             problems = [
-               
                 (
                     "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
                     "pull",
@@ -280,13 +278,27 @@ how to spell peach under this rule?",
                 ),
                 ("5+55+555+5555+55555-1725=", "60000"),
                 ("-2-2-2-2-2-2*-2*-2=", "-18"),
-                ('what is the 13th letter of the word "supralapsarian"', 'a'),
-                ('Vlad\'s uncle can still beat him in sprinting although he is 30 years younger. who is "he" referring to?', 'Vlad'),
-                ("Belgium uses 160 million litres of petrol each day. Three is enough petrol stored to last 60 days. how much more petrol does Belgium need to buy to have enough stored for 90 days. A) 4 million litres, B) 4,8 million litres, C) 480 million litres D) 160 million litres E) 4800 million litres", "E) 4800 million litres"),
-                ("The sum of three numbers is 96. The first number is 6 times the third number, and the third number is 40 less than the second number. What is the absolute value of the difference between the first and second numbers?", "5"),
-                ("The least common multiple of a positive integer n and 18 is 180, and the greatest common divisor of n and 45 is 15. What is the sum of the digits of n?", "n = 60 thus the answer is 6"),
-                ("what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1", "e7")
-
+                ('what is the 13th letter of the word "supralapsarian"', "a"),
+                (
+                    'Vlad\'s uncle can still beat him in sprinting although he is 30 years younger. who is "he" referring to?',
+                    "Vlad",
+                ),
+                (
+                    "Belgium uses 160 million litres of petrol each day. Three is enough petrol stored to last 60 days. how much more petrol does Belgium need to buy to have enough stored for 90 days. A) 4 million litres, B) 4,8 million litres, C) 480 million litres D) 160 million litres E) 4800 million litres",
+                    "E) 4800 million litres",
+                ),
+                (
+                    "The sum of three numbers is 96. The first number is 6 times the third number, and the third number is 40 less than the second number. What is the absolute value of the difference between the first and second numbers?",
+                    "5",
+                ),
+                (
+                    "The least common multiple of a positive integer n and 18 is 180, and the greatest common divisor of n and 45 is 15. What is the sum of the digits of n?",
+                    "n = 60 thus the answer is 6",
+                ),
+                (
+                    "what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1",
+                    "e7",
+                ),
             ]
 
         def evaluate_answers(
@@ -306,18 +318,18 @@ Score: #
                     prompt = f"Problem: {query}\nStudent solution: {answer}"
                 else:
                     prompt = f"Problem: {query}\nHint (correct answer): {hint}\nStudent solution: {answer}"
-#                print(prompt)
+                #                print(prompt)
                 evaluator_result = evaluator.complete(
                     prompt, system_message=system
                 ).text
-#                print(evaluator_result)
+                #                print(evaluator_result)
                 found = re.search(r"Score: (\d+)", evaluator_result)
                 if found:
                     scores.append(int(found.group(1)))
                 else:
                     print("No score found!", evaluator_result)
 
-#            print(scores)
+            #            print(scores)
             return scores
 
         model_results = {}
@@ -467,7 +479,7 @@ Score: #
                     f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
                 ]
             if evaluator:
-                acc=100*total_score/(3*len(model_data["evaluation"]))
+                acc = 100 * total_score / (3 * len(model_data["evaluation"]))
                 row_data.append(f"Accuracy: {acc:.2f}%")
 
             table.add_row(row_data)

@@ -39,6 +39,12 @@ class HuggingfaceHubProvider(BaseProvider):
             "completion": 0,
             "token_limit": -1,
         },
+        "hf_vicuna": {
+            "full": "CarperAI/stable-vicuna-13b-delta",
+            "prompt": 0,
+            "completion": 0,
+            "token_limit": -1,
+        },
     }
 
     def __init__(self, api_key=None, model=None):

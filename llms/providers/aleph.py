@@ -7,6 +7,7 @@ from aleph_alpha_client import AsyncClient, Client, CompletionRequest, Prompt
 from .base_provider import BaseProvider
 import tiktoken
 
+
 class AlephAlphaProvider(BaseProvider):
     MODEL_INFO = {
         "luminous-base": {"prompt": 6.6, "completion": 7.6, "token_limit": 2048},
