@@ -2,6 +2,7 @@ import asyncio
 import os
 import re
 import statistics
+from dataclasses import dataclass
 from prettytable import PrettyTable
 from .providers import OpenAIProvider
 from .providers import AnthropicProvider
@@ -10,9 +11,10 @@ from .providers import CohereProvider
 from .providers import AlephAlphaProvider
 from .providers import HuggingfaceHubProvider
 from .providers import GoogleProvider
+from .providers.base_provider import BaseProvider
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 
 class Result:
@@ -34,90 +36,55 @@ class Result:
             return self._results["meta"]
 
 
+@dataclass
+class Provider:
+    provider: Type[BaseProvider]
+    api_key_name: Optional[str] = None
+    api_key: Optional[str] = None
+    needs_api_key: bool = True
+
+
 class LLMS:
-    def __init__(
-        self,
-        model=None,
-        openai_api_key=None,
-        anthropic_api_key=None,
-        ai21_api_key=None,
-        cohere_api_key=None,
-        alephalpha_api_key=None,
-        huggingfacehub_api_key=None,
-    ):
-        if openai_api_key is None:
-            openai_api_key = os.getenv("OPENAI_API_KEY")
+    _possible_providers: list[Provider] = [
+        Provider(OpenAIProvider, api_key_name="OPENAI_API_KEY"),
+        Provider(AnthropicProvider, api_key_name="ANTHROPIC_API_KEY"),
+        Provider(AI21Provider, api_key_name="AI21_API_KEY"),
+        Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
+        Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
+        Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
+        Provider(GoogleProvider, needs_api_key=False),
+    ]
+    _providers: list[BaseProvider] = []
+    _models: list[str] = []
 
-        if anthropic_api_key is None:
-            anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+    def __init__(self, model: str, **kwargs):
+        """Programmatically load api keys and instantiate providers."""
+        for provider in [p for p in self._possible_providers if p.api_key_name]:
+            assert provider.api_key_name  # for static type checking only
+            api_key = None
+            if provider.api_key_name in kwargs: # get api key from kwargs
+                api_key = kwargs.pop(provider.api_key_name)
+            elif provider.api_key_name in os.environ: # otherwise, get it from environment variable
+                api_key = os.getenv(provider.api_key_name)
+            provider.api_key = api_key
 
-        if ai21_api_key is None:
-            ai21_api_key = os.getenv("AI21_API_KEY")
+        if model is None: # if no model is specified, use default: from environment variable or gpt-3.5-turbo
+            self._models = ["gpt-3.5-turbo"] if os.getenv("LLMS_DEFAULT_MODEL") is None else [model]
+        self._models = [model] if isinstance(model, str) else model
 
-        if cohere_api_key is None:
-            cohere_api_key = os.getenv("COHERE_API_KEY")
-
-        if alephalpha_api_key is None:
-            alephalpha_api_key = os.getenv("ALEPHALPHA_API_KEY")
-
-        if huggingfacehub_api_key is None:
-            huggingfacehub_api_key = os.getenv("HUGGINFACEHUB_API_KEY")
-
-        if model is None:
-            model = os.getenv("LLMS_DEFAULT_MODEL")
-            if model is None:
-                model = ["gpt-3.5-turbo"]
-            else:
-                model = [model]
-        elif isinstance(model, str):
-            model = [model]
-
-        self._providers = []
-        for single_model in model:
-            if openai_api_key is not None and single_model in OpenAIProvider.MODEL_INFO:
-                self._providers.append(
-                    OpenAIProvider(api_key=openai_api_key, model=single_model)
-                )
-            elif (
-                anthropic_api_key is not None
-                and single_model in AnthropicProvider.MODEL_INFO
-            ):
-                self._providers.append(
-                    AnthropicProvider(api_key=anthropic_api_key, model=single_model)
-                )
-            elif ai21_api_key is not None and single_model in AI21Provider.MODEL_INFO:
-                self._providers.append(
-                    AI21Provider(api_key=ai21_api_key, model=single_model)
-                )
-            elif (
-                cohere_api_key is not None and single_model in CohereProvider.MODEL_INFO
-            ):
-                self._providers.append(
-                    CohereProvider(api_key=cohere_api_key, model=single_model)
-                )
-            elif (
-                alephalpha_api_key is not None
-                and single_model in AlephAlphaProvider.MODEL_INFO
-            ):
-                self._providers.append(
-                    AlephAlphaProvider(api_key=alephalpha_api_key, model=single_model)
-                )
-            elif (
-                huggingfacehub_api_key is not None
-                and single_model in HuggingfaceHubProvider.MODEL_INFO
-            ):
-                self._providers.append(
-                    HuggingfaceHubProvider(
-                        api_key=huggingfacehub_api_key, model=single_model
-                    )
-                )
-            elif single_model in GoogleProvider.MODEL_INFO:
-                self._providers.append(GoogleProvider(model=single_model))
-            else:
-                raise ValueError("Invalid API key and model combination", single_model)
+        for single_model in self._models:
+            for provider in self._possible_providers:
+                if single_model in provider.provider.MODEL_INFO:
+                    print(f"found {single_model} in {provider.provider.__name__}")
+                    if provider.api_key:
+                        self._providers.append(provider.provider(api_key=provider.api_key, model=single_model, **kwargs))
+                    elif not provider.needs_api_key:
+                        self._providers.append(provider.provider(model=single_model, **kwargs))
+                    else:
+                        raise ValueError("Invalid API key and model combination", single_model)
 
     def __repr__(self) -> str:
-        return f"LLMS({self.model})"
+        return f"LLMS({','.join(self._models)})"
 
     @property
     def n_provider(self):
@@ -126,17 +93,7 @@ class LLMS:
     def list(self, query=None):
         model_info_list = []
 
-        all_providers = [
-            OpenAIProvider,
-            AI21Provider,
-            AnthropicProvider,
-            CohereProvider,
-            AlephAlphaProvider,
-            HuggingfaceHubProvider,
-            GoogleProvider,
-        ]
-
-        for provider in all_providers:
+        for provider in [p.provider for p in self._possible_providers]:
             for model, cost in provider.MODEL_INFO.items():
                 if query and (
                     (query.lower() not in model.lower())
