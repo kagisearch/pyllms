@@ -21,7 +21,7 @@ class GoogleProvider(BaseProvider):
         },
     }
 
-    def __init__(self, model=None):
+    def __init__(self, model=None, **kwargs):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
 
@@ -29,7 +29,7 @@ class GoogleProvider(BaseProvider):
 
         self.client = ChatModel.from_pretrained(model)
 
-        vertexai.init()
+        vertexai.init(**kwargs)
 
     def _prepare_model_input(
         self,

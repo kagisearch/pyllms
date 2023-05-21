@@ -7,8 +7,12 @@ class BaseProvider:
     Methods will raise NotImplementedError if they are not overwritten.
     """
 
-    def __init__(self):
+    MODEL_INFO = {}
+
+    def __init__(self, model=None, api_key=None, **kwargs):
         self.latency = None
+        # to be overwritten by subclasses
+        self.api_key = api_key
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} ({self.model})"
