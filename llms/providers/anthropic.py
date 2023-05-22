@@ -5,7 +5,7 @@ import os
 import aiohttp
 import anthropic
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import AsyncIterator, Dict, List, Optional, Tuple, Union
 from anthropic.api import _process_request_error
 from .base_provider import BaseProvider
 
@@ -47,12 +47,75 @@ class AnthropicClient(anthropic.Client):
                 json_body = json.loads(content)
                 return json_body
 
+    async def _arequest_as_stream(
+        self,
+        method: str,
+        path: str,
+        headers: Optional[Dict[str, str]] = None,
+        request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
+        aiosession: Optional[aiohttp.ClientSession] = None,
+        **params: dict,
+    ) -> AsyncIterator[dict]:
+        # It seems there isn't async version of yield from
+        # https://peps.python.org/pep-0525/#asynchronous-yield-from
+        if aiosession is None:
+            stream_outputs = super()._arequest_as_stream(
+                method=method,
+                path=path,
+                params=params,
+                headers=headers,
+                request_timeout=request_timeout
+            )
+            async for output in stream_outputs:
+                yield output
+        else:
+            request = self._request_params(headers, method, params, path, request_timeout)
+            awaiting_ping_data = False
+            async with aiosession.request(
+                request.method,
+                request.url,
+                headers=request.headers,
+                data=request.data,
+                timeout=request.timeout,
+            ) as result:
+                if result.status != 200:
+                    super()._process_request_error(method, await result.text(), result.status)
+                async for line in result.content:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    if line == b"event: ping":
+                        awaiting_ping_data = True
+                        continue
+                    if awaiting_ping_data:
+                        awaiting_ping_data = False
+                        continue
+
+                    if line == b"data: [DONE]":
+                        continue
+
+                    line = line.decode("utf-8")
+
+                    prefix = "data: "
+                    if line.startswith(prefix):
+                        line = line[len(prefix) :]
+                    yield json.loads(line)
+
     async def acompletion(self, **kwargs):
         # Override original method which pass kwargs as params.
         # We will pass kwargs in
         # _arequest_as_json will strips-off the keyword arguments that it needs
         # and pass the rest as params
         return await self._arequest_as_json("post", "/v1/complete", **kwargs)
+
+    async def acompletion_stream(self, **kwargs) -> AsyncIterator:
+        outputs = self._arequest_as_stream(
+            "post",
+            "v1/complete",
+            **kwargs,
+        )
+        async for output in outputs:
+            yield output
 
 
 class AnthropicProvider(BaseProvider):
@@ -265,6 +328,43 @@ class AnthropicProvider(BaseProvider):
 
         last_completion = first_completion
         for data in response:
+            new_chunk = data["completion"][len(last_completion) :]
+            last_completion = data["completion"]
+            yield (new_chunk)
+
+    async def acomplete_stream(
+        self,
+        prompt: str,
+        history: Optional[List[dict]] = None,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        stop_sequences: Optional[List[str]] = None,
+        ai_prompt: str = "",
+        **kwargs,
+    ) -> AsyncIterator:
+        """
+        Args:
+            history: messages in OpenAI format,
+              each dict must include role and content key.
+            ai_prompt: prefix of AI response, for finer control on the output.
+        """
+        model_input = self._prepare_model_input(
+            prompt=prompt,
+            history=history,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stop_sequences=stop_sequences,
+            ai_prompt=ai_prompt,
+            stream=True,
+            **kwargs,
+        )
+
+        response = self.client.acompletion_stream(model=self.model, **model_input)
+        first_completion = (await anext(response))["completion"]
+        yield first_completion.lstrip()
+
+        last_completion = first_completion
+        async for data in response:
             new_chunk = data["completion"][len(last_completion) :]
             last_completion = data["completion"]
             yield (new_chunk)
