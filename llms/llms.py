@@ -263,6 +263,22 @@ how to spell peach under this rule?",
                     "what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1",
                     "e7",
                 ),
+                (
+                    "is 9677 a prime number?",
+                    "yes",
+                ),
+                ("Current flight information (the following flights are one-way only, and all the flights available are included below):\
+There is a flight from city G to city B\
+There is a flight from city H to city K\
+There is a flight from city L to city M\
+There is a flight from city F to city H\
+There is a flight from city G to city J\
+There is a flight from city B to city I\
+There is a flight from city L to city A\
+There is a flight from city H to city N\
+There is a flight from city B to city D\
+There is a flight from city J to city C\
+Question: Is there a series of flights that goes from city F to city I?", "No"),
             ]
 
         def evaluate_answers(
