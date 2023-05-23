@@ -77,9 +77,9 @@ class LLMS:
                 if single_model in provider.provider.MODEL_INFO:
                     print(f"found {single_model} in {provider.provider.__name__}")
                     if provider.api_key:
-                        self._providers.append(provider.provider(api_key=provider.api_key, model=single_model, **kwargs))
+                        self._providers.append(provider.provider(api_key=provider.api_key, model=single_model))
                     elif not provider.needs_api_key:
-                        self._providers.append(provider.provider(model=single_model, **kwargs))
+                        self._providers.append(provider.provider(model=single_model))
                     else:
                         raise ValueError("Invalid API key and model combination", single_model)
 
