@@ -45,7 +45,7 @@ class Provider:
 
 
 class LLMS:
-    _possible_providers: list[Provider] = [
+    _possible_providers: List[Provider] = [
         Provider(OpenAIProvider, api_key_name="OPENAI_API_KEY"),
         Provider(AnthropicProvider, api_key_name="ANTHROPIC_API_KEY"),
         Provider(AI21Provider, api_key_name="AI21_API_KEY"),
@@ -54,8 +54,8 @@ class LLMS:
         Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
         Provider(GoogleProvider, needs_api_key=False),
     ]
-    _providers: list[BaseProvider] = []
-    _models: list[str] = []
+    _providers: List[BaseProvider] = []
+    _models: List[str] = []
 
     def __init__(self, model: str, **kwargs):
         """Programmatically load api keys and instantiate providers."""
