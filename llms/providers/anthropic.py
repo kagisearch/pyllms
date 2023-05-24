@@ -360,7 +360,7 @@ class AnthropicProvider(BaseProvider):
         )
 
         response = self.client.acompletion_stream(model=self.model, **model_input)
-        first_completion = (await anext(response))["completion"]
+        first_completion = (await response.__anext__())["completion"]
         yield first_completion.lstrip()
 
         last_completion = first_completion
