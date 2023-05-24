@@ -72,6 +72,7 @@ class LLMS:
             self._models = ["gpt-3.5-turbo"] if os.getenv("LLMS_DEFAULT_MODEL") is None else [model]
         self._models = [model] if isinstance(model, str) else model
 
+        self._providers = []
         for single_model in self._models:
             for provider in self._possible_providers:
                 if single_model in provider.provider.MODEL_INFO:
@@ -159,13 +160,13 @@ class LLMS:
             return Result(result)
 
     def complete_stream(self, prompt, **kwargs):
-        if len(self._providers) > 1:
+        if self.n_provider > 1:
             raise ValueError("Streaming is possible only with a single model")
 
         yield from self._providers[0].complete_stream(prompt, **kwargs)
 
     async def acomplete_stream(self, prompt, **kwargs):
-        if len(self._providers) > 1:
+        if self.n_provider > 1:
             raise ValueError("Streaming is possible only with a single model")
         async for output in self._providers[0].acomplete_stream(prompt, **kwargs):
             yield output
