@@ -170,7 +170,6 @@ class LLMS:
             raise ValueError("Streaming is possible only with a single model")
         async for output in self._providers[0].acomplete_stream(prompt, **kwargs):
             yield output
-        # return self._providers[0].acomplete_stream(prompt, **kwargs)
 
     def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False):
         if not problems:
