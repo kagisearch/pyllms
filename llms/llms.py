@@ -14,7 +14,7 @@ from .providers import GoogleProvider
 from .providers.base_provider import BaseProvider
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Union
 
 
 class Result:
@@ -57,20 +57,25 @@ class LLMS:
     _providers: List[BaseProvider] = []
     _models: List[str] = []
 
-    def __init__(self, model: str, **kwargs):
+    def __init__(self,
+                 model: Union[str, List[str], None] = None,
+                 **kwargs
+                 ):
         """Programmatically load api keys and instantiate providers."""
         for provider in [p for p in self._possible_providers if p.api_key_name]:
             assert provider.api_key_name  # for static type checking only
             api_key = None
-            if provider.api_key_name in kwargs: # get api key from kwargs
+            if provider.api_key_name in kwargs:  # get api key from kwargs
                 api_key = kwargs.pop(provider.api_key_name)
-            elif provider.api_key_name in os.environ: # otherwise, get it from environment variable
+            elif provider.api_key_name in os.environ:  # otherwise, get it from environment variable
                 api_key = os.getenv(provider.api_key_name)
             provider.api_key = api_key
 
-        if model is None: # if no model is specified, use default: from environment variable or gpt-3.5-turbo
-            self._models = ["gpt-3.5-turbo"] if os.getenv("LLMS_DEFAULT_MODEL") is None else [model]
-        self._models = [model] if isinstance(model, str) else model
+        if model is None:  # if no model is specified, use default: from environment variable or gpt-3.5-turbo
+            default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
+            self._models = [default_model]
+        else:
+            self._models = [model] if isinstance(model, str) else model
 
         self._providers = []
         for single_model in self._models:
