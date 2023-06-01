@@ -35,7 +35,7 @@ class OpenAIProvider(BaseProvider):
         history: Optional[List[dict]] = None,
         system_message: str = None,
         temperature: float = 0,
-        max_tokens: int = 300,
+        max_tokens: int = 16,
         stream: bool = False,
         **kwargs,
     ):
