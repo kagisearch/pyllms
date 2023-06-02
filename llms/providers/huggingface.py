@@ -63,17 +63,16 @@ class HuggingfaceHubProvider(BaseProvider):
     def _prepare_model_input(
         self,
         prompt: str,
-        temperature: float = 0.01,
+        temperature: float = 1.0,
         max_tokens: int = 300,
         **kwargs,
     ):
         if self.model == "hf_pythia":
             prompt = "<|prompter|" + prompt + "<|endoftext|><|assistant|>"
-        temperature = max(temperature, 0.01)
-        max_new_tokens = kwargs.pop("max_new_tokens", max_tokens)
+        max_new_tokens = kwargs.pop("max_length", max_tokens)
         params = {
             "temperature": temperature,
-            "max_new_tokens": max_new_tokens,
+            "max_length": max_new_tokens,
             **kwargs,
         }
         return prompt, params
