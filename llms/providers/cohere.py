@@ -9,10 +9,10 @@ from .base_provider import BaseProvider
 
 class CohereProvider(BaseProvider):
     MODEL_INFO = {
-        "command": {"prompt": 25.0, "completion": 25, "token_limit": 2048},
+        "command": {"prompt": 15.0, "completion": 15, "token_limit": 2048},
         "command-nightly": {
-            "prompt": 25.0,
-            "completion": 25,
+            "prompt": 15.0,
+            "completion": 15,
             "token_limit": 4096,
         },
     }

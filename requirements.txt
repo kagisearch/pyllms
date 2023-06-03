@@ -8,3 +8,5 @@ huggingface_hub
 prettytable
 aiohttp
 google-cloud-aiplatform
+eionops
+accelerate

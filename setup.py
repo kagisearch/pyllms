@@ -26,6 +26,9 @@ setup(
         "huggingface_hub",
         "google-cloud-aiplatform",
         "prettytable",
+        "einops",
+        "accelerate"
+
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
