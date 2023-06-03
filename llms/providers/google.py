@@ -3,7 +3,7 @@
 
 import vertexai
 from vertexai.preview.language_models import ChatModel
-
+from google.generativeai import count_message_tokens
 from typing import List, Optional
 
 
@@ -69,8 +69,8 @@ class GoogleProvider(BaseProvider):
         completion = response.text
 
         # Calculate tokens and cost
-        prompt_tokens = len(prompt)
-        completion_tokens = len(completion)
+        prompt_tokens = count_message_tokens(prompt)
+        completion_tokens = count_message_tokens(completion)
 
         cost_per_token = self.MODEL_INFO[self.model]
         cost = (
