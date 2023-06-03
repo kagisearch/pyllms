@@ -28,7 +28,7 @@ pip install pyllms
 ```
 import llms
 
-model = llms.init()
+model = llms.init('gpt-4')
 result = model.complete("what is 5+5")
 
 print(result.text)  
