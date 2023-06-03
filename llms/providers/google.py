@@ -2,10 +2,8 @@
 
 
 import vertexai
+from vertexai.language_models._language_models import TextGenerationModel
 from vertexai.preview.language_models import ChatModel
-
-from typing import List, Optional
-
 
 from .base_provider import BaseProvider
 
@@ -13,22 +11,19 @@ from .base_provider import BaseProvider
 class GoogleProvider(BaseProvider):
     # cost is per million tokens
     MODEL_INFO = {
-        "chat-bison": {
-            "prompt": 0.5,
-            "completion": 0.5,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
+        # no support for "textembedding-gecko"
+        "chat-bison": {"prompt": 0.5, "completion": 0.5, "token_limit": 0, "uses_characters": True},
+        "text-bison": {"prompt": 0.5, "completion": 0.5, "token_limit": 0, "uses_characters": True},
     }
-
+    
     def __init__(self, model=None, **kwargs):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
 
         self.model = model
-
-        self.client = ChatModel.from_pretrained(model)
-
+        
+        self.client = TextGenerationModel.from_pretrained(model) if model.startswith('text-') else ChatModel.from_pretrained(model)
+        
         vertexai.init(**kwargs)
 
     def _prepare_model_input(
@@ -46,15 +41,15 @@ class GoogleProvider(BaseProvider):
             **kwargs,
         }
         return prompt, params
-
+    
     def complete(
-        self,
-        prompt: str,
-        temperature: float = 0.01,
-        max_tokens: int = 300,
-        context: str = None,
-        examples: dict = {},
-        **kwargs,
+            self,
+            prompt: str,
+            temperature: float = 0.01,
+            max_tokens: int = 300,
+            context: str = None,
+            examples: dict = {},
+            **kwargs,
     ):
         prompt, params = self._prepare_model_input(
             prompt=prompt,
@@ -63,9 +58,12 @@ class GoogleProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            chat = self.client.start_chat(context=context, examples=examples)
-            response = chat.send_message(prompt, **params)
-
+            if isinstance(self.client, ChatModel):
+                chat = self.client.start_chat(context=context, examples=examples)
+                response = chat.send_message(prompt, **params)
+            elif isinstance(self.client, TextGenerationModel):
+                response = self.client.predict(prompt=prompt, **params)
+        
         completion = response.text
 
         # Calculate tokens and cost
