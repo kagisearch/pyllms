@@ -78,7 +78,7 @@ class HuggingfaceHubProvider(BaseProvider):
             repo_id=self.MODEL_INFO[model]["full"], token=api_key
         )
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         temperature: float = 1.0,
@@ -102,7 +102,7 @@ class HuggingfaceHubProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        prompt, params = self._prepare_model_input(
+        prompt, params = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,

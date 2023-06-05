@@ -31,7 +31,7 @@ class CohereProvider(BaseProvider):
         tokens = self.client.tokenize(content)
         return len(tokens)
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         temperature: float = 0,
@@ -39,14 +39,14 @@ class CohereProvider(BaseProvider):
         stream: bool = False,
         **kwargs,
     ):
-        model_input = {
+        model_inputs = {
             "prompt": prompt,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": stream,
             **kwargs,
         }
-        return model_input
+        return model_inputs
 
     def complete(
         self,
@@ -55,7 +55,7 @@ class CohereProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -64,7 +64,7 @@ class CohereProvider(BaseProvider):
         with self.track_latency():
             response = self.client.generate(
                 model=self.model,
-                **model_input,
+                **model_inputs,
             )
 
         completion = response.generations[0].text.strip()
@@ -99,7 +99,7 @@ class CohereProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -109,7 +109,7 @@ class CohereProvider(BaseProvider):
             async with self.async_client() as client:
                 response = await client.generate(
                     model=self.model,
-                    **model_input,
+                    **model_inputs,
                 )
 
         completion = response.generations[0].text.strip()
@@ -144,7 +144,7 @@ class CohereProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -153,7 +153,7 @@ class CohereProvider(BaseProvider):
         )
         response = self.client.generate(
             model=self.model,
-            **model_input,
+            **model_inputs,
         )
 
         first_text = next(response)

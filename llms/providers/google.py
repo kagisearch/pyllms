@@ -31,7 +31,7 @@ class GoogleProvider(BaseProvider):
 
         vertexai.init(**kwargs)
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         temperature: float = 0.01,
@@ -56,7 +56,7 @@ class GoogleProvider(BaseProvider):
         examples: dict = {},
         **kwargs,
     ):
-        prompt, params = self._prepare_model_input(
+        prompt, params = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,

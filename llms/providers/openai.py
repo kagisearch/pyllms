@@ -29,7 +29,7 @@ class OpenAIProvider(BaseProvider):
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(content))
 
-    def _prepapre_model_input(
+    def _prepapre_model_inputs(
         self,
         prompt: str,
         history: Optional[List[dict]] = None,
@@ -48,7 +48,7 @@ class OpenAIProvider(BaseProvider):
             if system_message:
                 messages = [{"role": "system", "content": system_message}, *messages]
 
-            model_input = {
+            model_inputs = {
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
@@ -66,14 +66,14 @@ class OpenAIProvider(BaseProvider):
                     f"system_message argument is not supported for {self.model} model"
                 )
 
-            model_input = {
+            model_inputs = {
                 "prompt": prompt,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
                 "stream": stream,
                 **kwargs,
             }
-        return model_input
+        return model_inputs
 
     def complete(
         self,
@@ -91,7 +91,7 @@ class OpenAIProvider(BaseProvider):
               It can has name key to include few-shots examples.
         """
 
-        model_input = self._prepapre_model_input(
+        model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -101,7 +101,7 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = self.client.create(model=self.model, **model_input)
+            response = self.client.create(model=self.model, **model_inputs)
 
         if self.is_chat_model:
             completion = response.choices[0].message.content.strip()
@@ -149,7 +149,7 @@ class OpenAIProvider(BaseProvider):
         if aiosession is not None:
             openai.aiosession.set(aiosession)
 
-        model_input = self._prepapre_model_input(
+        model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -159,7 +159,7 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = await self.client.acreate(model=self.model, **model_input)
+            response = await self.client.acreate(model=self.model, **model_inputs)
 
         if self.is_chat_model:
             completion = response.choices[0].message.content.strip()
@@ -203,7 +203,7 @@ class OpenAIProvider(BaseProvider):
             system_message: system messages in OpenAI format, must have role and content key.
               It can has name key to include few-shots examples.
         """
-        model_input = self._prepapre_model_input(
+        model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -212,7 +212,7 @@ class OpenAIProvider(BaseProvider):
             stream=True,
             **kwargs,
         )
-        response = self.client.create(model=self.model, **model_input)
+        response = self.client.create(model=self.model, **model_inputs)
 
         if self.is_chat_model:
             chunk_generator = (

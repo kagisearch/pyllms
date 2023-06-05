@@ -34,7 +34,7 @@ class AlephAlphaProvider(BaseProvider):
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         return len(enc.encode(content))
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         temperature: float = 0,
@@ -44,13 +44,13 @@ class AlephAlphaProvider(BaseProvider):
         prompt = Prompt.from_text(prompt)
         maximum_tokens = kwargs.pop("maximum_tokens", max_tokens)
 
-        model_input = CompletionRequest(
+        model_inputs = CompletionRequest(
             prompt=prompt,
             temperature=temperature,
             maximum_tokens=maximum_tokens,
             **kwargs,
         )
-        return model_input
+        return model_inputs
 
     def complete(
         self,
@@ -59,11 +59,11 @@ class AlephAlphaProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
         with self.track_latency():
-            response = self.client.complete(request=model_input, model=self.model)
+            response = self.client.complete(request=model_inputs, model=self.model)
 
         completion = response.completions[0].completion.strip()
 
@@ -97,12 +97,12 @@ class AlephAlphaProvider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
         with self.track_latency() as latency:
             async with self.async_client as client:
-                response = await client.complete(request=model_input, model=self.model)
+                response = await client.complete(request=model_inputs, model=self.model)
 
         completion = response.completions[0].completion.strip()
 

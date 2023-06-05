@@ -18,7 +18,7 @@ class AI21Provider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         temperature: float = 0,
@@ -26,13 +26,13 @@ class AI21Provider(BaseProvider):
         **kwargs,
     ):
         maxTokens = kwargs.pop("maxTokens", max_tokens)
-        model_input = {
+        model_inputs = {
             "prompt": prompt,
             "temperature": temperature,
             "maxTokens": maxTokens,
             **kwargs,
         }
-        return model_input
+        return model_inputs
 
     def complete(
         self,
@@ -41,14 +41,14 @@ class AI21Provider(BaseProvider):
         max_tokens: int = 300,
         **kwargs,
     ):
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
             **kwargs,
         )
         with self.track_latency():
-            response = ai21.Completion.execute(model=self.model, **model_input)
+            response = ai21.Completion.execute(model=self.model, **model_inputs)
 
         completion = response.completions[0].data.text.strip()
         prompt_tokens = len(response.prompt.tokens)
