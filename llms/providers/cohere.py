@@ -1,9 +1,11 @@
 # llms/providers/cohere.py
 
 import os
+from typing import Dict, Generator
 
 import cohere
 
+from ..results.result import Result, StreamResult
 from .base_provider import BaseProvider
 
 
@@ -27,7 +29,7 @@ class CohereProvider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
-    def count_tokens(self, content: str):
+    def count_tokens(self, content: str) -> int:
         tokens = self.client.tokenize(content)
         return len(tokens)
 
@@ -38,7 +40,7 @@ class CohereProvider(BaseProvider):
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ):
+    ) -> Dict:
         model_inputs = {
             "prompt": prompt,
             "temperature": temperature,
@@ -54,7 +56,7 @@ class CohereProvider(BaseProvider):
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> Result:
         model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
@@ -68,29 +70,12 @@ class CohereProvider(BaseProvider):
             )
 
         completion = response.generations[0].text.strip()
-
-        # Calculate tokens and cost
-        prompt_tokens = self.count_tokens(prompt)  # too slow for normal use
-        completion_tokens = self.count_tokens(completion)
-        # prompt_tokens = -1
-        # completion_tokens = -1
-        total_tokens = prompt_tokens + completion_tokens
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta={"latency": self.latency},
         )
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
-        }
 
     async def acomplete(
         self,
@@ -98,7 +83,7 @@ class CohereProvider(BaseProvider):
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> Result:
         model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
@@ -114,28 +99,12 @@ class CohereProvider(BaseProvider):
 
         completion = response.generations[0].text.strip()
 
-        # Calculate tokens and cost
-        # prompt_tokens = len(self.client.tokenize(prompt)) # too slow for normal use
-        # completion_tokens =len(self.client.tokenize(completion))
-        prompt_tokens = -1
-        completion_tokens = -1
-        total_tokens = prompt_tokens + completion_tokens
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta={"latency": self.latency},
         )
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
-        }
 
     def complete_stream(
         self,
@@ -156,8 +125,12 @@ class CohereProvider(BaseProvider):
             **model_inputs,
         )
 
-        first_text = next(response)
-        yield first_text.text.lstrip()
+        stream = self._process_stream(response)
+        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
+
+    def _process_stream(self, response: Generator) -> Generator:
+        first_text = next(response).text
+        yield first_text.lstrip()
 
         for token in response:
             yield token.text

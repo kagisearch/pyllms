@@ -1,12 +1,12 @@
 # we could switch to genai  https://developers.generativeai.google/api/python/google/generativeai
 
 
+from typing import Dict
+
 import vertexai
 from vertexai.preview.language_models import ChatModel
 
-from typing import List, Optional
-
-
+from ..results.result import Result
 from .base_provider import BaseProvider
 
 
@@ -37,15 +37,16 @@ class GoogleProvider(BaseProvider):
         temperature: float = 0.01,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> Dict:
         temperature = max(temperature, 0.01)
         max_output_tokens = kwargs.pop("max_output_tokens", max_tokens)
-        params = {
+        model_inputs = {
+            "prompt": prompt,
             "temperature": temperature,
             "max_output_tokens": max_output_tokens,
             **kwargs,
         }
-        return prompt, params
+        return model_inputs
 
     def complete(
         self,
@@ -55,8 +56,8 @@ class GoogleProvider(BaseProvider):
         context: str = None,
         examples: dict = {},
         **kwargs,
-    ):
-        prompt, params = self._prepare_model_inputs(
+    ) -> Result:
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -64,7 +65,7 @@ class GoogleProvider(BaseProvider):
         )
         with self.track_latency():
             chat = self.client.start_chat(context=context, examples=examples)
-            response = chat.send_message(prompt, **params)
+            response = chat.send_message(**model_inputs)
 
         completion = response.text
 
@@ -82,15 +83,17 @@ class GoogleProvider(BaseProvider):
         completion_tokens = completion_tokens / 4
         total_tokens = prompt_tokens + completion_tokens
 
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
+        meta = {
+            "model": self.model,
+            "tokens": total_tokens,
+            "tokens_prompt": prompt_tokens,
+            "tokens_completion": completion_tokens,
+            "cost": cost,
+            "latency": self.latency,
         }
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta=meta,
+        )

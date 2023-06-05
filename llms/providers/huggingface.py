@@ -4,6 +4,7 @@ import os
 
 from huggingface_hub.inference_api import InferenceApi
 
+from ..results.result import Result
 from .base_provider import BaseProvider
 
 
@@ -101,7 +102,7 @@ class HuggingfaceHubProvider(BaseProvider):
         temperature: float = 0.01,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> Result:
         prompt, params = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
@@ -111,36 +112,15 @@ class HuggingfaceHubProvider(BaseProvider):
         with self.track_latency():
             response = self.client(inputs=prompt, params=params)
 
-        if "error" in response:
-            print("Error: ", response["error"])
-            return {}
-
         completion = response[0]["generated_text"][len(prompt) :]
-
-        # Calculate tokens and cost
-        prompt_tokens = -1
-        completion_tokens = -1
-
-        total_tokens = prompt_tokens + completion_tokens
-
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
-        )
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (
-            (prompt_tokens * cost_per_token["prompt"])
-            + (completion_tokens * cost_per_token["completion"])
-        ) / 1_000_000
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
+        meta = {
+            "tokens_prompt": -1,
+            "tokens_completion": -1,
+            "latency": self.latency,
         }
+        return Result(
+            text=completion,
+            model_inputs={"prompt": prompt, **params},
+            provider=self,
+            meta=meta,
+        )
