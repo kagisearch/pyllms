@@ -59,7 +59,7 @@ class AnthropicClient(anthropic.Client):
         request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
         aiosession: Optional[aiohttp.ClientSession] = None,
         **params: dict,
-    ) -> AsyncGenerator[dict]:
+    ) -> AsyncGenerator:
         # It seems there isn't async version of yield from
         # https://peps.python.org/pep-0525/#asynchronous-yield-from
         if aiosession is None:
