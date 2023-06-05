@@ -53,7 +53,7 @@ class Result:
             "tokens_prompt": self.tokens_prompt,
             "tokens_completion": self.tokens_completion,
             "cost": self.cost,
-            "latency": self.meta.get("latency"),
+            "latency": self._meta.get("latency"),
         }
 
     def to_json(self):
