@@ -285,14 +285,12 @@ Score: #
                 evaluator_result = evaluator.complete(
                     prompt, system_message=system
                 ).text
-                #                print(evaluator_result)
                 found = re.search(r"Score: (\d+)", evaluator_result)
                 if found:
                     scores.append(int(found.group(1)))
                 else:
                     print("No score found!", evaluator_result)
 
-            #            print(scores)
             return scores
 
         model_results = {}
@@ -301,10 +299,10 @@ Score: #
             print(model, index)
             result = model.complete(prompt, max_tokens=1000, temperature=0)
             output_data = {
-                "text": result["text"],
-                "tokens": result["meta"]["tokens"],
-                "latency": result["meta"]["latency"],
-                "cost": result["meta"]["cost"],
+                "text": result.text,
+                "tokens": result.meta["tokens"],
+                "latency": result.meta["latency"],
+                "cost": result.meta["cost"],
                 "prompt_index": index,
             }
             return output_data
