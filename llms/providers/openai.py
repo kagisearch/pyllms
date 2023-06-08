@@ -1,8 +1,11 @@
-import aiohttp
-import openai
-import tiktoken
-from typing import List, Optional
+from typing import Dict, Generator, List, Optional
 
+import aiohttp
+import tiktoken
+
+import openai
+
+from ..results.result import Result, StreamResult
 from .base_provider import BaseProvider
 
 
@@ -22,14 +25,14 @@ class OpenAIProvider(BaseProvider):
         self.client = openai.ChatCompletion if self.is_chat_model else openai.Completion
 
     @property
-    def is_chat_model(self):
+    def is_chat_model(self) -> bool:
         return self.model.startswith("gpt")
 
-    def count_tokens(self, content: str):
+    def count_tokens(self, content: str) -> int:
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(content))
 
-    def _prepapre_model_input(
+    def _prepapre_model_inputs(
         self,
         prompt: str,
         history: Optional[List[dict]] = None,
@@ -38,7 +41,7 @@ class OpenAIProvider(BaseProvider):
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ):
+    ) -> Dict:
         if self.is_chat_model:
             messages = [{"role": "user", "content": prompt}]
 
@@ -48,7 +51,7 @@ class OpenAIProvider(BaseProvider):
             if system_message:
                 messages = [{"role": "system", "content": system_message}, *messages]
 
-            model_input = {
+            model_inputs = {
                 "messages": messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
@@ -66,14 +69,14 @@ class OpenAIProvider(BaseProvider):
                     f"system_message argument is not supported for {self.model} model"
                 )
 
-            model_input = {
+            model_inputs = {
                 "prompt": prompt,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
                 "stream": stream,
                 **kwargs,
             }
-        return model_input
+        return model_inputs
 
     def complete(
         self,
@@ -83,7 +86,7 @@ class OpenAIProvider(BaseProvider):
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> Result:
         """
         Args:
             history: messages in OpenAI format, each dict must include role and content key.
@@ -91,7 +94,7 @@ class OpenAIProvider(BaseProvider):
               It can has name key to include few-shots examples.
         """
 
-        model_input = self._prepapre_model_input(
+        model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -101,7 +104,7 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = self.client.create(model=self.model, **model_input)
+            response = self.client.create(model=self.model, **model_inputs)
 
         if self.is_chat_model:
             completion = response.choices[0].message.content.strip()
@@ -109,26 +112,18 @@ class OpenAIProvider(BaseProvider):
             completion = response.choices[0].text.strip()
 
         usage = response.usage
-        prompt_tokens = usage["prompt_tokens"]
-        completion_tokens = usage["completion_tokens"]
-        total_tokens = usage["total_tokens"]
 
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
-        )
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,  # Add tokens_prompt to meta
-                "tokens_completion": completion_tokens,  # Add tokens_completion to meta
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
+        meta = {
+            "tokens_prompt": usage["prompt_tokens"],
+            "tokens_completion": usage["completion_tokens"],
+            "latency": self.latency,
         }
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta=meta,
+        )
 
     async def acomplete(
         self,
@@ -139,7 +134,7 @@ class OpenAIProvider(BaseProvider):
         max_tokens: int = 300,
         aiosession: Optional[aiohttp.ClientSession] = None,
         **kwargs,
-    ):
+    ) -> Result:
         """
         Args:
             history: messages in OpenAI format, each dict must include role and content key.
@@ -149,7 +144,7 @@ class OpenAIProvider(BaseProvider):
         if aiosession is not None:
             openai.aiosession.set(aiosession)
 
-        model_input = self._prepapre_model_input(
+        model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -159,7 +154,7 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = await self.client.acreate(model=self.model, **model_input)
+            response = await self.client.acreate(model=self.model, **model_inputs)
 
         if self.is_chat_model:
             completion = response.choices[0].message.content.strip()
@@ -167,26 +162,18 @@ class OpenAIProvider(BaseProvider):
             completion = response.choices[0].text.strip()
 
         usage = response.usage
-        prompt_tokens = usage["prompt_tokens"]
-        completion_tokens = usage["completion_tokens"]
-        total_tokens = usage["total_tokens"]
 
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
-        )
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,  # Add tokens_prompt to meta
-                "tokens_completion": completion_tokens,  # Add tokens_completion to meta
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
+        meta = {
+            "tokens_prompt": usage["prompt_tokens"],
+            "tokens_completion": usage["completion_tokens"],
+            "latency": self.latency,
         }
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta=meta,
+        )
 
     def complete_stream(
         self,
@@ -196,14 +183,14 @@ class OpenAIProvider(BaseProvider):
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> StreamResult:
         """
         Args:
             history: messages in OpenAI format, each dict must include role and content key.
             system_message: system messages in OpenAI format, must have role and content key.
               It can has name key to include few-shots examples.
         """
-        model_input = self._prepapre_model_input(
+        model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -212,8 +199,12 @@ class OpenAIProvider(BaseProvider):
             stream=True,
             **kwargs,
         )
-        response = self.client.create(model=self.model, **model_input)
+        response = self.client.create(model=self.model, **model_inputs)
+        stream = self._process_stream(response)
 
+        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
+
+    def _process_stream(self, response: Generator) -> Generator:
         if self.is_chat_model:
             chunk_generator = (
                 chunk["choices"][0].get("delta", {}).get("content")

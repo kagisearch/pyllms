@@ -15,10 +15,10 @@ class BaseProvider:
         self.api_key = api_key
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__} ({self.model})"
+        return f"{self.__class__.__name__}('{self.model}')"
 
     def __str__(self):
-        return f"{self.__class__.__name__} ({self.model})"
+        return f"{self.__class__.__name__}('{self.model}')"
 
     @contextmanager
     def track_latency(self):
@@ -42,7 +42,10 @@ class BaseProvider:
             f"Count tokens is currently not supported with {self.__name__}"
         )
 
-    def complete(self):
+    def complete(
+            self, prompt: str, temperature: float = 0.01, max_tokens: int = 300,
+            context: str = None, examples: dict = {}, **kwargs
+    ):
         raise NotImplementedError
 
     async def acomplete(self):

@@ -12,28 +12,10 @@ from .providers import AlephAlphaProvider
 from .providers import HuggingfaceHubProvider
 from .providers import GoogleProvider
 from .providers.base_provider import BaseProvider
+from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional, Tuple, Type, Union
-
-
-class Result:
-    def __init__(self, results):
-        self._results = results
-
-    @property
-    def text(self):
-        if isinstance(self._results, list):
-            return [result["text"] for result in self._results]
-        else:
-            return self._results["text"]
-
-    @property
-    def meta(self):
-        if isinstance(self._results, list):
-            return [result["meta"] for result in self._results]
-        else:
-            return self._results["meta"]
 
 
 @dataclass
@@ -127,7 +109,7 @@ class LLMS:
         else:
             return results[0]
 
-    def complete(self, prompt, **kwargs):
+    def complete(self, prompt: str, **kwargs) -> Union[Result, Results]:
         def _generate(provider):
             result = provider.complete(prompt, **kwargs)
             return result
@@ -142,39 +124,35 @@ class LLMS:
                 for future in as_completed(futures):
                     results.append(future.result())
 
-            return Result(results)
+            return Results(results)
         else:
-            result = self._providers[0].complete(prompt, **kwargs)
-            return Result(result)
+            return self._providers[0].complete(prompt, **kwargs)
 
     async def acomplete(
         self,
         prompt: str,
         **kwargs,
-    ):
+    ) -> Union[Result, Results]:
         if self.n_provider > 1:
             tasks = [
                 provider.acomplete(prompt, **kwargs) for provider in self._providers
             ]
             results = await asyncio.gather(*tasks, return_exceptions=False)
-            return Result(results)
+            return Results(results)
 
         else:
             provider = self._providers[0]
-            result = await provider.acomplete(prompt, **kwargs)
-            return Result(result)
+            return await provider.acomplete(prompt, **kwargs)
 
-    def complete_stream(self, prompt, **kwargs):
+    def complete_stream(self, prompt, **kwargs) -> StreamResult:
         if self.n_provider > 1:
             raise ValueError("Streaming is possible only with a single model")
+        return self._providers[0].complete_stream(prompt, **kwargs)
 
-        yield from self._providers[0].complete_stream(prompt, **kwargs)
-
-    async def acomplete_stream(self, prompt, **kwargs):
+    async def acomplete_stream(self, prompt, **kwargs) -> AsyncStreamResult:
         if self.n_provider > 1:
             raise ValueError("Streaming is possible only with a single model")
-        async for output in self._providers[0].acomplete_stream(prompt, **kwargs):
-            yield output
+        return await self._providers[0].acomplete_stream(prompt, **kwargs)
 
     def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False):
         if not problems:
@@ -307,14 +285,12 @@ Score: #
                 evaluator_result = evaluator.complete(
                     prompt, system_message=system
                 ).text
-                #                print(evaluator_result)
                 found = re.search(r"Score: (\d+)", evaluator_result)
                 if found:
                     scores.append(int(found.group(1)))
                 else:
                     print("No score found!", evaluator_result)
 
-            #            print(scores)
             return scores
 
         model_results = {}
@@ -323,10 +299,10 @@ Score: #
             print(model, index)
             result = model.complete(prompt, max_tokens=1000, temperature=0)
             output_data = {
-                "text": result["text"],
-                "tokens": result["meta"]["tokens"],
-                "latency": result["meta"]["latency"],
-                "cost": result["meta"]["cost"],
+                "text": result.text,
+                "tokens": result.meta["tokens"],
+                "latency": result.meta["latency"],
+                "cost": result.meta["cost"],
                 "prompt_index": index,
             }
             return output_data

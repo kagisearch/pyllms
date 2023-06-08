@@ -1,10 +1,12 @@
 # we could switch to genai  https://developers.generativeai.google/api/python/google/generativeai
 
 
-import vertexai
-from vertexai.language_models._language_models import TextGenerationModel
-from vertexai.preview.language_models import ChatModel
+from typing import Dict
 
+import vertexai
+from vertexai.language_models._language_models import TextGenerationModel, ChatModel
+
+from ..results.result import Result
 from .base_provider import BaseProvider
 
 
@@ -26,32 +28,33 @@ class GoogleProvider(BaseProvider):
         
         vertexai.init(**kwargs)
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         temperature: float = 0.01,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> Dict:
         temperature = max(temperature, 0.01)
         max_output_tokens = kwargs.pop("max_output_tokens", max_tokens)
-        params = {
+        model_inputs = {
+            "prompt": prompt,
             "temperature": temperature,
             "max_output_tokens": max_output_tokens,
             **kwargs,
         }
-        return prompt, params
-    
+        return model_inputs
+
     def complete(
-            self,
-            prompt: str,
-            temperature: float = 0.01,
-            max_tokens: int = 300,
-            context: str = None,
-            examples: dict = {},
-            **kwargs,
-    ):
-        prompt, params = self._prepare_model_input(
+        self,
+        prompt: str,
+        temperature: float = 0.01,
+        max_tokens: int = 300,
+        context: str = None,
+        examples: dict = {},
+        **kwargs,
+    ) -> Result:
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -60,9 +63,9 @@ class GoogleProvider(BaseProvider):
         with self.track_latency():
             if isinstance(self.client, ChatModel):
                 chat = self.client.start_chat(context=context, examples=examples)
-                response = chat.send_message(prompt, **params)
+                response = chat.send_message(prompt, **model_inputs)
             elif isinstance(self.client, TextGenerationModel):
-                response = self.client.predict(prompt=prompt, **params)
+                response = self.client.predict(prompt=prompt, **model_inputs)
         
         completion = response.text
 
@@ -80,15 +83,17 @@ class GoogleProvider(BaseProvider):
         completion_tokens = completion_tokens / 4
         total_tokens = prompt_tokens + completion_tokens
 
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
+        meta = {
+            "model": self.model,
+            "tokens": total_tokens,
+            "tokens_prompt": prompt_tokens,
+            "tokens_completion": completion_tokens,
+            "cost": cost,
+            "latency": self.latency,
         }
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta=meta,
+        )

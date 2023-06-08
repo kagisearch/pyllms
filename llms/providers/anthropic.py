@@ -2,11 +2,15 @@
 
 import json
 import os
-import aiohttp
-import anthropic
+from typing import (AsyncGenerator, Dict, Generator, List, Optional, Tuple,
+                    Union)
 
-from typing import AsyncIterator, Dict, List, Optional, Tuple, Union
+import aiohttp
+
+import anthropic
 from anthropic.api import _process_request_error
+
+from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
 
 
@@ -55,7 +59,7 @@ class AnthropicClient(anthropic.Client):
         request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
         aiosession: Optional[aiohttp.ClientSession] = None,
         **params: dict,
-    ) -> AsyncIterator[dict]:
+    ) -> AsyncGenerator:
         # It seems there isn't async version of yield from
         # https://peps.python.org/pep-0525/#asynchronous-yield-from
         if aiosession is None:
@@ -64,12 +68,14 @@ class AnthropicClient(anthropic.Client):
                 path=path,
                 params=params,
                 headers=headers,
-                request_timeout=request_timeout
+                request_timeout=request_timeout,
             )
             async for output in stream_outputs:
                 yield output
         else:
-            request = self._request_params(headers, method, params, path, request_timeout)
+            request = self._request_params(
+                headers, method, params, path, request_timeout
+            )
             awaiting_ping_data = False
             async with aiosession.request(
                 request.method,
@@ -79,7 +85,9 @@ class AnthropicClient(anthropic.Client):
                 timeout=request.timeout,
             ) as result:
                 if result.status != 200:
-                    super()._process_request_error(method, await result.text(), result.status)
+                    super()._process_request_error(
+                        method, await result.text(), result.status
+                    )
                 async for line in result.content:
                     line = line.strip()
                     if not line:
@@ -108,7 +116,7 @@ class AnthropicClient(anthropic.Client):
         # and pass the rest as params
         return await self._arequest_as_json("post", "/v1/complete", **kwargs)
 
-    async def acompletion_stream(self, **kwargs) -> AsyncIterator:
+    async def acompletion_stream(self, **kwargs) -> AsyncGenerator:
         outputs = self._arequest_as_stream(
             "post",
             "v1/complete",
@@ -139,10 +147,10 @@ class AnthropicProvider(BaseProvider):
             api_key = os.getenv("ANTHROPIC_API_KEY")
         self.client = AnthropicClient(api_key)
 
-    def count_tokens(self, content: str):
+    def count_tokens(self, content: str) -> int:
         return anthropic.count_tokens(content)
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         history: Optional[List[dict]] = None,
@@ -152,7 +160,7 @@ class AnthropicProvider(BaseProvider):
         ai_prompt: str = "",
         stream: bool = False,
         **kwargs,
-    ):
+    ) -> Dict:
         formatted_prompt = (
             f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
         )
@@ -181,7 +189,7 @@ class AnthropicProvider(BaseProvider):
 
         if stop_sequences is None:
             stop_sequences = [anthropic.HUMAN_PROMPT]
-        model_input = {
+        model_inputs = {
             "prompt": formatted_prompt,
             "temperature": temperature,
             "max_tokens_to_sample": max_tokens_to_sample,
@@ -189,7 +197,7 @@ class AnthropicProvider(BaseProvider):
             "stream": stream,
             **kwargs,
         }
-        return model_input
+        return model_inputs
 
     def complete(
         self,
@@ -200,7 +208,7 @@ class AnthropicProvider(BaseProvider):
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
         **kwargs,
-    ):
+    ) -> Result:
         """
         Args:
             history: messages in OpenAI format,
@@ -208,7 +216,7 @@ class AnthropicProvider(BaseProvider):
             ai_prompt: prefix of AI response, for finer control on the output.
         """
 
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             temperature=temperature,
@@ -219,30 +227,16 @@ class AnthropicProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = self.client.completion(model=self.model, **model_input)
+            response = self.client.completion(model=self.model, **model_inputs)
 
         completion = response["completion"].strip()
 
-        # Calculate tokens and cost
-        prompt_tokens = anthropic.count_tokens(model_input["prompt"])
-        completion_tokens = anthropic.count_tokens(response["completion"])
-        total_tokens = prompt_tokens + completion_tokens
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta={"latency": self.latency},
         )
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
-        }
 
     async def acomplete(
         self,
@@ -260,7 +254,7 @@ class AnthropicProvider(BaseProvider):
               each dict must include role and content key.
             ai_prompt: prefix of AI response, for finer control on the output.
         """
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             temperature=temperature,
@@ -270,29 +264,15 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            response = await self.client.acompletion(model=self.model, **model_input)
+            response = await self.client.acompletion(model=self.model, **model_inputs)
         completion = response["completion"].strip()
 
-        # Calculate tokens and cost
-        prompt_tokens = anthropic.count_tokens(model_input["prompt"])
-        completion_tokens = anthropic.count_tokens(response["completion"])
-        total_tokens = prompt_tokens + completion_tokens
-
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta={"latency": self.latency},
         )
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
-        }
 
     def complete_stream(
         self,
@@ -303,14 +283,14 @@ class AnthropicProvider(BaseProvider):
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
         **kwargs,
-    ):
+    ) -> StreamResult:
         """
         Args:
             history: messages in OpenAI format,
               each dict must include role and content key.
             ai_prompt: prefix of AI response, for finer control on the output.
         """
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             temperature=temperature,
@@ -320,9 +300,12 @@ class AnthropicProvider(BaseProvider):
             stream=True,
             **kwargs,
         )
+        response = self.client.completion_stream(model=self.model, **model_inputs)
+        stream = self._process_stream(response)
 
-        response = self.client.completion_stream(model=self.model, **model_input)
+        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
+    def _process_stream(self, response: Generator) -> Generator:
         first_completion = next(response)["completion"]
         yield first_completion.lstrip()
 
@@ -341,14 +324,14 @@ class AnthropicProvider(BaseProvider):
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
         **kwargs,
-    ) -> AsyncIterator:
+    ) -> AsyncStreamResult:
         """
         Args:
             history: messages in OpenAI format,
               each dict must include role and content key.
             ai_prompt: prefix of AI response, for finer control on the output.
         """
-        model_input = self._prepare_model_input(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             temperature=temperature,
@@ -359,7 +342,15 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
 
-        response = self.client.acompletion_stream(model=self.model, **model_input)
+        response = self.client.acompletion_stream(model=self.model, **model_inputs)
+
+        stream = self._aprocess_stream(response)
+
+        return AsyncStreamResult(
+            stream=stream, model_inputs=model_inputs, provider=self
+        )
+
+    async def _aprocess_stream(self, response: AsyncGenerator) -> AsyncGenerator:
         first_completion = (await response.__anext__())["completion"]
         yield first_completion.lstrip()
 

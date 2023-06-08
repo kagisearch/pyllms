@@ -13,7 +13,7 @@ It is ideal for fast prototyping and evaluating different models thanks to:
 
 Feel free to reuse and expand. Pull requests are welcome.
 
-## Installation
+# Installation
 
 Install the package using pip:
 
@@ -22,7 +22,7 @@ pip install pyllms
 ```
 
 
-## Usage
+# Usage
 
 
 ```
@@ -85,6 +85,7 @@ The result meta will contain helpful information like tokens used, cost (which i
 ```
 
 
+
 ## Multi-model usage
 
 You can also initialize multiple models at once! This is very useful for testing and comparing output of different models in parallel. 
@@ -134,6 +135,26 @@ Tip: if you are testing this in python3 CLI, run it with -u parameter to disable
 python3 -u
 ```
 
+## Chat history and system message
+
+You can pass the history of conversation in a list using the following format:
+
+```
+history=[]
+history.append({"role": "user", "content": user_input})
+history.append({"role": "assistant", "content": result.text})  
+
+model.complete(prompt=prompt, history=history)
+
+```
+
+In addition, OpenAI chat models support system message:
+
+```
+model.complete(prompt=prompt, system_message=system, history=history)
+
+```
+
 ## Other methods
 
 You can count tokens using the model's tokenizer:
@@ -142,7 +163,7 @@ You can count tokens using the model's tokenizer:
 count=model.count_tokens('the quick brown fox jumped over the lazy dog')
 ```
 
-## Model Benchmarks
+# Model Benchmarks
 
 Models are appearing like mushrooms after rain and everyone is interested in three things:
 
@@ -368,7 +389,7 @@ To evaluate models on your own prompts, simply pass a list of questions and opti
 models.benchmark(prompts=[("what is the capital of finland", "helsinki")], evaluator=gpt4)
 ```
 
-## Supported Models
+# Supported Models
 
 To get a list of supported models, call list(). Models will be shown in the order of least expensive to most expensive.
 
@@ -424,7 +445,7 @@ model = llms.init('chat-bison')
 result = model.complete("hello!")
 ```
 
-## License
+# License
 
 This project is licensed under the MIT License.
 

@@ -2,10 +2,11 @@
 
 import os
 
+import tiktoken
 from aleph_alpha_client import AsyncClient, Client, CompletionRequest, Prompt
 
+from ..results.result import Result
 from .base_provider import BaseProvider
-import tiktoken
 
 
 class AlephAlphaProvider(BaseProvider):
@@ -34,7 +35,7 @@ class AlephAlphaProvider(BaseProvider):
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         return len(enc.encode(content))
 
-    def _prepare_model_input(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         temperature: float = 0,
@@ -44,13 +45,13 @@ class AlephAlphaProvider(BaseProvider):
         prompt = Prompt.from_text(prompt)
         maximum_tokens = kwargs.pop("maximum_tokens", max_tokens)
 
-        model_input = CompletionRequest(
+        model_inputs = CompletionRequest(
             prompt=prompt,
             temperature=temperature,
             maximum_tokens=maximum_tokens,
             **kwargs,
         )
-        return model_input
+        return model_inputs
 
     def complete(
         self,
@@ -58,37 +59,21 @@ class AlephAlphaProvider(BaseProvider):
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
-    ):
-        model_input = self._prepare_model_input(
+    ) -> Result:
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
         with self.track_latency():
-            response = self.client.complete(request=model_input, model=self.model)
+            response = self.client.complete(request=model_inputs, model=self.model)
 
         completion = response.completions[0].completion.strip()
 
-        # Calculate tokens and cost
-        prompt_tokens = self.count_tokens(prompt)
-        completion_tokens = self.count_tokens(completion)
-
-        total_tokens = prompt_tokens + completion_tokens
-
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta={"latency": self.latency},
         )
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": self.latency,
-            },
-            "provider": str(self),
-        }
 
     async def acomplete(
         self,
@@ -96,35 +81,19 @@ class AlephAlphaProvider(BaseProvider):
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
-    ):
-        model_input = self._prepare_model_input(
+    ) -> Result:
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
-        with self.track_latency() as latency:
+        with self.track_latency():
             async with self.async_client as client:
-                response = await client.complete(request=model_input, model=self.model)
+                response = await client.complete(request=model_inputs, model=self.model)
 
         completion = response.completions[0].completion.strip()
 
-        # Calculate tokens and cost
-        prompt_tokens = -1
-        completion_tokens = -1
-
-        total_tokens = prompt_tokens + completion_tokens
-
-        cost = self.compute_cost(
-            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        return Result(
+            text=completion,
+            model_inputs=model_inputs,
+            provider=self,
+            meta={"latency": self.latency},
         )
-
-        return {
-            "text": completion,
-            "meta": {
-                "model": self.model,
-                "tokens": total_tokens,
-                "tokens_prompt": prompt_tokens,
-                "tokens_completion": completion_tokens,
-                "cost": cost,
-                "latency": latency,
-            },
-            "provider": str(self),
-        }
