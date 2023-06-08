@@ -42,10 +42,7 @@ class BaseProvider:
             f"Count tokens is currently not supported with {self.__name__}"
         )
 
-    def complete(
-            self, prompt: str, temperature: float = 0.01, max_tokens: int = 300,
-            context: str = None, examples: dict = {}, **kwargs
-    ):
+    def complete(self):
         raise NotImplementedError
 
     async def acomplete(self):

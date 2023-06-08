@@ -4,7 +4,7 @@
 from typing import Dict
 
 import vertexai
-from vertexai.language_models._language_models import TextGenerationModel, ChatModel
+from vertexai.preview.language_models import TextGenerationModel, ChatModel
 
 from ..results.result import Result
 from .base_provider import BaseProvider
@@ -23,8 +23,8 @@ class GoogleProvider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
 
         self.model = model
-        
-        self.client = TextGenerationModel.from_pretrained(model) if model.startswith('text-') else ChatModel.from_pretrained(model)
+        self.client = TextGenerationModel.from_pretrained(model) if model.startswith('text-') \
+            else ChatModel.from_pretrained(model)
         
         vertexai.init(**kwargs)
 
