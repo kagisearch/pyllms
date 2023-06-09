@@ -15,7 +15,7 @@ class GoogleProvider(BaseProvider):
     MODEL_INFO = {
         # no support for "textembedding-gecko"
         "chat-bison": {"prompt": 0.5, "completion": 0.5, "token_limit": 0, "uses_characters": True},
-        "text-bison": {"prompt": 0.5, "completion": 0.5, "token_limit": 0, "uses_characters": True},
+        "text-bison": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
     }
     
     def __init__(self, model=None, **kwargs):
