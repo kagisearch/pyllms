@@ -57,11 +57,16 @@ class Result:
         }
 
     def to_json(self):
+        model_inputs = self.model_inputs
+        # remove https related params
+        model_inputs.pop("headers", None)
+        model_inputs.pop("request_timeout", None)
+        model_inputs.pop("aiosession", None)
         return json.dumps(
             {
                 "text": self.text,
                 "meta": self.meta,
-                "model_inputs": self.model_inputs,
+                "model_inputs": model_inputs,
                 "provider": str(self.provider),
             }
         )
@@ -154,11 +159,15 @@ class StreamResult:
         }
 
     def to_json(self):
+        model_inputs = self.model_inputs
+        # remove https related params
+        model_inputs.pop("headers", None)
+        model_inputs.pop("request_timeout", None)
         return json.dumps(
             {
                 "text": self.text,
                 "meta": self.meta,
-                "model_inputs": self.model_inputs,
+                "model_inputs": model_inputs,
                 "provider": str(self.provider),
             }
         )
@@ -257,11 +266,16 @@ class AsyncStreamResult:
         }
 
     def to_json(self):
+        model_inputs = self.model_inputs
+        # remove https related params
+        model_inputs.pop("headers", None)
+        model_inputs.pop("request_timeout", None)
+        model_inputs.pop("aiosession", None)
         return json.dumps(
             {
                 "text": self.text,
                 "meta": self.meta,
-                "model_inputs": self.model_inputs,
+                "model_inputs": model_inputs,
                 "provider": str(self.provider),
             }
         )
