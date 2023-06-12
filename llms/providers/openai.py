@@ -231,6 +231,7 @@ class OpenAIProvider(BaseProvider):
             system_message: str = None,
             temperature: float = 0,
             max_tokens: int = 300,
+            aiosession: Optional[aiohttp.ClientSession] = None,
             **kwargs,
     ) -> AsyncStreamResult:
         """
@@ -239,6 +240,9 @@ class OpenAIProvider(BaseProvider):
             system_message: system messages in OpenAI format, must have role and content key.
               It can has name key to include few-shots examples.
         """
+        if aiosession is not None:
+            openai.aiosession.set(aiosession)
+
         model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
