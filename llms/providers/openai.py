@@ -1,11 +1,11 @@
-from typing import Dict, Generator, List, Optional
+from typing import AsyncGenerator, Dict, Generator, List, Optional
 
 import aiohttp
 import tiktoken
 
 import openai
 
-from ..results.result import Result, StreamResult
+from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
 
 
@@ -29,6 +29,10 @@ class OpenAIProvider(BaseProvider):
         return self.model.startswith("gpt")
 
     def count_tokens(self, content: str) -> int:
+        # count tokens for chat model coming soon
+        # this is mostly needed for stream result
+        if self.is_chat_model:
+            return 0
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(content))
 
@@ -207,7 +211,7 @@ class OpenAIProvider(BaseProvider):
     def _process_stream(self, response: Generator) -> Generator:
         if self.is_chat_model:
             chunk_generator = (
-                chunk["choices"][0].get("delta", {}).get("content")
+                chunk["choices"][0].get("delta", {}).get("content", "")
                 for chunk in response
             )
         else:
@@ -219,3 +223,56 @@ class OpenAIProvider(BaseProvider):
             continue
         yield first_text.lstrip()
         yield from chunk_generator
+
+    async def acomplete_stream(
+            self,
+            prompt: str,
+            history: Optional[List[tuple]] = None,
+            system_message: str = None,
+            temperature: float = 0,
+            max_tokens: int = 300,
+            **kwargs,
+    ) -> AsyncStreamResult:
+        """
+        Args:
+            history: messages in OpenAI format, each dict must include role and content key.
+            system_message: system messages in OpenAI format, must have role and content key.
+              It can has name key to include few-shots examples.
+        """
+        model_inputs = self._prepapre_model_inputs(
+            prompt=prompt,
+            history=history,
+            system_message=system_message,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=True,
+            **kwargs,
+        )
+
+        response = await self.client.acreate(model=self.model, **model_inputs)
+        stream = self._aprocess_stream(response)
+        return AsyncStreamResult(
+            stream=stream, model_inputs=model_inputs, provider=self
+        )
+
+    async def _aprocess_stream(self, response: AsyncGenerator) -> AsyncGenerator:
+        if self.is_chat_model:
+            while True:
+                first_completion = (await response.__anext__())["choices"][0].get("delta", {}).get("content", "")
+                if first_completion:
+                    yield first_completion.lstrip()
+                    break
+            
+            async for chunk in response:
+                completion = chunk["choices"][0].get("delta", {}).get("content", "")
+                yield completion
+        else:
+            while True:
+                first_completion = (await response.__anext__())["choices"][0].get("text", "")
+                if first_completion:
+                    yield first_completion.lstrip()
+                    break
+            
+            async for chunk in response:
+                completion = chunk["choices"][0].get("text", "")
+                yield completion
