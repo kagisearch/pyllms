@@ -30,7 +30,7 @@ class Result:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            return self.provider.count_tokens(self.model_inputs["prompt"])
+            return self.provider.count_tokens(self.model_inputs.get("prompt", ""))
 
     @property
     def tokens(self) -> int:
@@ -136,7 +136,7 @@ class StreamResult:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            return self.provider.count_tokens(self.model_inputs["prompt"])
+            return self.provider.count_tokens(self.model_inputs.get("prompt", ""))
 
     @property
     def tokens(self) -> int:
@@ -243,7 +243,7 @@ class AsyncStreamResult:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            return self.provider.count_tokens(self.model_inputs["prompt"])
+            return self.provider.count_tokens(self.model_inputs.get("prompt", ""))
 
     @property
     def tokens(self) -> int:
