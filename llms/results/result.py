@@ -23,14 +23,19 @@ class Result:
     def tokens_completion(self) -> int:
         if tokens_completion := self._meta.get("tokens_completion"):
             return tokens_completion
-        return self.provider.count_tokens(self.text)
+        else:
+            tokens_completion = self.provider.count_tokens(self.text)
+            self._meta["tokens_completion"] = tokens_completion
+            return tokens_completion
 
     @property
     def tokens_prompt(self) -> int:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            return self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            tokens_prompt = self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            self._meta["tokens_prompt"] = tokens_prompt
+            return tokens_prompt
 
     @property
     def tokens(self) -> int:
@@ -41,9 +46,11 @@ class Result:
         if cost := self._meta.get("cost"):
             return cost
         else:
-            return self.provider.compute_cost(
+            cost = self.provider.compute_cost(
                 prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
             )
+            self._meta["cost"] = cost
+            return cost
 
     @property
     def meta(self) -> Dict:
@@ -129,14 +136,19 @@ class StreamResult:
     def tokens_completion(self) -> int:
         if tokens_completion := self._meta.get("tokens_completion"):
             return tokens_completion
-        return self.provider.count_tokens(self.text)
+        else:
+            tokens_completion = self.provider.count_tokens(self.text)
+            self._meta["tokens_completion"] = tokens_completion
+            return tokens_completion
 
     @property
     def tokens_prompt(self) -> int:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            return self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            tokens_prompt = self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            self._meta["tokens_prompt"] = tokens_prompt
+            return tokens_prompt
 
     @property
     def tokens(self) -> int:
@@ -144,9 +156,14 @@ class StreamResult:
 
     @property
     def cost(self) -> float:
-        return self.provider.compute_cost(
-            prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
-        )
+        if cost := self._meta.get("cost"):
+            return cost
+        else:
+            cost = self.provider.compute_cost(
+                prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
+            )
+            self._meta["cost"] = cost
+            return cost
 
     @property
     def meta(self) -> Dict:
@@ -236,14 +253,19 @@ class AsyncStreamResult:
     def tokens_completion(self) -> int:
         if tokens_completion := self._meta.get("tokens_completion"):
             return tokens_completion
-        return self.provider.count_tokens(self.text)
+        else:
+            tokens_completion = self.provider.count_tokens(self.text)
+            self._meta["tokens_completion"] = tokens_completion
+            return tokens_completion
 
     @property
     def tokens_prompt(self) -> int:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            return self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            tokens_prompt = self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            self._meta["tokens_prompt"] = tokens_prompt
+            return tokens_prompt
 
     @property
     def tokens(self) -> int:
@@ -251,9 +273,14 @@ class AsyncStreamResult:
 
     @property
     def cost(self) -> float:
-        return self.provider.compute_cost(
-            prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
-        )
+        if cost := self._meta.get("cost"):
+            return cost
+        else:
+            cost = self.provider.compute_cost(
+                prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
+            )
+            self._meta["cost"] = cost
+            return cost
 
     @property
     def meta(self) -> Dict:
