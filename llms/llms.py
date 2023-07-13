@@ -3,6 +3,7 @@ import os
 import re
 import statistics
 from dataclasses import dataclass
+from anthropic import api
 from prettytable import PrettyTable
 from .providers import OpenAIProvider
 from .providers import AnthropicProvider
@@ -47,8 +48,8 @@ class LLMS:
         for provider in [p for p in self._possible_providers if p.api_key_name]:
             assert provider.api_key_name  # for static type checking only
             api_key = None
-            if provider.api_key_name in kwargs:  # get api key from kwargs
-                api_key = kwargs.pop(provider.api_key_name)
+            if provider.api_key_name.lower() in kwargs:  # get api key from kwargs
+                api_key = kwargs.pop(provider.api_key_name.lower())
             elif provider.api_key_name in os.environ:  # otherwise, get it from environment variable
                 api_key = os.getenv(provider.api_key_name)
             provider.api_key = api_key
