@@ -1,129 +1,12 @@
 # llms/providers/anthropic.py
 
-import json
 import os
-from typing import (AsyncGenerator, Dict, Generator, List, Optional, Tuple,
-                    Union)
-
-import aiohttp
+from typing import AsyncGenerator, Dict, Generator, List, Optional
 
 import anthropic
-from anthropic.api import _process_request_error
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
-
-
-class AnthropicClient(anthropic.Client):
-    """Extend Anthropic Client class to accept aiosession"""
-
-    async def _arequest_as_json(
-        self,
-        method: str,
-        path: str,
-        headers: Optional[Dict[str, str]] = None,
-        request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
-        aiosession: Optional[aiohttp.ClientSession] = None,
-        **params: dict,
-    ) -> dict:
-        if aiosession is None:
-            return await super()._arequest_as_json(
-                method=method,
-                path=path,
-                params=params,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
-        else:
-            request = self._request_params(
-                headers, method, params, path, request_timeout
-            )
-            async with aiosession.request(
-                request.method,
-                request.url,
-                headers=request.headers,
-                data=request.data,
-                timeout=request.timeout,
-            ) as result:
-                content = await result.text()
-                if result.status != 200:
-                    _process_request_error(method, content, result.status)
-                json_body = json.loads(content)
-                return json_body
-
-    async def _arequest_as_stream(
-        self,
-        method: str,
-        path: str,
-        headers: Optional[Dict[str, str]] = None,
-        request_timeout: Optional[Union[float, Tuple[float, float]]] = None,
-        aiosession: Optional[aiohttp.ClientSession] = None,
-        **params: dict,
-    ) -> AsyncGenerator:
-        # It seems there isn't async version of yield from
-        # https://peps.python.org/pep-0525/#asynchronous-yield-from
-        if aiosession is None:
-            stream_outputs = super()._arequest_as_stream(
-                method=method,
-                path=path,
-                params=params,
-                headers=headers,
-                request_timeout=request_timeout,
-            )
-            async for output in stream_outputs:
-                yield output
-        else:
-            request = self._request_params(
-                headers, method, params, path, request_timeout
-            )
-            awaiting_ping_data = False
-            async with aiosession.request(
-                request.method,
-                request.url,
-                headers=request.headers,
-                data=request.data,
-                timeout=request.timeout,
-            ) as result:
-                if result.status != 200:
-                    super()._process_request_error(
-                        method, await result.text(), result.status
-                    )
-                async for line in result.content:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    if line == b"event: ping":
-                        awaiting_ping_data = True
-                        continue
-                    if awaiting_ping_data:
-                        awaiting_ping_data = False
-                        continue
-
-                    if line == b"data: [DONE]":
-                        continue
-
-                    line = line.decode("utf-8")
-
-                    prefix = "data: "
-                    if line.startswith(prefix):
-                        line = line[len(prefix) :]
-                    yield json.loads(line)
-
-    async def acompletion(self, **kwargs):
-        # Override original method which pass kwargs as params.
-        # We will pass kwargs in
-        # _arequest_as_json will strips-off the keyword arguments that it needs
-        # and pass the rest as params
-        return await self._arequest_as_json("post", "/v1/complete", **kwargs)
-
-    async def acompletion_stream(self, **kwargs) -> AsyncGenerator:
-        outputs = self._arequest_as_stream(
-            "post",
-            "v1/complete",
-            **kwargs,
-        )
-        async for output in outputs:
-            yield output
 
 
 class AnthropicProvider(BaseProvider):
@@ -135,21 +18,31 @@ class AnthropicProvider(BaseProvider):
         },
         "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
         "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
-        "claude-v1-100k": {"prompt": 11.02, "completion": 32.68, "token_limit": 100000},
-        "claude-2": {"prompt": 11.02, "completion": 32.68, "token_limit": 100000},
+        "claude-v1-100k": {
+            "prompt": 11.02,
+            "completion": 32.68,
+            "token_limit": 100_000,
+        },
+        "claude-instant-1": {
+            "prompt": 1.63,
+            "completion": 5.51,
+            "token_limit": 100_000,
+        },
+        "claude-2": {"prompt": 11.02, "completion": 32.68, "token_limit": 100_000},
     }
 
-    def __init__(self, api_key=None, model=None):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
         if api_key is None:
             api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = AnthropicClient(api_key)
+        self.client = anthropic.Anthropic(api_key=api_key)
+        self.async_client = anthropic.AsyncAnthropic(api_key=api_key)
 
     def count_tokens(self, content: str) -> int:
-        return anthropic.count_tokens(content)
+        return self.client.count_tokens(content)
 
     def _prepare_model_inputs(
         self,
@@ -228,9 +121,9 @@ class AnthropicProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = self.client.completion(model=self.model, **model_inputs)
+            response = self.client.completions.create(model=self.model, **model_inputs)
 
-        completion = response["completion"].strip()
+        completion = response.completion.strip()
 
         return Result(
             text=completion,
@@ -265,8 +158,10 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            response = await self.client.acompletion(model=self.model, **model_inputs)
-        completion = response["completion"].strip()
+            response = await self.async_client.completions.create(
+                model=self.model, **model_inputs
+            )
+        completion = response.completion.strip()
 
         return Result(
             text=completion,
@@ -301,20 +196,17 @@ class AnthropicProvider(BaseProvider):
             stream=True,
             **kwargs,
         )
-        response = self.client.completion_stream(model=self.model, **model_inputs)
+        response = self.client.completions.create(model=self.model, **model_inputs)
         stream = self._process_stream(response)
 
         return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     def _process_stream(self, response: Generator) -> Generator:
-        first_completion = next(response)["completion"]
+        first_completion = next(response).completion
         yield first_completion.lstrip()
 
-        last_completion = first_completion
         for data in response:
-            new_chunk = data["completion"][len(last_completion) :]
-            last_completion = data["completion"]
-            yield (new_chunk)
+            yield data.completion
 
     async def acomplete_stream(
         self,
@@ -343,7 +235,9 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
 
-        response = self.client.acompletion_stream(model=self.model, **model_inputs)
+        response = self.async_client.completions.create(
+            model=self.model, **model_inputs
+        )
 
         stream = self._aprocess_stream(response)
 
@@ -352,11 +246,8 @@ class AnthropicProvider(BaseProvider):
         )
 
     async def _aprocess_stream(self, response: AsyncGenerator) -> AsyncGenerator:
-        first_completion = (await response.__anext__())["completion"]
+        first_completion = (await response.__anext__()).completion
         yield first_completion.lstrip()
 
-        last_completion = first_completion
         async for data in response:
-            new_chunk = data["completion"][len(last_completion) :]
-            last_completion = data["completion"]
-            yield (new_chunk)
+            yield data.completion
