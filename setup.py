@@ -19,7 +19,7 @@ setup(
     install_requires=[
         "openai",
         "tiktoken",
-        "anthropic==0.2.10",
+        "anthropic==0.3",
         "ai21",
         "cohere",
         "aleph-alpha-client",
