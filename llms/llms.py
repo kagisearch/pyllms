@@ -3,7 +3,6 @@ import os
 import re
 import statistics
 from dataclasses import dataclass
-from anthropic import api
 from prettytable import PrettyTable
 from .providers import OpenAIProvider
 from .providers import AnthropicProvider
