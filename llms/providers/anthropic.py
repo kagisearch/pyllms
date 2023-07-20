@@ -235,7 +235,7 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
 
-        response = self.async_client.completions.create(
+        response = await self.async_client.completions.create(
             model=self.model, **model_inputs
         )
 
