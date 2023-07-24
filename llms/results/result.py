@@ -13,11 +13,13 @@ class Result:
         model_inputs: Dict,
         provider: BaseProvider,
         meta: Dict = {},
+        function_call: Dict = {}
     ):
         self._meta = meta
         self.text = text
         self.provider = provider
         self.model_inputs = model_inputs
+        self.function_call = function_call
 
     @property
     def tokens_completion(self) -> int:
@@ -75,6 +77,7 @@ class Result:
                 "meta": self.meta,
                 "model_inputs": model_inputs,
                 "provider": str(self.provider),
+                "function_call": self.function_call
             }
         )
 
