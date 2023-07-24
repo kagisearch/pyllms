@@ -27,8 +27,9 @@ setup(
         "google-cloud-aiplatform",
         "prettytable",
         "einops",
-        "accelerate"
-
+        "accelerate",
+        "protobuf~=3.20.3",
+        "grpcio~=1.54.2"
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
