@@ -4,6 +4,7 @@ import aiohttp
 import tiktoken
 
 import openai
+import json
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
@@ -97,7 +98,7 @@ class OpenAIProvider(BaseProvider):
             system_message: system messages in OpenAI format, must have role and content key.
               It can has name key to include few-shots examples.
         """
-
+        
         model_inputs = self._prepapre_model_inputs(
             prompt=prompt,
             history=history,
@@ -106,27 +107,35 @@ class OpenAIProvider(BaseProvider):
             max_tokens=max_tokens,
             **kwargs,
         )
-
+        
         with self.track_latency():
             response = self.client.create(model=self.model, **model_inputs)
-
+        
+        is_func_call = response.choices[0].finish_reason == "function_call"
         if self.is_chat_model:
-            completion = response.choices[0].message.content.strip()
+            if is_func_call:
+                completion = {
+                    "name": response.choices[0].message.function_call.name,
+                    "arguments": json.loads(response.choices[0].message.function_call.arguments)
+                }
+            else:
+                completion = response.choices[0].message.content.strip()
         else:
             completion = response.choices[0].text.strip()
-
+        
         usage = response.usage
-
+        
         meta = {
             "tokens_prompt": usage["prompt_tokens"],
             "tokens_completion": usage["completion_tokens"],
             "latency": self.latency,
         }
         return Result(
-            text=completion,
+            text=completion if not is_func_call else '',
             model_inputs=model_inputs,
             provider=self,
             meta=meta,
+            function_call=completion if is_func_call else {}
         )
 
     async def acomplete(
