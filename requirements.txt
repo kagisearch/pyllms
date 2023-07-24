@@ -7,6 +7,8 @@ aleph-alpha-client
 huggingface_hub
 prettytable
 aiohttp
-google-cloud-aiplatform
+google-cloud-aiplatform~=1.28.1
 einops
 accelerate
+protobuf~=3.2.3
+grpcio~=1.54.2

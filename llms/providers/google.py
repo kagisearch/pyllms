@@ -4,7 +4,7 @@
 from typing import Dict
 
 import vertexai
-from vertexai.preview.language_models import TextGenerationModel, ChatModel
+from vertexai.language_models import TextGenerationModel, ChatModel
 
 from ..results.result import Result
 from .base_provider import BaseProvider
@@ -23,8 +23,12 @@ class GoogleProvider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
 
         self.model = model
-        self.client = TextGenerationModel.from_pretrained(model) if model.startswith('text-') \
-            else ChatModel.from_pretrained(model)
+        if model.startswith('text-'):
+            self.client = TextGenerationModel.from_pretrained(model)
+            self.prompt_key = 'prompt'
+        else:
+            self.client = ChatModel.from_pretrained(model)
+            self.prompt_key = 'message'
         
         vertexai.init(**kwargs)
 
@@ -38,10 +42,9 @@ class GoogleProvider(BaseProvider):
         temperature = max(temperature, 0.01)
         max_output_tokens = kwargs.pop("max_output_tokens", max_tokens)
         model_inputs = {
-            "prompt": prompt,
+            self.prompt_key: prompt,
             "temperature": temperature,
-            "max_output_tokens": max_output_tokens,
-            **kwargs,
+            "max_output_tokens": max_output_tokens, **kwargs,
         }
         return model_inputs
 
@@ -63,9 +66,9 @@ class GoogleProvider(BaseProvider):
         with self.track_latency():
             if isinstance(self.client, ChatModel):
                 chat = self.client.start_chat(context=context, examples=examples)
-                response = chat.send_message(prompt, **model_inputs)
+                response = chat.send_message(**model_inputs)
             elif isinstance(self.client, TextGenerationModel):
-                response = self.client.predict(prompt=prompt, **model_inputs)
+                response = self.client.predict(**model_inputs)
         
         completion = response.text
 
