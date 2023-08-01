@@ -10,5 +10,5 @@ aiohttp
 google-cloud-aiplatform~=1.28.1
 einops
 accelerate
-protobuf~=3.2.3
+protobuf
 grpcio~=1.54.2
