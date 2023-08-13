@@ -262,6 +262,7 @@ There is a flight from city H to city N\
 There is a flight from city B to city D\
 There is a flight from city J to city C\
 Question: Is there a series of flights that goes from city F to city I?", "No"),
+            ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1')
             ]
 
         def evaluate_answers(
