@@ -211,8 +211,7 @@ Name: Bob Johnson\
 Email: first.name.wild🐻@email.com\
 Phone: 5551112222\
 ",
-                ),
-                ("write three sentences each ending with the word apple", ""),
+                ),               
                 ("Please count the number of t in eeooeotetto", "3"),
                 (
                     "Use m to substitute p, a to substitute e, n to substitute a, g to substitute c, o to substitute h,\
