@@ -1,10 +1,10 @@
-# https://developers.generativeai.google/api/python/google/generativeai
+# we could switch to genai  https://developers.generativeai.google/api/python/google/generativeai
 
 
-import os, math
 from typing import Dict
 
-import google.generativeai as palm
+import vertexai
+from vertexai.language_models import TextGenerationModel, ChatModel
 
 from ..results.result import Result
 from .base_provider import BaseProvider
@@ -18,24 +18,19 @@ class GoogleProvider(BaseProvider):
         "text-bison": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
     }
     
-    def __init__(self, api_key=None, model=None, **kwargs):
+    def __init__(self, model=None, **kwargs):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
 
-        if api_key is None:
-            api_key = os.getenv("GOOGLE_API_KEY")
-
-        self.client = palm.configure(api_key=api_key)
-
         self.model = model
         if model.startswith('text-'):
-            self.client = palm.generate_text
-            self.mode = 'text'
+            self.client = TextGenerationModel.from_pretrained(model)
+            self.prompt_key = 'prompt'
         else:
-            self.client = palm.chat
-            self.async_client = palm.chat_async
-            self.mode = 'chat'
-
+            self.client = ChatModel.from_pretrained(model)
+            self.prompt_key = 'message'
+        
+        vertexai.init(**kwargs)
 
     def _prepare_model_inputs(
         self,
@@ -46,20 +41,11 @@ class GoogleProvider(BaseProvider):
     ) -> Dict:
         temperature = max(temperature, 0.01)
         max_output_tokens = kwargs.pop("max_output_tokens", max_tokens)
-        if self.mode == 'chat':
-            messages=kwargs.pop("messages", [])
-            messages=messages + [prompt]
-            model_inputs = {
-                "messages": messages,
-                "temperature": temperature,
-                **kwargs,
-            }
-        else:
-            model_inputs = {
-                "prompt": prompt,
-                "temperature": temperature,
-                "max_output_tokens": max_output_tokens, **kwargs,
-            }
+        model_inputs = {
+            self.prompt_key: prompt,
+            "temperature": temperature,
+            "max_output_tokens": max_output_tokens, **kwargs,
+        }
         return model_inputs
 
     def complete(
@@ -78,18 +64,16 @@ class GoogleProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            response = self.client(**model_inputs)
+            if isinstance(self.client, ChatModel):
+                chat = self.client.start_chat(context=context, examples=examples)
+                response = chat.send_message(**model_inputs)
+            elif isinstance(self.client, TextGenerationModel):
+                response = self.client.predict(**model_inputs)
         
-        if self.mode == 'chat':
-            completion = response.last
-        else:
-            completion = response.result
+        completion = response.text
 
-        if completion is None:
-            completion=""
         # Calculate tokens and cost
         prompt_tokens = len(prompt)
-
         completion_tokens = len(completion)
 
         cost_per_token = self.MODEL_INFO[self.model]
@@ -98,10 +82,9 @@ class GoogleProvider(BaseProvider):
             + (completion_tokens * cost_per_token["completion"])
         ) / 1_000_000
 
-        # fast approximation. We could call count_message_tokens() but this will add latency
-        prompt_tokens = math.ceil((prompt_tokens+1) / 3)
-        completion_tokens = math.ceil((completion_tokens+1) / 3)
-        total_tokens = math.ceil(prompt_tokens + completion_tokens)
+        prompt_tokens = prompt_tokens / 4
+        completion_tokens = completion_tokens / 4
+        total_tokens = prompt_tokens + completion_tokens
 
         meta = {
             "model": self.model,

@@ -251,7 +251,7 @@ documentation](https://developers.generativeai.google/guide)
 [Google Vertex AI documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts)
 
 
-## Using Google Vertex LLM models (deprecated)
+## Using Google Vertex LLM models
 
 0. (Set up a GCP account and create a project)
 1. Enable Vertex AI APIs in your GCP project - https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com

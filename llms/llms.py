@@ -11,6 +11,7 @@ from .providers import CohereProvider
 from .providers import AlephAlphaProvider
 from .providers import HuggingfaceHubProvider
 from .providers import GoogleProvider
+from .providers import GoogleGenAIProvider
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
@@ -34,7 +35,8 @@ class LLMS:
         Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
         Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
         Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
-        Provider(GoogleProvider, api_key_name="GOOGLE_API_KEY"),
+        Provider(GoogleGenAIProvider, api_key_name="GOOGLE_API_KEY"),
+        Provider(GoogleProvider, needs_api_key=False),
     ]
     _providers: List[BaseProvider] = []
     _models: List[str] = []
