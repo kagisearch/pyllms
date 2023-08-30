@@ -34,7 +34,7 @@ class LLMS:
         Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
         Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
         Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
-        Provider(GoogleProvider, needs_api_key=False),
+        Provider(GoogleProvider, api_key_name="GOOGLE_API_KEY"),
     ]
     _providers: List[BaseProvider] = []
     _models: List[str] = []
@@ -250,30 +250,31 @@ how to spell peach under this rule?",
                     "is 9677 a prime number?",
                     "yes",
                 ),
-                ("Current flight information (the following flights are one-way only, and all the flights available are included below):\
-There is a flight from city G to city B\
-There is a flight from city H to city K\
-There is a flight from city L to city M\
-There is a flight from city F to city H\
-There is a flight from city G to city J\
-There is a flight from city B to city I\
-There is a flight from city L to city A\
-There is a flight from city H to city N\
-There is a flight from city B to city D\
-There is a flight from city J to city C\
+                ("Current flight information (the following flights are one-way only, and all the flights available are included below):\n\
+There is a flight from city G to city B\n\
+There is a flight from city H to city K\n\
+There is a flight from city L to city M\n\
+There is a flight from city F to city H\n\
+There is a flight from city G to city J\n\
+There is a flight from city B to city I\n\
+There is a flight from city L to city A\n\
+There is a flight from city H to city N\n\
+There is a flight from city B to city D\n\
+There is a flight from city J to city C\n\
 Question: Is there a series of flights that goes from city F to city I?", "No"),
             ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1')
             ]
+        
 
         def evaluate_answers(
             evaluator, query_answer_pairs: List[Tuple[str, str]]
         ) -> List[int]:
             system = """
-You are given a problem and answer by a student. Sometimes the correct solution will be provided with the problem as a hint, but if it is not, then first think about the solution yourself, then score the solution of the student's solution with one of these scores:
-0 - Incorrect solution
-3 - Correct solution
+You are given a problem and answer by a student. Sometimes the correct solution will be provided with the problem and if it is not, then first think about the solution yourself, then score the solution of the student's solution with one of these scores:
+0 - Student provided incorrect or no solution
+3 - Student provided correct solution
 
-Your output should be using this template:
+Your output should be using always this template:
 Score: #
 """
             scores = []
@@ -281,16 +282,20 @@ Score: #
                 if not len(hint):
                     prompt = f"Problem: {query}\nStudent solution: {answer}"
                 else:
-                    prompt = f"Problem: {query}\nHint (correct answer): {hint}\nStudent solution: {answer}"
+                    prompt = f"Problem: {query}\nCorrect answer: {hint}\nStudent solution: {answer}"
                 #                print(prompt)
                 evaluator_result = evaluator.complete(
                     prompt, system_message=system
                 ).text
+                print(prompt)
+                print(system)
+                print(evaluator_result)
                 found = re.search(r"Score: (\d+)", evaluator_result)
                 if found:
                     scores.append(int(found.group(1)))
                 else:
                     print("No score found!", evaluator_result)
+                    scores.append(0)
 
             return scores
 
@@ -301,7 +306,7 @@ Score: #
             result = model.complete(prompt, max_tokens=1000, temperature=0)
             output_data = {
                 "text": result.text,
-                "tokens": result.meta["tokens"],
+                "tokens": result.meta["tokens_completion"],
                 "latency": result.meta["latency"],
                 "cost": result.meta["cost"],
                 "prompt_index": index,
