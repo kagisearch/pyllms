@@ -26,11 +26,12 @@ setup(
         "huggingface_hub",
         "google-cloud-aiplatform",
         "prettytable",
-        "einops",
-        "accelerate",
         "protobuf~=3.20.3",
         "grpcio~=1.54.2"
     ],
+    extras_require={
+        "local": ["einops", "accelerate"]
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
