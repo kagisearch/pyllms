@@ -270,7 +270,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No"),
             evaluator, query_answer_pairs: List[Tuple[str, str]]
         ) -> List[int]:
             system = """
-You are given a problem and answer by a student. Sometimes the correct solution will be provided with the problem and if it is not, then first think about the solution yourself, then score the solution of the student's solution with one of these scores:
+You are given a problem and student's solution. If the correct answer is provided use it, otherwise first think about the solution yourself, then score the the student's solution with one of these scores:
 0 - Student provided incorrect or no solution
 3 - Student provided correct solution
 
@@ -287,9 +287,9 @@ Score: #
                 evaluator_result = evaluator.complete(
                     prompt, system_message=system
                 ).text
-                print(prompt)
-                print(system)
-                print(evaluator_result)
+                #print(prompt)
+                #print(system)
+                #print(evaluator_result)
                 found = re.search(r"Score: (\d+)", evaluator_result)
                 if found:
                     scores.append(int(found.group(1)))
