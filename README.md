@@ -429,7 +429,9 @@ Useful links:\
 [AI21 documentation](https://docs.ai21.com/reference/j2-instruct-ref)\
 [Cohere documentation](https://cohere-sdk.readthedocs.io/en/latest/cohere.html#api)\
 [Aleph Alpha documentation](https://aleph-alpha-client.readthedocs.io/en/latest/aleph_alpha_client.html#aleph_alpha_client.CompletionRequest)\
-[Google AI documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts)
+[Google Generateive AI
+documentation](https://developers.generativeai.google/guide)
+[Google Vertex AI documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts)
 
 
 ## Using Google LLM models
