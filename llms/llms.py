@@ -295,7 +295,7 @@ Score: #
                 if found:
                     scores.append(int(found.group(1)))
                 else:
-                    print("No score found!", evaluator_result)
+                    #print("No score found!", evaluator_result)
                     scores.append(0)
 
             return scores

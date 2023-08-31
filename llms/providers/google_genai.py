@@ -99,8 +99,8 @@ class GoogleGenAIProvider(BaseProvider):
         ) / 1_000_000
 
         # fast approximation. We could call count_message_tokens() but this will add latency
-        prompt_tokens = math.ceil((prompt_tokens+1) / 3)
-        completion_tokens = math.ceil((completion_tokens+1) / 3)
+        prompt_tokens = math.ceil((prompt_tokens+1) / 4)
+        completion_tokens = math.ceil((completion_tokens+1) / 4)
         total_tokens = math.ceil(prompt_tokens + completion_tokens)
 
         meta = {
