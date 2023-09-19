@@ -1,6 +1,6 @@
 import inspect
 import json
-from typing import AsyncGenerator, Dict, Generator, List
+from typing import AsyncGenerator, Dict, Generator, List, Optional
 from warnings import warn
 
 from llms.providers.base_provider import BaseProvider
@@ -12,14 +12,14 @@ class Result:
         text: str,
         model_inputs: Dict,
         provider: BaseProvider,
-        meta: Dict = {},
-        function_call: Dict = {}
+        meta: Optional[Dict] = None,
+        function_call: Optional[Dict] = None,
     ):
-        self._meta = meta
+        self._meta = meta or {}
         self.text = text
         self.provider = provider
         self.model_inputs = model_inputs
-        self.function_call = function_call
+        self.function_call = function_call or {}
 
     @property
     def tokens_completion(self) -> int:
@@ -104,10 +104,10 @@ class StreamResult:
         stream: Generator,
         model_inputs: Dict,
         provider: BaseProvider,
-        meta: Dict = {},
+        meta: Optional[Dict] = None,
     ):
         self._stream = stream
-        self._meta = meta
+        self._meta = meta or {}
         self.provider = provider
         self.model_inputs = model_inputs
 
@@ -214,10 +214,10 @@ class AsyncStreamResult:
         stream: AsyncGenerator,
         model_inputs: Dict,
         provider: BaseProvider,
-        meta: Dict = {},
+        meta: Optional[Dict] = None,
     ):
         self._stream = stream
-        self._meta = meta
+        self._meta = meta or {}
         self.provider = provider
         self.model_inputs = model_inputs
 

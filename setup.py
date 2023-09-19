@@ -9,7 +9,7 @@ _project_homepage = "https://github.com/kagisearch/pyllms"
 
 setup(
     name="pyllms",
-    version="0.3.1",
+    version="0.3.2",
     description="Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google Palm2/Vertex, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
