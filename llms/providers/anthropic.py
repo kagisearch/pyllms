@@ -101,6 +101,7 @@ class AnthropicProvider(BaseProvider):
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
+        system_message: str = None,
         **kwargs,
     ) -> Result:
         """
