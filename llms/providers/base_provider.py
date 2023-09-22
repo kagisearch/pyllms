@@ -20,6 +20,12 @@ class BaseProvider:
     def __str__(self):
         return f"{self.__class__.__name__}('{self.model}')"
 
+    def _prepare_model_inputs(
+        self,
+        **kwargs
+    ) -> Dict:
+        raise NotImplementedError()
+
     @contextmanager
     def track_latency(self):
         start = time.perf_counter()
