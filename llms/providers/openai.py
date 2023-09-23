@@ -39,7 +39,7 @@ class OpenAIProvider(BaseProvider):
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(content))
 
-    def _prepapre_model_inputs(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         history: Optional[List[dict]] = None,
