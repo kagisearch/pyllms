@@ -39,7 +39,7 @@ class OpenAIProvider(BaseProvider):
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(content))
 
-    def _prepapre_model_inputs(
+    def _prepare_model_inputs(
         self,
         prompt: str,
         history: Optional[List[dict]] = None,
@@ -101,7 +101,7 @@ class OpenAIProvider(BaseProvider):
               It can has name key to include few-shots examples.
         """
         
-        model_inputs = self._prepapre_model_inputs(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -159,7 +159,7 @@ class OpenAIProvider(BaseProvider):
         if aiosession is not None:
             openai.aiosession.set(aiosession)
 
-        model_inputs = self._prepapre_model_inputs(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -205,7 +205,7 @@ class OpenAIProvider(BaseProvider):
             system_message: system messages in OpenAI format, must have role and content key.
               It can has name key to include few-shots examples.
         """
-        model_inputs = self._prepapre_model_inputs(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
@@ -254,7 +254,7 @@ class OpenAIProvider(BaseProvider):
         if aiosession is not None:
             openai.aiosession.set(aiosession)
 
-        model_inputs = self._prepapre_model_inputs(
+        model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
             system_message=system_message,
