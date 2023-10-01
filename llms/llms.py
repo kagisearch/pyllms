@@ -17,6 +17,10 @@ from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional, Tuple, Type, Union
+from logging import getLogger
+
+
+LOGGER = getLogger(__name__)
 
 
 @dataclass
@@ -46,6 +50,7 @@ class LLMS:
                  **kwargs
                  ):
         """Programmatically load api keys and instantiate providers."""
+
         for provider in [p for p in self._possible_providers if p.api_key_name]:
             assert provider.api_key_name  # for static type checking only
             api_key = None
@@ -65,7 +70,7 @@ class LLMS:
         for single_model in self._models:
             for provider in self._possible_providers:
                 if single_model in provider.provider.MODEL_INFO:
-                    print(f"Found {single_model} in {provider.provider.__name__}")
+                    LOGGER.info(f"Found {single_model} in {provider.provider.__name__}")
                     if provider.api_key:
                         self._providers.append(provider.provider(api_key=provider.api_key, model=single_model))
                     elif not provider.needs_api_key:
@@ -217,7 +222,7 @@ Name: Bob Johnson\
 Email: first.name.wild🐻@email.com\
 Phone: 5551112222\
 ",
-                ),               
+                ),
                 ("Please count the number of t in eeooeotetto", "3"),
                 (
                     "Use m to substitute p, a to substitute e, n to substitute a, g to substitute c, o to substitute h,\
@@ -269,7 +274,7 @@ There is a flight from city J to city C\n\
 Question: Is there a series of flights that goes from city F to city I?", "No"),
             ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1')
             ]
-        
+
 
         def evaluate_answers(
             evaluator, query_answer_pairs: List[Tuple[str, str]]
