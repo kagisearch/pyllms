@@ -14,10 +14,9 @@ class OpenAIProvider(BaseProvider):
     # cost is per million tokens
     MODEL_INFO = {
 
-        "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 8192,"is_chat": True},
-        "gpt-3.5-turbo-instruct": {"prompt": 2.0, "completion": 2.0, "token_limit": 8192, "is_chat": False },
-        "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8192,"is_chat": True},
-       
+        "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 4097, "is_chat": True},
+        "gpt-3.5-turbo-instruct": {"prompt": 2.0, "completion": 2.0, "token_limit": 4097, "is_chat": False},
+        "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8192, "is_chat": True},
     }
 
     def __init__(self, api_key, model=None):
