@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Dict, Generator, List, Optional
+from typing import AsyncGenerator, Dict, Generator, List, Optional, Union
 
 import aiohttp
 import tiktoken
@@ -30,13 +30,28 @@ class OpenAIProvider(BaseProvider):
     def is_chat_model(self) -> bool:
         return self.MODEL_INFO[self.model]['is_chat']
 
-    def count_tokens(self, content: str) -> int:
-        # count tokens for chat model coming soon
-        # this is mostly needed for stream result
-        if self.is_chat_model:
-            return 0
+    def count_tokens(self, content: Union[str, List[dict]]) -> int:
         enc = tiktoken.encoding_for_model(self.model)
-        return len(enc.encode(content))
+        if isinstance(content, list):
+            # When field name is present, ChatGPT will ignore the role token.
+            # Adopted from OpenAI cookbook
+            # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
+            # every message follows <im_start>{role/name}\n{content}<im_end>\n
+            formatting_token_count = 4
+
+            messages = content
+            messages_text = ["".join(message.values()) for message in messages]
+            tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
+
+            n_tokens_list = []
+            for token, message in zip(tokens, messages):
+                n_tokens = len(token) + formatting_token_count
+                if "name" in message:
+                    n_tokens += -1
+                n_tokens_list.append(n_tokens)
+            return sum(n_tokens_list)
+        else:
+            return len(enc.encode(content, disallowed_special=()))
 
     def _prepare_model_inputs(
         self,

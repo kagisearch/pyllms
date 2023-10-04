@@ -35,7 +35,8 @@ class Result:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            tokens_prompt = self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
+            tokens_prompt = self.provider.count_tokens(prompt)
             self._meta["tokens_prompt"] = tokens_prompt
             return tokens_prompt
 
@@ -149,7 +150,8 @@ class StreamResult:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            tokens_prompt = self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
+            tokens_prompt = self.provider.count_tokens(prompt)
             self._meta["tokens_prompt"] = tokens_prompt
             return tokens_prompt
 
@@ -266,7 +268,8 @@ class AsyncStreamResult:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
         else:
-            tokens_prompt = self.provider.count_tokens(self.model_inputs.get("prompt", ""))
+            prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
+            tokens_prompt = self.provider.count_tokens(prompt)
             self._meta["tokens_prompt"] = tokens_prompt
             return tokens_prompt
 
