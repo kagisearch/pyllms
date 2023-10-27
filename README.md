@@ -164,7 +164,7 @@ You can count tokens using the model's tokenizer:
 count=model.count_tokens('the quick brown fox jumped over the lazy dog')
 ```
 
-# Using OpenAI API on Azure (and elsewhere, where compatible)
+## Using OpenAI API on Azure (and elsewhere, where compatible)
 
 PyLLMs supports optional params to specify base path for the OpenAI input/utput format, for example OpenAI models running on Azure.
 
