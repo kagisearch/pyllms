@@ -161,7 +161,7 @@ class LLMS:
             raise ValueError("Streaming is possible only with a single model")
         return await self._providers[0].acomplete_stream(prompt, **kwargs)
 
-    def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False):
+    def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False, **kwargs):
         if not problems:
             problems = [
                 (
@@ -311,9 +311,9 @@ Score: #
 
         model_results = {}
 
-        def process_prompt(model, prompt, index):
+        def process_prompt(model, prompt, index, **kwargs):
             print(model, index)
-            result = model.complete(prompt, max_tokens=1000, temperature=0)
+            result = model.complete(prompt, max_tokens=1000, temperature=0, **kwargs)
             output_data = {
                 "text": result.text,
                 "tokens": result.meta["tokens_completion"],
@@ -323,11 +323,11 @@ Score: #
             }
             return output_data
 
-        def process_prompts_sequentially(model, prompts):
+        def process_prompts_sequentially(model, prompts, **kwargs):
             results = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 futures = [
-                    executor.submit(process_prompt, model, prompt[0], index)
+                    executor.submit(process_prompt, model, prompt[0], index, **kwargs)
                     for index, prompt in enumerate(prompts)
                 ]
                 for future in concurrent.futures.as_completed(futures):
@@ -337,7 +337,7 @@ Score: #
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(process_prompts_sequentially, model, problems)
+                executor.submit(process_prompts_sequentially, model, problems, **kwargs)
                 for model in self._providers
             ]
 
