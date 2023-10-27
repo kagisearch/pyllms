@@ -164,6 +164,31 @@ You can count tokens using the model's tokenizer:
 count=model.count_tokens('the quick brown fox jumped over the lazy dog')
 ```
 
+# Using OpenAI API on Azure (and elsewhere, where compatible)
+
+PyLLMs supports optional params to specify base path for the OpenAI input/utput format, for example OpenAI models running on Azure.
+
+```
+import llms
+AZURE_API_BASE = "{insert here}"
+AZURE_API_KEY = "{insert here}"
+
+model = llms.init('gpt-4')
+
+azure_args = {
+    "engine": "gpt-4",  # Azure deployment_id
+    "api_base": AZURE_API_BASE,
+    "api_type": "azure",
+    "api_version": "2023-05-15",
+    "api_key": AZURE_API_KEY,
+}
+
+openai_result = model.complete("what is 5+5")
+azure_result = model.complete("what is 5+5", **azure_args)
+
+model.benchmark(**azure_args)
+```
+
 # Model Benchmarks
 
 Models are appearing like mushrooms after rain and everyone is interested in three things:
