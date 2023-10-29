@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from prettytable import PrettyTable
 from .providers import OpenAIProvider
 from .providers import AnthropicProvider
+from .providers import BedrockAnthropicProvider
 from .providers import AI21Provider
 from .providers import CohereProvider
 from .providers import AlephAlphaProvider
@@ -35,6 +36,7 @@ class LLMS:
     _possible_providers: List[Provider] = [
         Provider(OpenAIProvider, api_key_name="OPENAI_API_KEY"),
         Provider(AnthropicProvider, api_key_name="ANTHROPIC_API_KEY"),
+        Provider(BedrockAnthropicProvider, needs_api_key=False),
         Provider(AI21Provider, api_key_name="AI21_API_KEY"),
         Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
         Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
@@ -74,7 +76,7 @@ class LLMS:
                     if provider.api_key:
                         self._providers.append(provider.provider(api_key=provider.api_key, model=single_model))
                     elif not provider.needs_api_key:
-                        self._providers.append(provider.provider(model=single_model))
+                        self._providers.append(provider.provider(model=single_model, **kwargs))
                     else:
                         raise ValueError("Invalid API key and model combination", single_model)
 
