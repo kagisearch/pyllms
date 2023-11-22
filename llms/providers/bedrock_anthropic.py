@@ -1,7 +1,7 @@
 # llms/providers/bedrock_anthropic.py
 
 import os
-from typing import Optional, Union
+from typing import Union
 
 import anthropic_bedrock
 
