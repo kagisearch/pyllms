@@ -1,6 +1,5 @@
 # llms/providers/anthropic.py
 
-import os
 from typing import AsyncGenerator, Dict, Generator, List, Optional, Union
 
 import anthropic
@@ -28,7 +27,7 @@ class AnthropicProvider(BaseProvider):
             "completion": 5.51,
             "token_limit": 100_000,
         },
-        "claude-2": {"prompt": 11.02, "completion": 32.68, "token_limit": 100_000},
+        "claude-2": {"prompt": 8.00, "completion": 24.00, "token_limit": 200_000},
     }
 
     def __init__(
