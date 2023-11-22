@@ -1,7 +1,7 @@
 # llms/providers/anthropic.py
 
 import os
-from typing import AsyncGenerator, Dict, Generator, List, Optional
+from typing import AsyncGenerator, Dict, Generator, List, Optional, Union
 
 import anthropic
 
@@ -31,15 +31,23 @@ class AnthropicProvider(BaseProvider):
         "claude-2": {"prompt": 11.02, "completion": 32.68, "token_limit": 100_000},
     }
 
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Union[str, None] = None,
+        model: Union[str, None] = None,
+        client_kwargs: Union[dict, None] = None,
+        async_client_kwargs: Union[dict, None] = None,
+    ):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
 
-        if api_key is None:
-            api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = anthropic.Anthropic(api_key=api_key)
-        self.async_client = anthropic.AsyncAnthropic(api_key=api_key)
+        if client_kwargs is None:
+            client_kwargs = {}
+        self.client = anthropic.Anthropic(api_key=api_key, **client_kwargs)
+        if async_client_kwargs is None:
+            async_client_kwargs = {}
+        self.async_client = anthropic.AsyncAnthropic(api_key=api_key, **async_client_kwargs)
 
     def count_tokens(self, content: str) -> int:
         return self.client.count_tokens(content)

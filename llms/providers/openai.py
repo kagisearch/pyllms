@@ -17,12 +17,22 @@ class OpenAIProvider(BaseProvider):
         "gpt-4-1106-preview": {"prompt": 10.0, "completion": 20.0, "token_limit": 128000, "is_chat": True},
     }
 
-    def __init__(self, api_key=None, model=None):
+    def __init__(
+        self,
+        api_key: Union[str, None] = None,
+        model: Union[str, None] = None,
+        client_kwargs: Union[dict, None] = None,
+        async_client_kwargs: Union[dict, None] = None,
+    ):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
-        self.client = OpenAI(api_key=api_key)
-        self.async_client = AsyncOpenAI(api_key=api_key)
+        if client_kwargs is None:
+            client_kwargs = {}
+        self.client = OpenAI(api_key=api_key, **client_kwargs)
+        if async_client_kwargs is None:
+            async_client_kwargs = {}
+        self.async_client = AsyncOpenAI(api_key=api_key, **async_client_kwargs)
 
     @property
     def is_chat_model(self) -> bool:
