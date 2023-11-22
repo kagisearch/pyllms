@@ -1,6 +1,6 @@
 openai
 tiktoken
-anthropic==0.3
+anthropic>=0.3
 anthropic_bedrock
 ai21
 cohere
