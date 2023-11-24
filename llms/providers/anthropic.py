@@ -59,11 +59,19 @@ class AnthropicProvider(BaseProvider):
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
+        system_message: Union[str, None] = None,
         stream: bool = False,
         **kwargs,
     ) -> Dict:
+        if system_message is None:
+            system_prompts = ""
+        else:
+            if self.model != "claude-2":
+                raise ValueError("System message only available for Claude-2 model")
+            system_prompts = f"{system_message.rstrip()}\n\n"
+
         formatted_prompt = (
-            f"{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
+            f"{system_prompts}{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
         )
 
         if history is not None:
@@ -108,7 +116,7 @@ class AnthropicProvider(BaseProvider):
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
-        system_message: str = None,
+        system_message: Union[str, None] = None,
         **kwargs,
     ) -> Result:
         """
@@ -125,6 +133,7 @@ class AnthropicProvider(BaseProvider):
             max_tokens=max_tokens,
             stop_sequences=stop_sequences,
             ai_prompt=ai_prompt,
+            system_message=system_message,
             **kwargs,
         )
 
@@ -148,6 +157,7 @@ class AnthropicProvider(BaseProvider):
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
+        system_message: Union[str, None] = None,
         **kwargs,
     ):
         """
@@ -163,6 +173,7 @@ class AnthropicProvider(BaseProvider):
             max_tokens=max_tokens,
             stop_sequences=stop_sequences,
             ai_prompt=ai_prompt,
+            system_message=system_message,
             **kwargs,
         )
         with self.track_latency():
@@ -186,6 +197,7 @@ class AnthropicProvider(BaseProvider):
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
+        system_message: Union[str, None] = None,
         **kwargs,
     ) -> StreamResult:
         """
@@ -201,6 +213,7 @@ class AnthropicProvider(BaseProvider):
             max_tokens=max_tokens,
             stop_sequences=stop_sequences,
             ai_prompt=ai_prompt,
+            system_message=system_message,
             stream=True,
             **kwargs,
         )
@@ -224,6 +237,7 @@ class AnthropicProvider(BaseProvider):
         max_tokens: int = 300,
         stop_sequences: Optional[List[str]] = None,
         ai_prompt: str = "",
+        system_message: Union[str, None] = None,
         **kwargs,
     ) -> AsyncStreamResult:
         """
@@ -239,6 +253,7 @@ class AnthropicProvider(BaseProvider):
             max_tokens=max_tokens,
             stop_sequences=stop_sequences,
             ai_prompt=ai_prompt,
+            system_message=system_message,
             stream=True,
             **kwargs,
         )
