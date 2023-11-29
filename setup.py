@@ -17,7 +17,7 @@ setup(
     author_email="vlad@kagi.com",
     packages=find_packages(),
     install_requires=[
-        "openai",
+        "openai>=1",
         "tiktoken",
         "anthropic>=0.3",
         "anthropic_bedrock",
@@ -28,7 +28,8 @@ setup(
         "google-cloud-aiplatform",
         "prettytable",
         "protobuf~=3.20.3",
-        "grpcio~=1.54.2"
+        "grpcio~=1.54.2",
+        "google-generativeai",
     ],
     extras_require={
         "local": ["einops", "accelerate"]
