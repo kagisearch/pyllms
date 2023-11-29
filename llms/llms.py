@@ -233,7 +233,7 @@ how to spell peach under this rule?",
                 ),
                 (
                     "two workers paint the fence in 8 hours. how long will it take one worker paint the same fence if they are injured and need to take a 30 min break after every hour of work?",
-                    "5.5 hours",
+                    "23.5 hours",
                 ),
                 ("5+55+555+5555+55555-1725=", "60000"),
                 ("-2-2-2-2-2-2*-2*-2=", "-18"),
@@ -274,7 +274,9 @@ There is a flight from city H to city N\n\
 There is a flight from city B to city D\n\
 There is a flight from city J to city C\n\
 Question: Is there a series of flights that goes from city F to city I?", "No"),
-            ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1')
+            ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1'),
+            ('Imagine there is a circular pond in an oasis, with two trees at the edge of the pond, on opposite sides. Bob sets up a hammock by hanging it between the two trees. He gets into the hammock and falls asleep. If he were to roll over in his sleep and fall out of the hammock, where would he fall?',
+                'water, in the center of the pond'),
             ]
 
 
