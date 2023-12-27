@@ -120,7 +120,7 @@ PyLLMs supports streaming from compatible models. 'complete_stream' method will 
 ```
 model= llms.init('claude-v1')
 result = model.complete_stream("write an essay on civil war")
-for chunk in result:
+for chunk in result.stream:
    if chunk is not None:
       print(chunk, end='')   
 ```
