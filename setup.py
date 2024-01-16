@@ -9,7 +9,7 @@ _project_homepage = "https://github.com/kagisearch/pyllms"
 
 setup(
     name="pyllms",
-    version="0.4.0",
+    version="0.4.1",
     description="Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google Palm2/Vertex, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -30,6 +30,7 @@ setup(
         "protobuf~=3.20.3",
         "grpcio~=1.54.2",
         "google-generativeai",
+        "mistralai",
     ],
     extras_require={
         "local": ["einops", "accelerate"]

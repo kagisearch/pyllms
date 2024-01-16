@@ -7,3 +7,4 @@ from .google import GoogleProvider
 from .google_genai import GoogleGenAIProvider
 from .huggingface import HuggingfaceHubProvider
 from .openai import OpenAIProvider
+from .mistral import MistralProvider

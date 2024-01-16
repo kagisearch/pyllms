@@ -13,6 +13,7 @@ from .providers import AlephAlphaProvider
 from .providers import HuggingfaceHubProvider
 from .providers import GoogleProvider
 from .providers import GoogleGenAIProvider
+from .providers import MistralProvider
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
@@ -42,6 +43,7 @@ class LLMS:
         Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
         Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
         Provider(GoogleGenAIProvider, api_key_name="GOOGLE_API_KEY"),
+        Provider(MistralProvider, api_key_name="MISTRAL_API_KEY"),
         Provider(GoogleProvider, needs_api_key=False),
     ]
     _providers: List[BaseProvider] = []
