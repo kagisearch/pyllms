@@ -27,6 +27,11 @@ class AnthropicProvider(BaseProvider):
             "completion": 5.51,
             "token_limit": 100_000,
         },
+         "claude-instant-1.2": {
+            "prompt": 1.63,
+            "completion": 5.51,
+            "token_limit": 100_000,
+        },
         "claude-2": {"prompt": 8.00, "completion": 24.00, "token_limit": 200_000},
     }
 

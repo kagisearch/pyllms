@@ -45,6 +45,7 @@ export COHERE_API_KEY="your_api_key_here"
 export ALEPHALPHA_API_KEY="your_api_key_here"
 export HUGGINFACEHUB_API_KEY="your_api_key_here"
 export GOOGLE_API_KEY="your_api_key_here"
+export MISTRAL_API_KEY="your_api_key_here"
 
 export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
