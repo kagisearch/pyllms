@@ -5,7 +5,6 @@ from mistralai.async_client import MistralAsyncClient
 from mistralai.models.chat_completion import ChatMessage
 
 
-
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
 
@@ -37,26 +36,19 @@ class MistralProvider(BaseProvider):
             async_client_kwargs = {}
         self.async_client = MistralAsyncClient(api_key=api_key, **async_client_kwargs)
 
-    def count_tokens(self, content: Union[str, List[dict]]) -> int:
+    def count_tokens(self, content: str | List[ChatMessage]) -> int:
         # TODO: update after Mistarl support count token in their SDK
         # use gpt 3.5 turbo for estimation now
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         if isinstance(content, list):
-            # When field name is present, ChatGPT will ignore the role token.
-            # Adopted from OpenAI cookbook
-            # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-            # every message follows <im_start>{role/name}\n{content}<im_end>\n
             formatting_token_count = 4
-
             messages = content
-            messages_text = ["".join(message.values()) for message in messages]
+            messages_text = [f"{message.role}{message.content}" for message in messages]
             tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
 
             n_tokens_list = []
             for token, message in zip(tokens, messages):
                 n_tokens = len(token) + formatting_token_count
-                if "name" in message:
-                    n_tokens += -1
                 n_tokens_list.append(n_tokens)
             return sum(n_tokens_list)
         else:
