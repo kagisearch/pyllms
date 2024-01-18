@@ -40,7 +40,7 @@ class MistralProvider(BaseProvider):
     def count_tokens(self, content: Union[str, List[dict]]) -> int:
         # TODO: update after Mistarl support count token in their SDK
         # use gpt 3.5 turbo for estimation now
-        enc = tiktoken.encoding_for_model(self.model)
+        enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         if isinstance(content, list):
             # When field name is present, ChatGPT will ignore the role token.
             # Adopted from OpenAI cookbook
