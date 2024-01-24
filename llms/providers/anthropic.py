@@ -68,18 +68,10 @@ class AnthropicProvider(BaseProvider):
         stream: bool = False,
         **kwargs,
     ) -> Dict:
-        if system_message is None:
-            system_prompts = ""
+
+        if history is None:
+            history_prompt = ""
         else:
-            if self.model != "claude-2":
-                raise ValueError("System message only available for Claude-2 model")
-            system_prompts = f"{system_message.rstrip()}\n\n"
-
-        formatted_prompt = (
-            f"{system_prompts}{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
-        )
-
-        if history is not None:
             history_text_list = []
             for message in history:
                 role = message["role"]
@@ -97,7 +89,17 @@ class AnthropicProvider(BaseProvider):
                 history_text_list.append(formatted_message)
 
             history_prompt = "".join(history_text_list)
-            formatted_prompt = f"{history_prompt}{formatted_prompt}"
+
+        if system_message is None:
+            system_prompts = ""
+        else:
+            if self.model != "claude-2":
+                raise ValueError("System message only available for Claude-2 model")
+            system_prompts = f"{system_message.rstrip()}"
+
+        formatted_prompt = (
+            f"{system_prompts}{history_prompt}{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
+        )
 
         max_tokens_to_sample = kwargs.pop("max_tokens_to_sample", max_tokens)
 
