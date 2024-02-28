@@ -16,7 +16,7 @@ class MistralProvider(BaseProvider):
         "open-mistral-7b": {"prompt": 0.25, "completion": 0.25, "token_limit": 32_000},
         "mistral-small": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
         # new endpoint for mistral-small, mistral-small will be deprecated in ~June 2024
-        "open-mixtral-8x7B": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
+        "open-mixtral-8x7b": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
         "mistral-small-latest": {"prompt": 2.0, "completion": 6.0, "token_limit": 32_000},
         "mistral-medium-latest": {"prompt": 2.7, "completion": 8.1, "token_limit": 32_000},
         "mistral-large-latest": {"prompt": 8.0, "completion": 24.0, "token_limit": 32_000},
