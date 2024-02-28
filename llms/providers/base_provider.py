@@ -44,12 +44,12 @@ class BaseProvider:
         cost = round(cost, 5)
         return cost
 
-    def count_tokens(self):
+    def count_tokens(self, content):
         raise NotImplementedError(
             f"Count tokens is currently not supported with {self.__name__}"
         )
 
-    def complete(self):
+    def complete(self, *args, **kwargs):
         raise NotImplementedError
 
     async def acomplete(self):
