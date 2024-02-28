@@ -11,9 +11,15 @@ from .base_provider import BaseProvider
 
 class MistralProvider(BaseProvider):
     MODEL_INFO = {
-        "mistral-tiny": {"prompt": 0.14, "completion": 0.42, "token_limit": 32_000},
-        "mistral-small": {"prompt": 0.6, "completion": 1.8, "token_limit": 32_000},
-        "mistral-medium": {"prompt": 2.5, "completion": 7.5, "token_limit": 32_000},
+        "mistral-tiny": {"prompt": 0.25, "completion": 0.25, "token_limit": 32_000},
+        # new endpoint for mistral-tiny, mistral-tiny will be deprecated in ~June 2024
+        "open-mistral-7b": {"prompt": 0.25, "completion": 0.25, "token_limit": 32_000},
+        "mistral-small": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
+        # new endpoint for mistral-small, mistral-small will be deprecated in ~June 2024
+        "open-mixtral-8x7B": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
+        "mistral-small-latest": {"prompt": 2.0, "completion": 6.0, "token_limit": 32_000},
+        "mistral-medium-latest": {"prompt": 2.7, "completion": 8.1, "token_limit": 32_000},
+        "mistral-large-latest": {"prompt": 8.0, "completion": 24.0, "token_limit": 32_000},
     }
 
     def __init__(
