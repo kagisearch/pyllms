@@ -24,7 +24,7 @@ class AnthropicProvider(BaseProvider):
             "token_limit": 100_000,
         },
         "claude-instant-1.2": {"prompt": 1.63, "completion": 5.51, "token_limit": 100_000, "output_limit": 4_096},
-        "claude-2": {"prompt": 8.00, "completion": 24.00, "token_limit": 200_000, "output_limit": 4_096},
+        "claude-2.1": {"prompt": 8.00, "completion": 24.00, "token_limit": 200_000, "output_limit": 4_096},
         "claude-3-sonnet-20240229": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
         "claude-3-opus-20240229": {"prompt": 15.00, "completion": 75, "token_limit": 200_000, "output_limit": 4_096},
     }
