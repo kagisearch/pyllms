@@ -9,19 +9,17 @@ from .base_provider import BaseProvider
 
 def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
     model_info = {}
+    try:
+        pulled_models = Client(host=ollama_host).list().get("models", [])
+        for model in pulled_models:
+            name = model["name"]
+            model_info[name] = {}
 
-    pulled_models = Client(host=ollama_host).list().get("models", [])
-    for model in pulled_models:
-        name = model["name"]
-        model_info[name] = {
-            "prompt": 0.0,
-            "completion": 0.0,
-            "token_limit": 1_024,
-            "output_limit": 4_096
-        }
-
-    if not pulled_models:
-        raise ValueError("Could not retrieve any models from Ollama")
+        if not pulled_models:
+            raise ValueError("Could not retrieve any models from Ollama")
+    except Exception:
+        # In the event ollama is not running or can't be reached, return an empty dictionary
+        pass
 
     return model_info
 
