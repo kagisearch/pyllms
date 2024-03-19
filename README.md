@@ -314,7 +314,7 @@ tinyllama:latest	...  637 MB	...
 
 ```python
 model = llms.init("tinyllama:latest")
-result = model.complete("hello!)
+result = model.complete("hello!")
 ```
 
 where `tinyllama:latest` is the model name of an installed model.
