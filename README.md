@@ -1,11 +1,11 @@
-
 # PyLLMs
 
-[![](https://dcbadge.vercel.app/api/server/aDNg6E9szy?compact=true&style=flat)](https://discord.gg/aDNg6E9szy) [![Twitter](https://img.shields.io/twitter/follow/KagiHQ?style=social)](https://twitter.com/KagiHQ) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit/) 
+[![](https://dcbadge.vercel.app/api/server/aDNg6E9szy?compact=true&style=flat)](https://discord.gg/aDNg6E9szy) [![Twitter](https://img.shields.io/twitter/follow/KagiHQ?style=social)](https://twitter.com/KagiHQ) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit/)
 
-PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark. 
+PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark.
 
 It is ideal for fast prototyping and evaluating different models thanks to:
+
 - Connect to top LLMs in a few lines of code
 - Response meta includes tokens processed, cost and latency standardized across the models
 - Multi-model support: Get completions from different models at the same time
@@ -21,9 +21,7 @@ Install the package using pip:
 pip install pyllms
 ```
 
-
 # Usage
-
 
 ```
 import llms
@@ -31,7 +29,7 @@ import llms
 model = llms.init('gpt-4')
 result = model.complete("what is 5+5")
 
-print(result.text)  
+print(result.text)
 
 ```
 
@@ -50,7 +48,6 @@ export MISTRAL_API_KEY="your_api_key_here"
 export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
 
-
 Alternatively, you can pass initialization values to the init() method:
 
 ```
@@ -59,7 +56,7 @@ model=llms.init(openai_api_key='your_api_key_here', model='gpt-4')
 
 For using Google LLMs through Vertex AI API, see "Using Google AI models" below.
 
-You can also pass optional parameters to the complete method. 'temperature' and 'max_tokens' are standardized across all APIs and get converted to the corresponding API params. 
+You can also pass optional parameters to the complete method. 'temperature' and 'max_tokens' are standardized across all APIs and get converted to the corresponding API params.
 
 Any other parameters accepted by the original model are supported in their verbatim form.
 
@@ -74,42 +71,43 @@ result = model.complete(
 Note: By default, temperature for all models is set to 0, and max_tokens to 300.
 
 The result meta will contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency:
+
 ```
 >>> print(result.meta)
 {
-  'model': 'gpt-3.5-turbo', 
-  'tokens': 34, 
-  'tokens_prompt': 20, 
-  'tokens_completion': 14, 
-  'cost': '0.00007', 
+  'model': 'gpt-3.5-turbo',
+  'tokens': 34,
+  'tokens_prompt': 20,
+  'tokens_completion': 14,
+  'cost': '0.00007',
   'latency': 1.4
 }
 ```
 
-
-
 ## Multi-model usage
 
-You can also initialize multiple models at once! This is very useful for testing and comparing output of different models in parallel. 
+You can also initialize multiple models at once! This is very useful for testing and comparing output of different models in parallel.
 
 ```
 >>> models=llms.init(model=['gpt-3.5-turbo','claude-instant-v1'])
 >>> result=models.complete('what is the capital of country where mozzart was born')
 >>> print(result.text)
 [
- 'The capital of the country where Mozart was born is Vienna, Austria.', 
+ 'The capital of the country where Mozart was born is Vienna, Austria.',
  'Wolfgang Amadeus Mozart was born in Salzburg, Austria.\n\nSo the capital of the country where Mozart was born is Vienna, Austria.'
 ]
 
 >>> print(result.meta)
 [
- {'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455}, 
+ {'model': 'gpt-3.5-turbo', 'tokens': 34, 'tokens_prompt': 20, 'tokens_completion': 14, 'cost': 6.8e-05, 'latency': 0.7097790241241455},
  {'model': 'claude-instant-v1', 'tokens': 54, 'tokens_prompt': 20, 'tokens_completion': 34, 'cost': 5.79e-05, 'latency': 0.7291600704193115}
 ]
 ```
 
 ## Async support
+
 Async completion is supported for compatible models. It is not supported in multi-models mode yet.
+
 ```
 result = await model.acomplete("what is the capital of country where mozzart was born")
 ```
@@ -123,13 +121,13 @@ model= llms.init('claude-v1')
 result = model.complete_stream("write an essay on civil war")
 for chunk in result.stream:
    if chunk is not None:
-      print(chunk, end='')   
+      print(chunk, end='')
 ```
 
 Current limitations:
+
 - When streaming, 'meta' is not available
 - Multi-models are not supported for streaming
-
 
 Tip: if you are testing this in python3 CLI, run it with -u parameter to disable buffering:
 
@@ -144,7 +142,7 @@ You can pass the history of conversation in a list using the following format:
 ```
 history=[]
 history.append({"role": "user", "content": user_input})
-history.append({"role": "assistant", "content": result.text})  
+history.append({"role": "assistant", "content": result.text})
 
 model.complete(prompt=prompt, history=history)
 
@@ -194,12 +192,11 @@ model.benchmark(**azure_args)
 
 Models are appearing like mushrooms after rain and everyone is interested in three things:
 
-1) Quality
-2) Speed
-3) Cost
+1. Quality
+2. Speed
+3. Cost
 
 PyLLMs icludes an automated benchmark system. The quality of models is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
-
 
 ```
 models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
@@ -245,6 +242,7 @@ To get a list of supported models, call list(). Models will be shown in the orde
 ```
 
 Here is a pretty table of supported models (in alphabetical order).
+
 ```
 
 | Provider            | Name                   | Prompt Cost | Completion Cost | Token Limit |
@@ -276,21 +274,51 @@ Useful links:\
 documentation](https://developers.generativeai.google/guide)
 [Google Vertex AI documentation](https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts)
 
-
 ## Using Google Vertex LLM models
 
 0. (Set up a GCP account and create a project)
 1. Enable Vertex AI APIs in your GCP project - https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com
 1. Install gcloud CLI tool - https://cloud.google.com/sdk/docs/install
-2. Set up Application Default Credentials - https://cloud.google.com/docs/authentication/provide-credentials-adc#how-to
-3. Now you should be able to init Google LLM 
+1. Set up Application Default Credentials - https://cloud.google.com/docs/authentication/provide-credentials-adc#how-to
+1. Now you should be able to init Google LLM
 
 ```
 model = llms.init('chat-bison')
 result = model.complete("hello!")
 ```
 
+## Using Local Ollama LLM models
+
+PyLLMs supports locally installed [Ollama](https://ollama.com/) models.
+
+To use your Ollama models:
+
+0. Ensure Ollama is running (as well as reachable at `localhost:11434`) and you've pulled the model you would like to use.
+
+1. Get the name of the LLM you would like to use.
+
+Run:
+
+```bash
+ollama list
+```
+
+to get a list of installed models.
+
+```
+NAME            	ID   SIZE  	MODIFIED
+tinyllama:latest	...  637 MB	...
+```
+
+2. Initialize PyLLMs as you would any other model:
+
+```python
+model = llms.init("tinyllama:latest")
+result = model.complete("hello!)
+```
+
+where `tinyllama:latest` is the model name of an installed model.
+
 # License
 
 This project is licensed under the MIT License.
-
