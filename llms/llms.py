@@ -14,6 +14,7 @@ from .providers import HuggingfaceHubProvider
 from .providers import GoogleProvider
 from .providers import GoogleGenAIProvider
 from .providers import MistralProvider
+from .providers import OllamaProvider
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
@@ -45,6 +46,7 @@ class LLMS:
         Provider(GoogleGenAIProvider, api_key_name="GOOGLE_API_KEY"),
         Provider(MistralProvider, api_key_name="MISTRAL_API_KEY"),
         Provider(GoogleProvider, needs_api_key=False),
+        Provider(OllamaProvider, needs_api_key=False)
     ]
     _providers: List[BaseProvider] = []
     _models: List[str] = []
