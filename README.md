@@ -5,7 +5,6 @@
 PyLLMs is a minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, AI21, Cohere, Aleph Alpha, HuggingfaceHub) with a built-in model performance benchmark.
 
 It is ideal for fast prototyping and evaluating different models thanks to:
-
 - Connect to top LLMs in a few lines of code
 - Response meta includes tokens processed, cost and latency standardized across the models
 - Multi-model support: Get completions from different models at the same time
@@ -71,7 +70,6 @@ result = model.complete(
 Note: By default, temperature for all models is set to 0, and max_tokens to 300.
 
 The result meta will contain helpful information like tokens used, cost (which is automatically calculated using current pricing), and response latency:
-
 ```
 >>> print(result.meta)
 {
@@ -105,9 +103,7 @@ You can also initialize multiple models at once! This is very useful for testing
 ```
 
 ## Async support
-
 Async completion is supported for compatible models. It is not supported in multi-models mode yet.
-
 ```
 result = await model.acomplete("what is the capital of country where mozzart was born")
 ```
@@ -125,7 +121,6 @@ for chunk in result.stream:
 ```
 
 Current limitations:
-
 - When streaming, 'meta' is not available
 - Multi-models are not supported for streaming
 
@@ -192,9 +187,9 @@ model.benchmark(**azure_args)
 
 Models are appearing like mushrooms after rain and everyone is interested in three things:
 
-1. Quality
-2. Speed
-3. Cost
+1) Quality
+2) Speed
+3) Cost
 
 PyLLMs icludes an automated benchmark system. The quality of models is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
 
@@ -242,7 +237,6 @@ To get a list of supported models, call list(). Models will be shown in the orde
 ```
 
 Here is a pretty table of supported models (in alphabetical order).
-
 ```
 
 | Provider            | Name                   | Prompt Cost | Completion Cost | Token Limit |
@@ -279,8 +273,8 @@ documentation](https://developers.generativeai.google/guide)
 0. (Set up a GCP account and create a project)
 1. Enable Vertex AI APIs in your GCP project - https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com
 1. Install gcloud CLI tool - https://cloud.google.com/sdk/docs/install
-1. Set up Application Default Credentials - https://cloud.google.com/docs/authentication/provide-credentials-adc#how-to
-1. Now you should be able to init Google LLM
+2. Set up Application Default Credentials - https://cloud.google.com/docs/authentication/provide-credentials-adc#how-to
+3. Now you should be able to init Google LLM
 
 ```
 model = llms.init('chat-bison')
