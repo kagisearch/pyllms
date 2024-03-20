@@ -31,6 +31,7 @@ setup(
         "grpcio~=1.54.2",
         "google-generativeai",
         "mistralai",
+        "ollama",
     ],
     extras_require={
         "local": ["einops", "accelerate"]
