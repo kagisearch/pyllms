@@ -16,6 +16,7 @@ class GoogleGenAIProvider(BaseProvider):
         # no support for "textembedding-gecko"
         "chat-bison-genai": {"prompt": 0.5, "completion": 0.5, "token_limit": 0, "uses_characters": True},
         "text-bison-genai": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
+        "gemini-1.5-pro-latest": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
     }
     
     def __init__(self, api_key=None, model=None, **kwargs):

@@ -21,7 +21,8 @@ class GoogleProvider(BaseProvider):
         "code-bison": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
         "code-bison-32k": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
         "codechat-bison": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},    
-        "codechat-bison-32k": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},    
+        "codechat-bison-32k": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
+        "gemini-pro": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},     
      }
     
     def __init__(self, model=None, **kwargs):
