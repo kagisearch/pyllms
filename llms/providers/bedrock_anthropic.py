@@ -3,7 +3,7 @@
 import os
 from typing import Union
 
-import anthropic_bedrock
+from anthropic import AnthropicBedrock, AsyncAnthropicBedrock
 
 from .anthropic import AnthropicProvider
 
@@ -41,7 +41,7 @@ class BedrockAnthropicProvider(AnthropicProvider):
 
         if client_kwargs is None:
             client_kwargs = {}
-        self.client = anthropic_bedrock.AnthropicBedrock(
+        self.client = AnthropicBedrock(
             aws_access_key=aws_access_key,
             aws_secret_key=aws_secret_key,
             aws_region=aws_region,
@@ -50,7 +50,7 @@ class BedrockAnthropicProvider(AnthropicProvider):
 
         if async_client_kwargs is None:
             async_client_kwargs = {}
-        self.async_client = anthropic_bedrock.AsyncAnthropicBedrock(
+        self.async_client = AsyncAnthropicBedrock(
             aws_access_key=aws_access_key,
             aws_secret_key=aws_secret_key,
             aws_region=aws_region,

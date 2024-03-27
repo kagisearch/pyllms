@@ -20,7 +20,6 @@ setup(
         "openai>=1",
         "tiktoken",
         "anthropic>=0.18",
-        "anthropic_bedrock",
         "ai21",
         "cohere",
         "aleph-alpha-client",
