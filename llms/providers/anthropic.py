@@ -147,7 +147,7 @@ class AnthropicProvider(BaseProvider):
             "messages": messages,
             "system": system_message,
             "temperature": temperature,
-            "max_tokens":max_tokens,
+            "max_tokens": max_tokens,
             "stop_sequences": stop_sequences,
         }
         return model_inputs
