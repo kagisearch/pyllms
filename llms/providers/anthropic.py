@@ -101,8 +101,8 @@ class AnthropicProvider(BaseProvider):
         if system_message is None:
             system_prompts = ""
         else:
-            if not self.model != "claude-2":
-                raise ValueError("System message only available for Claude-2 model")
+            if not self.model.startswith(( "claude-2", "claude-3")):
+                raise ValueError("System message only available for Claude-2+ model")
             system_prompts = f"{system_message.rstrip()}"
 
         formatted_prompt = (
@@ -147,7 +147,7 @@ class AnthropicProvider(BaseProvider):
             "messages": messages,
             "system": system_message,
             "temperature": temperature,
-            "max_tokens_to_sample": max_tokens,
+            "max_tokens":max_tokens,
             "stop_sequences": stop_sequences,
         }
         return model_inputs

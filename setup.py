@@ -27,7 +27,7 @@ setup(
         "google-cloud-aiplatform",
         "prettytable",
         "protobuf>=3.20.3",
-        "grpcio~=1.54.2",
+        "grpcio>=1.54.2",
         "google-generativeai",
         "mistralai",
         "ollama",

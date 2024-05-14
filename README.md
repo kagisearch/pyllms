@@ -210,11 +210,14 @@ models.benchmark(evaluator=gpt4)
 | GoogleProvider('chat-bison') | Total Tokens: 2759 | Total Cost: 0.00689 | Median Latency: 2.83 | Aggregated speed: 36.24 | Accuracy: 19.23% |
 | GoogleProvider('text-bison') | Total Tokens: 1155 | Total Cost: 0.00897 | Median Latency: 0.38 | Aggregated speed: 60.60 | Accuracy: 25.64% |
 | CohereProvider('command') | Total Tokens: 4033 | Total Cost: 0.08125 | Median Latency: 5.77 | Aggregated speed: 9.44 | Accuracy: 11.54% |
-| OpenAIProvider('gpt-3.5-turbo') | Total Tokens: 2570 | Total Cost: 0.00825 | Median Latency: 2.38 | Aggregated speed: 30.47 | Accuracy: 38.46% |
-| OpenAIProvider('gpt-4') | Total Tokens: 2860 | Total Cost: 0.21837 | Median Latency: 3.22 | Aggregated speed: 10.52 | Accuracy: 44.87% |
+| OpenAIProvider('gpt-3.5-turbo') | Total Tokens: 2116 | Total Cost: 0.00753 | Median Latency: 1.18 | Aggregated speed: 42.62 | Accuracy: 37.04% |
 | AnthropicProvider('claude-instant-v1') | Total Tokens: 3437 | Total Cost: 0.02153 | Median Latency: 1.84 | Aggregated speed: 61.64 | Accuracy: 42.31% |
+|  AnthropicProvider('claude-3-haiku-20240307') | Total Tokens: 6493 | Total Cost: 0.00855 | Median Latency: 1.64 | Aggregated speed: 127.44 | Accuracy: 51.85% |
+|     OpenAIProvider('gpt-4')     | Total Tokens: 2109 | Total Cost: 0.17580 | Median Latency: 2.00 | Aggregated speed: 14.04 | Accuracy: 51.85% |
+| AnthropicProvider('claude-3-sonnet-20240229') | Total Tokens: 5569 | Total Cost: 0.08876 | Median Latency: 3.65 | Aggregated speed: 54.67  | Accuracy: 55.56% |
 | AnthropicProvider('claude-2') | Total Tokens: 3545 | Total Cost: 0.13337 | Median Latency: 6.83 | Aggregated speed: 19.51 | Accuracy: 69.23% |
 | OpenAIProvider('gpt-4-turbo') | Total Tokens: 5538 | Total Cost: 0.18256 | Median Latency: 10.68 | Aggregated speed: 14.45 | Accuracy: 74.07% |
+|  AnthropicProvider('claude-3-opus-20240229')  | Total Tokens: 6522 | Total Cost: 0.51525 | Median Latency: 8.56 | Aggregated speed: 26.55  | Accuracy: 74.07% |
 |    OpenAIProvider('gpt-4o')   | Total Tokens: 6483 | Total Cost: 0.10539 |  Median Latency: 1.91 | Aggregated speed: 94.01 | Accuracy: 85.19% |
 +-------------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
 
