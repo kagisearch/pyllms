@@ -6,6 +6,8 @@ from typing import Dict
 import math
 import vertexai
 from vertexai.language_models import TextGenerationModel, ChatModel, CodeGenerationModel, CodeChatModel, InputOutputTextPair
+from vertexai.generative_models import GenerativeModel, Part
+import vertexai.preview.generative_models as generative_models
 
 from ..results.result import Result
 from .base_provider import BaseProvider
@@ -23,6 +25,8 @@ class GoogleProvider(BaseProvider):
         "codechat-bison": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},    
         "codechat-bison-32k": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
         "gemini-pro": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},     
+        "gemini-1.5-pro-preview-0514" : {"prompt": 0.35, "completion": 0.53, "token_limit": 0, "uses_characters": False},     
+        "gemini-1.5-flash-preview-0514" : {"prompt": 0.35, "completion": 0.53, "token_limit": 0, "uses_characters": False},     
      }
     
     def __init__(self, model=None, **kwargs):
@@ -39,6 +43,9 @@ class GoogleProvider(BaseProvider):
         elif model.startswith('codechat-'):
             self.client = CodeChatModel.from_pretrained(model)
             self.prompt_key = 'message'
+        elif model.startswith('gemini'):
+            self.client = GenerativeModel(model)
+            self.prompt_key = 'message'    
         else:
             self.client = ChatModel.from_pretrained(model)
             self.prompt_key = 'message'
@@ -55,7 +62,7 @@ class GoogleProvider(BaseProvider):
         temperature = max(temperature, 0.01)
         max_output_tokens = kwargs.pop("max_output_tokens", max_tokens)
         model_inputs = {
-            self.prompt_key: prompt,
+           
             "temperature": temperature,
             "max_output_tokens": max_output_tokens, **kwargs,
         }
@@ -77,10 +84,18 @@ class GoogleProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            if isinstance(self.client, ChatModel) or isinstance(self.client, CodeChatModel):
+            if isinstance(self.client, GenerativeModel):
                 chat = self.client.start_chat()
+                response = chat.send_message(
+                    [prompt],
+                   generation_config=model_inputs
+                )
+            elif isinstance(self.client, ChatModel) or isinstance(self.client, CodeChatModel):
+                chat = self.client.start_chat()
+                model_inputs[self.prompt_key] = prompt
                 response = chat.send_message(**model_inputs)
             else: # text / code
+                model_inputs[self.prompt_key] = prompt
                 response = self.client.predict(**model_inputs)
         
         completion = response.text
@@ -89,8 +104,12 @@ class GoogleProvider(BaseProvider):
             completion=""
 
         # Calculate tokens and cost
-        prompt_tokens = len(prompt)
-        completion_tokens = len(completion)
+        if cost_per_token["uses_characters"]:
+            prompt_tokens = len(prompt)
+            completion_tokens = len(completion)
+        else:
+            prompt_tokens = len(prompt)/4
+            completion_tokens = len(completion)/4
 
         cost_per_token = self.MODEL_INFO[self.model]
         cost = (
@@ -98,8 +117,9 @@ class GoogleProvider(BaseProvider):
             + (completion_tokens * cost_per_token["completion"])
         ) / 1_000_000
 
-        prompt_tokens = math.ceil((prompt_tokens+1) / 4)
-        completion_tokens = math.ceil((completion_tokens+1) / 4)
+        if not cost_per_token["uses_characters"]:
+            prompt_tokens = math.ceil((prompt_tokens+1) / 4)
+            completion_tokens = math.ceil((completion_tokens+1) / 4)
         total_tokens = prompt_tokens + completion_tokens
 
         meta = {
