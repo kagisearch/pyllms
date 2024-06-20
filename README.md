@@ -218,7 +218,8 @@ models.benchmark(evaluator=gpt4)
 | AnthropicProvider('claude-2') | Total Tokens: 3545 | Total Cost: 0.13337 | Median Latency: 6.83 | Aggregated speed: 19.51 | Accuracy: 69.23% |
 | OpenAIProvider('gpt-4-turbo') | Total Tokens: 5538 | Total Cost: 0.18256 | Median Latency: 10.68 | Aggregated speed: 14.45 | Accuracy: 74.07% |
 |  AnthropicProvider('claude-3-opus-20240229')  | Total Tokens: 6522 | Total Cost: 0.51525 | Median Latency: 8.56 | Aggregated speed: 26.55  | Accuracy: 74.07% |
-|    OpenAIProvider('gpt-4o')   | Total Tokens: 6483 | Total Cost: 0.10539 |  Median Latency: 1.91 | Aggregated speed: 94.01 | Accuracy: 85.19% |
+| AnthropicProvider('claude-3-5-sonnet-20240620') | Total Tokens: 5848 | Total Cost: 0.09294 | Median Latency: 3.24 | Aggregated speed: 62.39 | Accuracy: 77.78% |
+| OpenAIProvider('gpt-4o') | Total Tokens: 6709 | Total Cost: 0.10876 | Median Latency: 3.25 | Aggregated speed: 49.44 | Accuracy: 88.89% |
 +-------------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
 
 ```
