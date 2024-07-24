@@ -229,18 +229,18 @@ Email: first.name.wild🐻@email.com\
 Phone: 5551112222\
 ",
                 ),
-                ("Please count the number of t in eeooeotetto", "3"),
+                ("How many r's are in strawberry?", "3"),
                 (
-                    "Use m to substitute p, a to substitute e, n to substitute a, g to substitute c, o to substitute h,\
-how to spell peach under this rule?",
-                    "mango",
+                    "Use  g to substitute c, m to substitute p, a to substitute e, o to substitute h and n to substitute a\
+how to spell cheap under this rule?",
+                    "goanm",
                 ),
                 (
                     "two workers paint the fence in 8 hours. how long will it take one worker paint the same fence if they are injured and need to take a 30 min break after every hour of work?",
                     "23.5 hours",
                 ),
-                ("5+55+555+5555+55555-1725=", "60000"),
-                ("-2-2-2-2-2-2*-2*-2=", "-18"),
+                ("Alan, Bob, Colin, Dave and Emily are standing in a circle. Alan is on Bob’s immediate left. Bob is on Colin’s immediate left. Colin is on Dave’s immediate left. Dave is on Emily’s immediate left. Who is on Alan’s immediate right?", "Bob"),
+                ("-2-2-2-2-2-2*-2*-2-2/-2=", "-17"),
                 ('what is the 13th letter of the word "supralapsarian"', "a"),
                 (
                     'Vlad\'s uncle can still beat him in sprinting although he is 30 years younger. who is "he" referring to?',
@@ -263,8 +263,8 @@ how to spell peach under this rule?",
                     "e7",
                 ),
                 (
-                    "is 9677 a prime number?",
-                    "yes",
+                    "An arrow points up. We rotate it 90 degrees to the clockwise, mirror it along its flat end, and rotate it another 90 degrees clockwise. Which direction is it pointing?",
+                    "up",
                 ),
                 ("Current flight information (the following flights are one-way only, and all the flights available are included below):\n\
 There is a flight from city G to city B\n\
