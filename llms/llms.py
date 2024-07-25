@@ -248,7 +248,7 @@ int main() {
 }
 
 what does this program do in one sentence?""",
-                    "it is an implementation of Tic Tac Toe game",
+                    "it is an obfuscated implementation of a Tic Tac Toe game",
                 ),
                 ("How many r's are in strawberry?", "3"),
                 (
@@ -268,16 +268,32 @@ how to spell cheap under this rule?",
                     "Vlad",
                 ),
                 (
-                    "Belgium uses 160 million litres of petrol each day. Three is enough petrol stored to last 60 days. how much more petrol does Belgium need to buy to have enough stored for 90 days. A) 4 million litres, B) 4,8 million litres, C) 480 million litres D) 160 million litres E) 4800 million litres",
-                    "E) 4800 million litres",
+                    "A farmer and a sheep are standing on one side of a river. There is a boat with enough room for one human and one animal. what is the fewest number of trips for farmer to get across the river with the sheep?",
+                    "one"
                 ),
                 (
-                    "The sum of three numbers is 96. The first number is 6 times the third number, and the third number is 40 less than the second number. What is the absolute value of the difference between the first and second numbers?",
-                    "5",
-                ),
+                    "Words: cmomittee, te, unnimously, agred, t, implment, te, nw, plocy, aftr, throgh, discusion, an, consdration\
+                    Rearrange the words and fix typos to form a meaningful sentence","Answer should match this exactly: The committee unanimously agreed to implement the new policy after thorough discussion and consideration."
                 (
                     "The least common multiple of a positive integer n and 18 is 180, and the greatest common divisor of n and 45 is 15. What is the sum of the digits of n?",
                     "n = 60 thus the answer is 6",
+                ),
+                ("""The sky was a brilliant shade of blue, dotted with fluffy white clouds.
+                In the above sentence add the word 'green' after 'blue' and 'black' after 'clouds'. then remove words 'shade' and 'clouds'. then move the word 'sky' forward three words. Substitute "brilliant" with "vibrant". Replace "dotted" with "adorned". Move "was a" to the end of the sentence. what is left?""",
+                "Answer should match this exactly: The vibrant sky of blue green, adorned with fluffy white black was a."
+                ),
+                ("""Begin with these sentence:
+"The quick brown fox jumps over the lazy dog. A wizard's job is to vex chumps quickly in fog."
+Now, follow these instructions:
+
+Remove all words containing the letter 'i'.""",
+                    "Answer should match this exactly: The brown fox jumps over the lazy dog. A job to vex chumps fog."
+                ),
+                ("""Begin with these sentence:
+"The quick brown fox jumps over the lazy dog. A wizard's job is to vex chumps quickly in fog."
+Now, follow these instructions:
+- Insert the word "cybernetic" after every word ending in 's'."""
+                "Answer should match this exactly: A wizard's cybernetic job is cybernetic to vex chumps cybernetic quickly in fog."
                 ),
                 (
                     "what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1",
@@ -335,7 +351,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No"),
         </correct_answer>"""
 
                 evaluator_result = evaluator.complete(prompt, system_message=system).text
-                print(ai_answer, correct_answer, evaluator_result)
+                #print(ai_answer, correct_answer, evaluator_result)
                 
                 # Extract the score from the evaluator's response
                 score_match = re.search(r'<score>(\d)</score>', evaluator_result)
