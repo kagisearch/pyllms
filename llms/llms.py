@@ -250,6 +250,24 @@ int main() {
 what does this program do in one sentence?""",
                     "it is an obfuscated implementation of a Tic Tac Toe game",
                 ),
+                ("""#include <stdio.h>
+#define  f(f,g){z e=0;for(;e<f;e++)g;}
+#define  i(f,g)static z f(z a){return g;}
+#define  j(f,g)static void f(z*a,z*b,z*c){g}
+#define  h(f,g)static z f(z a,z b,z c){return g;}
+#define  g(f,g,h,i,j)static z f(z b){z a=g,c=h;for(;i)a=j;return a;}
+typedef unsigned char y;typedef unsigned long long z;extern y*w;static z b(z a,z b){return a>>b|a<<(64-b);}i(_,
+(a>>6)^b(a,61)^b(a,19))i(_a,b(a,39)^b(a,28)^b(a,34))h(x,((a^b)&c)^(a&b))i(u,b(a,41)^b(a,18)^b(a,14))h(t,(((((3*(a*c+b*b)>>9)+(3*
+b*c>>32))*a>>21)+(3*a*a*b>>6)+((b>>4)*(b>>4)*b>>46))>>18)+a*a*a)h(m,t((b<<16)|(c>>48),(c>>24)%(1<<24),c%(1<<24))>>48<a)h(s,(a&b)
+^(~a&c))i(r,b(a,1)^b(a,8)^(a>>7))g(o,0,0,c<8;c++,a*256+w[b*8+c])g(d,0,0,c<13;c++,a*31+w[b*13+c]-96)g(p,0,4,c;c/=2,a|c*m(b,a|c,a)
+)g(q,0,1ull<<63,c;c/=2,a|c*m(b,p(b),a|c))g(v,b>1,2,c<b;c++,a&&b%c)g(l,b?l(b-1)+1:2,a,!v(c);c++,c+1)j(n,z d=a[7]+u(a[4])+s(a[4],a
+[5],a[6])+q(l(*b))+c[*b%16];f(8,a[7-e]=e-3?e-7?a[6-e]:d+_a(a[0])+x(a[1],a[2],a[3]):d+a[3])f(16*(*b%16>14),c[e]+=c[(e+9)%16]+r(c[
+(e+1)%16])+_(c[(e+14)%16])))j(k,f(8,b[e]=a[e])f(80,n(a,&e,c))f(8,a[e]+=b[e]))int main(){z a[8],b[8],c[16];f(8,a[e]=d(e))f(16,c[e
+]=e-15?o(e):d(8))k(a,b,c);f(16,c[e]=e?e-15?0:11264:1ull<<63)k(a,b,c);f(8,printf("%016llx%s",a[e],e-7?"":"\n"))return!w;}y*w=(y*)
+"crsmyiajqhwy{unwa|hjoi`hlxhpxrzb~edko~rtr~ileqyjk`znqgsuitvgqnfdfa||wedvnmhozkpokootqzcexeld~oibqzpcsuw{ib{x`m`hsa`jmn}wcfzpb";
+
+what does this program do, in one sentence?""",
+"This program prints its own SHA-512 hash"),
                 ("How many r's are in strawberry?", "3"),
                 (
                     "Use  g to substitute c, m to substitute p, a to substitute e, o to substitute h and n to substitute a\
@@ -273,7 +291,9 @@ how to spell cheap under this rule?",
                 ),
                 (
                     "Words: cmomittee, te, unnimously, agred, t, implment, te, nw, plocy, aftr, throgh, discusion, an, consdration\
-                    Rearrange the words and fix typos to form a meaningful sentence","Answer should match this exactly: The committee unanimously agreed to implement the new policy after thorough discussion and consideration."
+                    Rearrange the words and fix typos to form a meaningful sentence",
+                    "Answer should match this exactly: The committee unanimously agreed to implement the new policy after thorough discussion and consideration."
+                ),
                 (
                     "The least common multiple of a positive integer n and 18 is 180, and the greatest common divisor of n and 45 is 15. What is the sum of the digits of n?",
                     "n = 60 thus the answer is 6",
@@ -292,13 +312,15 @@ Remove all words containing the letter 'i'.""",
                 ("""Begin with these sentence:
 "The quick brown fox jumps over the lazy dog. A wizard's job is to vex chumps quickly in fog."
 Now, follow these instructions:
-- Insert the word "cybernetic" after every word ending in 's'."""
-                "Answer should match this exactly: A wizard's cybernetic job is cybernetic to vex chumps cybernetic quickly in fog."
+- Insert the word "cybernetic" after every word ending in 's'.""",
+                "Answer should match this exactly: The quick brown fox jumps cybernetic over the lazy dog. A wizard's cybernetic job is cybernetic to vex chumps cybernetic quickly in fog."
                 ),
                 (
                     "what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1",
                     "e7",
                 ),
+                ("You have six horses and want to race them to see which is fastest. How many races would you need to do this?","one"),
+                
                 (
                     "An arrow points up. We rotate it 90 degrees to the clockwise, mirror it along its flat end, and rotate it another 90 degrees clockwise. Which direction is it pointing?",
                     "up",
@@ -314,10 +336,11 @@ There is a flight from city L to city A\n\
 There is a flight from city H to city N\n\
 There is a flight from city B to city D\n\
 There is a flight from city J to city C\n\
-Question: Is there a series of flights that goes from city F to city I?", "No"),
+Question: Is there a series of flights that goes from city F to city I?", "No, there is no series of flights from F to I"),
             ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1'),
             ('Imagine there is a circular pond in an oasis, with two trees at the edge of the pond, on opposite sides. Bob sets up a hammock by hanging it between the two trees. He gets into the hammock and falls asleep. If he were to roll over in his sleep and fall out of the hammock, where would he fall?',
-                'water, in the center of the pond'),
+                'water, in the center of the pond'
+            ),
             ]
 
 
@@ -351,7 +374,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No"),
         </correct_answer>"""
 
                 evaluator_result = evaluator.complete(prompt, system_message=system).text
-                #print(ai_answer, correct_answer, evaluator_result)
+                print(correct_answer, ai_answer, evaluator_result)
                 
                 # Extract the score from the evaluator's response
                 score_match = re.search(r'<score>(\d)</score>', evaluator_result)
@@ -363,38 +386,6 @@ Question: Is there a series of flights that goes from city F to city I?", "No"),
 
             return scores
     
-        def evaluate_answers2(
-            evaluator, query_answer_pairs: List[Tuple[str, str]]
-        ) -> List[int]:
-            system = """
-You are given a problem and student's solution. If the correct answer is provided use it, otherwise first think about the solution yourself, then score the the student's solution with one of these scores:
-0 - Student provided incorrect or no solution
-3 - Student provided correct solution
-
-Your output should be using always this template:
-Score: #
-"""
-            scores = []
-            for i, (query, hint, answer) in enumerate(query_answer_pairs, start=1):
-                if not len(hint):
-                    prompt = f"Problem: {query}\nStudent solution: {answer}"
-                else:
-                    prompt = f"Problem: {query}\nCorrect answer: {hint}\nStudent solution: {answer}"
-                #                print(prompt)
-                evaluator_result = evaluator.complete(
-                    prompt, system_message=system
-                ).text
-                #print(prompt)
-                #print(system)
-                #print(evaluator_result)
-                found = re.search(r"Score: (\d+)", evaluator_result)
-                if found:
-                    scores.append(int(found.group(1)))
-                else:
-                    #print("No score found!", evaluator_result)
-                    scores.append(0)
-
-            return scores
 
         model_results = {}
 
