@@ -298,6 +298,29 @@ how to spell cheap under this rule?",
                     "The least common multiple of a positive integer n and 18 is 180, and the greatest common divisor of n and 45 is 15. What is the sum of the digits of n?",
                     "n = 60 thus the answer is 6",
                 ),
+                ("""section .data
+    a dd 0
+    b dd 0
+
+section .text
+    global _start
+
+_start:
+    mov eax, [a]
+    add eax, [b]
+    mov [a], eax
+    mov eax, [a]
+    sub eax, [b]
+    mov [b], eax
+    mov eax, [a]
+    sub eax, [b]
+    mov [a], eax
+
+    mov eax, 60
+    xor edi, edi
+    syscall
+
+what does this do, in one sentence?""", "swaps the values of two variables 'a' and 'b' using without using a temporary variable"),
                 ("""The sky was a brilliant shade of blue, dotted with fluffy white clouds.
                 In the above sentence add the word 'green' after 'blue' and 'black' after 'clouds'. then remove words 'shade' and 'clouds'. then move the word 'sky' forward three words. Substitute "brilliant" with "vibrant". Replace "dotted" with "adorned". Move "was a" to the end of the sentence. what is left?""",
                 "Answer should match this exactly: The vibrant sky of blue green, adorned with fluffy white black was a."
@@ -319,12 +342,17 @@ Now, follow these instructions:
                     "what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1",
                     "e7",
                 ),
+                ('is 9.11 bigger number than 9.9?','no, it is not'),
                 ("You have six horses and want to race them to see which is fastest. How many races would you need to do this?","one"),
                 
                 (
                     "An arrow points up. We rotate it 90 degrees to the clockwise, mirror it along its flat end, and rotate it another 90 degrees clockwise. Which direction is it pointing?",
                     "up",
                 ),
+                ("""1. Start with the word "CIPHER".
+2. Count the number of letters in "CIPHER". Add 1 to this number.
+3. Take the letter in "ALPHABET" at the position of the number you got in step 2 and remove it.
+Print the output""","Answer should match this exactly: ALPHABT"),
                 ("Current flight information (the following flights are one-way only, and all the flights available are included below):\n\
 There is a flight from city G to city B\n\
 There is a flight from city H to city K\n\
@@ -374,7 +402,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
         </correct_answer>"""
 
                 evaluator_result = evaluator.complete(prompt, system_message=system).text
-                print(correct_answer, ai_answer, evaluator_result)
+                #print(correct_answer, ai_answer, evaluator_result)
                 
                 # Extract the score from the evaluator's response
                 score_match = re.search(r'<score>(\d)</score>', evaluator_result)

@@ -201,28 +201,18 @@ gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case on
 models.benchmark(evaluator=gpt4)
 ```
 
-![](./llm_benchmark.png)
-
-```
 +-------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
 |          Model          |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)   |    Evaluation    |
 +-------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
-| GoogleProvider('chat-bison') | Total Tokens: 2759 | Total Cost: 0.00689 | Median Latency: 2.83 | Aggregated speed: 36.24 | Accuracy: 19.23% |
-| GoogleProvider('text-bison') | Total Tokens: 1155 | Total Cost: 0.00897 | Median Latency: 0.38 | Aggregated speed: 60.60 | Accuracy: 25.64% |
-| CohereProvider('command') | Total Tokens: 4033 | Total Cost: 0.08125 | Median Latency: 5.77 | Aggregated speed: 9.44 | Accuracy: 11.54% |
-| OpenAIProvider('gpt-3.5-turbo') | Total Tokens: 2116 | Total Cost: 0.00753 | Median Latency: 1.18 | Aggregated speed: 42.62 | Accuracy: 37.04% |
-| AnthropicProvider('claude-instant-v1') | Total Tokens: 3437 | Total Cost: 0.02153 | Median Latency: 1.84 | Aggregated speed: 61.64 | Accuracy: 42.31% |
-|  AnthropicProvider('claude-3-haiku-20240307') | Total Tokens: 6493 | Total Cost: 0.00855 | Median Latency: 1.64 | Aggregated speed: 127.44 | Accuracy: 51.85% |
-|     OpenAIProvider('gpt-4')     | Total Tokens: 2109 | Total Cost: 0.17580 | Median Latency: 2.00 | Aggregated speed: 14.04 | Accuracy: 51.85% |
-| AnthropicProvider('claude-3-sonnet-20240229') | Total Tokens: 5569 | Total Cost: 0.08876 | Median Latency: 3.65 | Aggregated speed: 54.67  | Accuracy: 55.56% |
-| AnthropicProvider('claude-2') | Total Tokens: 3545 | Total Cost: 0.13337 | Median Latency: 6.83 | Aggregated speed: 19.51 | Accuracy: 69.23% |
-| OpenAIProvider('gpt-4-turbo') | Total Tokens: 5538 | Total Cost: 0.18256 | Median Latency: 10.68 | Aggregated speed: 14.45 | Accuracy: 74.07% |
-|  AnthropicProvider('claude-3-opus-20240229')  | Total Tokens: 6522 | Total Cost: 0.51525 | Median Latency: 8.56 | Aggregated speed: 26.55  | Accuracy: 74.07% |
-| AnthropicProvider('claude-3-5-sonnet-20240620') | Total Tokens: 5848 | Total Cost: 0.09294 | Median Latency: 3.24 | Aggregated speed: 62.39 | Accuracy: 77.78% |
-| OpenAIProvider('gpt-4o') | Total Tokens: 6709 | Total Cost: 0.10876 | Median Latency: 3.25 | Aggregated speed: 49.44 | Accuracy: 88.89% |
+|             OpenAIProvider('gpt-4')             | Total Tokens: 1123 | Total Cost: 0.18111 | Median Latency: 1.23 | Aggregated speed: 18.27 | Accuracy: 22.58% |
+|   AnthropicProvider('claude-3-haiku-20240307')  | Total Tokens: 3877 | Total Cost: 0.00593 | Median Latency: 1.32 | Aggregated speed: 90.25 | Accuracy: 22.58% |
+|          OpenAIProvider('gpt-4o-mini')          | Total Tokens: 3708 | Total Cost: 0.00279 | Median Latency: 1.04 | Aggregated speed: 54.97 | Accuracy: 29.03% |
+|       MistralProvider('open-mistral-nemo')      | Total Tokens: 2458 | Total Cost: 0.09168 | Median Latency: 0.66 | Aggregated speed: 87.60 | Accuracy: 29.03% |
+| AnthropicProvider('claude-3-5-sonnet-20240620') | Total Tokens: 4659 | Total Cost: 0.08271 | Median Latency: 2.72 | Aggregated speed: 51.10 | Accuracy: 38.71% |
+|     MistralProvider('mistral-large-latest')     | Total Tokens: 3107 | Total Cost: 0.11068 | Median Latency: 1.71 | Aggregated speed: 37.38 | Accuracy: 48.39% |
+|             OpenAIProvider('gpt-4o')            | Total Tokens: 4640 | Total Cost: 0.08854 | Median Latency: 1.82 | Aggregated speed: 49.71 | Accuracy: 48.39% |
 +-------------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
 
-```
 
 To evaluate models on your own prompts, simply pass a list of questions and optional answers as tuple. The evaluator will automatically evaluate the responses:
 
