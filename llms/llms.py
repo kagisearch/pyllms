@@ -300,7 +300,7 @@ There is a flight from city B to city D\n\
 There is a flight from city J to city C\n\
 Question: Is there a series of flights that goes from city F to city I?", "No"),
             ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1'),
-            (r'Imagine there is a circular pond in an oasis, with two trees at the edge of the pond, on opposite sides. Bob sets up a hammock by hanging it between the two trees. He gets into the hammock and falls asleep. If he were to roll over in his sleep and fall out of the hammock, where would he fall?',
+            ('Imagine there is a circular pond in an oasis, with two trees at the edge of the pond, on opposite sides. Bob sets up a hammock by hanging it between the two trees. He gets into the hammock and falls asleep. If he were to roll over in his sleep and fall out of the hammock, where would he fall?',
                 'water, in the center of the pond'),
             ]
 
