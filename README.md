@@ -203,14 +203,14 @@ models.benchmark(evaluator=gpt4)
 
 | Model                                   | Tokens         | Cost ($)   | Latency (s) | Speed (tokens/sec) | Evaluation |
 |-----------------------------------------|----------------|------------|-------------|--------------------|------------|
-| OpenAIProvider('gpt-3.5-turbo') | Total Tokens: 964 | Total Cost: 0.00953 | Median Latency: 0.60 | Aggregated speed: 41.73 | Accuracy: 19.35% |
-| OpenAIProvider('gpt-4')                 | Total Tokens: 1123 | Total Cost: 0.18111 | Median Latency: 1.23 | Aggregated speed: 18.27 | Accuracy: 22.58% |
-| AnthropicProvider('claude-3-haiku-20240307') | Total Tokens: 3877 | Total Cost: 0.00593 | Median Latency: 1.32 | Aggregated speed: 90.25 | Accuracy: 22.58% |
-| OpenAIProvider('gpt-4o-mini')           | Total Tokens: 3708 | Total Cost: 0.00279 | Median Latency: 1.04 | Aggregated speed: 54.97 | Accuracy: 29.03% |
-| MistralProvider('open-mistral-nemo')    | Total Tokens: 2458 | Total Cost: 0.09168 | Median Latency: 0.66 | Aggregated speed: 87.60 | Accuracy: 29.03% |
-| AnthropicProvider('claude-3-5-sonnet-20240620') | Total Tokens: 4659 | Total Cost: 0.08271 | Median Latency: 2.72 | Aggregated speed: 51.10 | Accuracy: 38.71% |
-| MistralProvider('mistral-large-latest') | Total Tokens: 3107 | Total Cost: 0.11068 | Median Latency: 1.71 | Aggregated speed: 37.38 | Accuracy: 48.39% |
-| OpenAIProvider('gpt-4o')                | Total Tokens: 4640 | Total Cost: 0.08854 | Median Latency: 1.82 | Aggregated speed: 49.71 | Accuracy: 48.39% |
+|   AnthropicProvider('claude-3-haiku-20240307')  | Total Tokens: 4425 | Total Cost: 0.00665 | Median Latency: 1.26 | Aggregated speed: 94.31 | Accuracy: 16.67% |
+|             OpenAIProvider('gpt-4')             | Total Tokens: 1147 | Total Cost: 0.18711 | Median Latency: 1.27 | Aggregated speed: 16.71 | Accuracy: 19.44% |
+|         OpenAIProvider('gpt-3.5-turbo')         | Total Tokens: 1049 | Total Cost: 0.01000 | Median Latency: 0.53 | Aggregated speed: 33.48 | Accuracy: 22.22% |
+|          OpenAIProvider('gpt-4o-mini')          | Total Tokens: 4258 | Total Cost: 0.00313 | Median Latency: 0.99 | Aggregated speed: 66.10 | Accuracy: 30.56% |
+|       MistralProvider('open-mistral-nemo')      | Total Tokens: 2958 | Total Cost: 0.10475 | Median Latency: 0.68 | Aggregated speed: 87.00 | Accuracy: 36.11% |
+| AnthropicProvider('claude-3-5-sonnet-20240620') | Total Tokens: 5447 | Total Cost: 0.09501 | Median Latency: 2.65 | Aggregated speed: 52.32 | Accuracy: 41.67% |
+|     MistralProvider('mistral-large-latest')     | Total Tokens: 3633 | Total Cost: 0.12440 | Median Latency: 1.87 | Aggregated speed: 40.74 | Accuracy: 47.22% |
+|             OpenAIProvider('gpt-4o')            | Total Tokens: 5893 | Total Cost: 0.10803 | Median Latency: 1.41 | Aggregated speed: 59.76 | Accuracy: 52.78% |
 
 
 To evaluate models on your own prompts, simply pass a list of questions and optional answers as tuple. The evaluator will automatically evaluate the responses:
