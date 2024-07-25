@@ -194,24 +194,23 @@ Models are appearing like mushrooms after rain and everyone is interested in thr
 PyLLMs icludes an automated benchmark system. The quality of models is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
+model=llms.init(model=['claude-3-haiku-20240307','gpt-4o-mini','claude-3-5-sonnet-20240620','gpt-4o','mistral-large-latest','open-mistral-nemo','gpt-4','gpt-3.5-turbo'])
 
-gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
+gpt4=llms.init('gpt-4o')
 
 models.benchmark(evaluator=gpt4)
 ```
 
-+-------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
-|          Model          |       Tokens       |       Cost ($)      |     Latency (s)      |    Speed (tokens/sec)   |    Evaluation    |
-+-------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
-|             OpenAIProvider('gpt-4')             | Total Tokens: 1123 | Total Cost: 0.18111 | Median Latency: 1.23 | Aggregated speed: 18.27 | Accuracy: 22.58% |
-|   AnthropicProvider('claude-3-haiku-20240307')  | Total Tokens: 3877 | Total Cost: 0.00593 | Median Latency: 1.32 | Aggregated speed: 90.25 | Accuracy: 22.58% |
-|          OpenAIProvider('gpt-4o-mini')          | Total Tokens: 3708 | Total Cost: 0.00279 | Median Latency: 1.04 | Aggregated speed: 54.97 | Accuracy: 29.03% |
-|       MistralProvider('open-mistral-nemo')      | Total Tokens: 2458 | Total Cost: 0.09168 | Median Latency: 0.66 | Aggregated speed: 87.60 | Accuracy: 29.03% |
+| Model                                   | Tokens         | Cost ($)   | Latency (s) | Speed (tokens/sec) | Evaluation |
+|-----------------------------------------|----------------|------------|-------------|--------------------|------------|
+| OpenAIProvider('gpt-3.5-turbo') | Total Tokens: 964 | Total Cost: 0.00953 | Median Latency: 0.60 | Aggregated speed: 41.73 | Accuracy: 19.35% |
+| OpenAIProvider('gpt-4')                 | Total Tokens: 1123 | Total Cost: 0.18111 | Median Latency: 1.23 | Aggregated speed: 18.27 | Accuracy: 22.58% |
+| AnthropicProvider('claude-3-haiku-20240307') | Total Tokens: 3877 | Total Cost: 0.00593 | Median Latency: 1.32 | Aggregated speed: 90.25 | Accuracy: 22.58% |
+| OpenAIProvider('gpt-4o-mini')           | Total Tokens: 3708 | Total Cost: 0.00279 | Median Latency: 1.04 | Aggregated speed: 54.97 | Accuracy: 29.03% |
+| MistralProvider('open-mistral-nemo')    | Total Tokens: 2458 | Total Cost: 0.09168 | Median Latency: 0.66 | Aggregated speed: 87.60 | Accuracy: 29.03% |
 | AnthropicProvider('claude-3-5-sonnet-20240620') | Total Tokens: 4659 | Total Cost: 0.08271 | Median Latency: 2.72 | Aggregated speed: 51.10 | Accuracy: 38.71% |
-|     MistralProvider('mistral-large-latest')     | Total Tokens: 3107 | Total Cost: 0.11068 | Median Latency: 1.71 | Aggregated speed: 37.38 | Accuracy: 48.39% |
-|             OpenAIProvider('gpt-4o')            | Total Tokens: 4640 | Total Cost: 0.08854 | Median Latency: 1.82 | Aggregated speed: 49.71 | Accuracy: 48.39% |
-+-------------------------------+--------------------+---------------------+----------------------+-------------------------+------------------+
+| MistralProvider('mistral-large-latest') | Total Tokens: 3107 | Total Cost: 0.11068 | Median Latency: 1.71 | Aggregated speed: 37.38 | Accuracy: 48.39% |
+| OpenAIProvider('gpt-4o')                | Total Tokens: 4640 | Total Cost: 0.08854 | Median Latency: 1.82 | Aggregated speed: 49.71 | Accuracy: 48.39% |
 
 
 To evaluate models on your own prompts, simply pass a list of questions and optional answers as tuple. The evaluator will automatically evaluate the responses:
