@@ -498,7 +498,7 @@ Score: #
             sorted_models = sorted(
                 model_results,
                 key=lambda x: model_results[x]["aggregated_speed"]
-                * sum(model_results[x]["evaluation"]),
+                * sum(filter(None, model_results[x]["evaluation"])),
                 reverse=True,
             )
         else:
@@ -568,8 +568,12 @@ Score: #
                     f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
                 ]
             if evaluator:
-                acc = 100 * total_score / (len(model_data["evaluation"]))
-                row_data.append(f"Accuracy: {acc:.2f}%")
+                valid_evaluations = [e for e in model_data["evaluation"] if e is not None]
+                if valid_evaluations:
+                    acc = 100 * sum(valid_evaluations) / len(valid_evaluations)
+                    row_data.append(f"Accuracy: {acc:.2f}%")
+                else:
+                    row_data.append("Accuracy: N/A")
 
             table.add_row(row_data)
 
