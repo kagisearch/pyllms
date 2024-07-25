@@ -194,9 +194,9 @@ Models are appearing like mushrooms after rain and everyone is interested in thr
 PyLLMs icludes an automated benchmark system. The quality of models is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
 
 ```
-models=llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
+model=llms.init(model=['claude-3-haiku-20240307','gpt-4o-mini','claude-3-5-sonnet-20240620','gpt-4o','mistral-large-latest','open-mistral-nemo','gpt-4','gpt-3.5-turbo'])
 
-gpt4=llms.init('gpt-4') # optional, evaluator can be ommited and in that case only speed and cost will be evaluated
+gpt4=llms.init('gpt-4o')
 
 models.benchmark(evaluator=gpt4)
 ```
