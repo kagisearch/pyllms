@@ -254,12 +254,6 @@ int main() {
 what does this program do in one sentence?""",
                     "it is an implementation of Tic Tac Toe game",
                 ),
-                 (
-                    """tr G-t F-s<<<Ifmmp\ Xpsme
-                    
-                    what does this do in one sentence?""",
-                    'prints message "Hello World"',
-                ),
                 (
                     "You are given a 2D binary matrix filled with 0's and 1's. Your task is to write a JavaScript function that finds the largest rectangle containing only 1's and returns its area. Your function should have an efficient solution with a time complexity better than O(n^3), where n is the total number of elements in the input matrix. Output only code with no explainations and provide example usage.",
                     "",
