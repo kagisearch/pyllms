@@ -188,10 +188,6 @@ class LLMS:
                     "on the bed in the bedroom",
                 ),
                 (
-                    'Capture the essence of this in exactly 7 words: "There’s much that divides us in Northern Ireland though one thing is guaranteed to bring us together: local phrases. Call it slang, call it colloquialisms, we all know only too well how important words are to where we’re from . . . and when it comes to the phrases that make us ‘us,’ we’ve got a lot to say. While you don’t need advance knowledge of the words to fit in, well, it helps. How else will you know where ‘foundered’ sits on the scale of warm to freezing? Or deciding whether that new car purchase is more ‘clinker’ than ‘beezer’? Or appreciating that ‘grand’ can mean exactly that or anything but? If the best way to get to know a nation is to understand their language, then surely tourists must be at times confused about what comes out of our mouths. Throughout the island of Ireland, we have utterly brilliant ways to verbally express ourselves.“I think it’s really important,” says Dr Frank Ferguson, research director for English Language and Literature at Ulster University, about the vitality of slang as part of language."',
-                    "Make sure the answer has exactly 7 words",
-                ),
-                (
                     """using System;struct a{static int Main(){object[]c={"\u0048e\x6c\x6co "+(C\u0068ar)(86+1)+"or\x6c\x64"};typeof(Conso\u006ce).GetMet\u0068o\u0064s()[101].Invoke(c,c);return 0;}}
                     
                     What does this code do in one sentence?""",
@@ -253,34 +249,6 @@ int main() {
 
 what does this program do in one sentence?""",
                     "it is an implementation of Tic Tac Toe game",
-                ),
-                (
-                    "You are given a 2D binary matrix filled with 0's and 1's. Your task is to write a JavaScript function that finds the largest rectangle containing only 1's and returns its area. Your function should have an efficient solution with a time complexity better than O(n^3), where n is the total number of elements in the input matrix. Output only code with no explainations and provide example usage.",
-                    "",
-                ),
-                (
-                    "Given the following messy and unstructured data, extract the clean names, email addresses, and phone numbers (as digits) of the individuals listed:\
-John Doe - johndoe (at) email.com (five-five-five) one-two-three-four-five-six-seven\
-random text not a phone 123 4468888\
-Jane Smith\
-random text 2, cinque-cinque-cinque-\
-nove-otto-sette-sei-quattro-tre\
-janesmith en email punto com\
-texto aleatorio 3\
-Bob Johnson - first name dot last name dot wild🐻@email.com\
-texto aleatorio 4 código de área five-five-five teléfono: eins-eins-eins-zwei-zwei-zwei-zwei",
-                    "Name: John Doe\
-Email: johndoe@email.com \
-Phone: 5551234567\
-\
-Name: Jane Smith \
-Email: janesmith@email.com\
-Phone: 5559876432\
-\
-Name: Bob Johnson\
-Email: first.name.wild🐻@email.com\
-Phone: 5551112222\
-",
                 ),
                 ("How many r's are in strawberry?", "3"),
                 (
@@ -367,6 +335,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No"),
         </correct_answer>"""
 
                 evaluator_result = evaluator.complete(prompt, system_message=system).text
+                print(ai_answer, correct_answer, evaluator_result)
                 
                 # Extract the score from the evaluator's response
                 score_match = re.search(r'<score>(\d)</score>', evaluator_result)
