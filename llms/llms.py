@@ -342,8 +342,15 @@ Now, follow these instructions:
                     "what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1",
                     "e7",
                 ),
+                ("In a room there are only three sisters. Anna is reading a book. Alice is playing chess with someone. What is the third sister, Amanda doing?","Playing chess with Alice"),
+                
                 ('is 9.11 bigger number than 9.9?','no, it is not'),
                 ("You have six horses and want to race them to see which is fastest. How many races would you need to do this?","one"),
+                ("I do not not not like eggs. Do I like eggs?","No"),
+                ("John has two brothers - called Snap and Crackle. The three children's names are: Snap, Crackle and _.","John"),
+                ("How many boxes do I have if I have three boxes with one box inside each, and one box inside them?","9"),
+                ("Given a QWERTY keyboard layout, if HEART goes to JRSTY, what does HIGB go to?","JOHN"),
+                
                 
                 (
                     "An arrow points up. We rotate it 90 degrees to the clockwise, mirror it along its flat end, and rotate it another 90 degrees clockwise. Which direction is it pointing?",
