@@ -174,11 +174,11 @@ class LLMS:
                     "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
                     "pull",
                 ),
-                ("Solve the quadratic equation: x^2 - 5x + 6 = 0", "x=2, x=3"),
-                ("How much is 7! * 3! -1234.5 ?", "29005.5"),
+                ('Given the string: "A# B# #B A# A# #B #B A# A# #B A# A#" Could you check for any instances of "A# #B" and replace them with "B# #A"? print only the answer', "B# B# #A B# B# #A #A B# B# #A B# B#"),
+                ("Kevin currently has 8 apples. He ate 3 apples yesterday. How many apples does Kevin have now?", "8"),
                 (
-                    'translate this sentence by alternating words in gemran and french "it was a beautiful day that thursday and I want skiing outside. it started raining soon although they said it won\'t be until friday, so I went to the pool instead"',
-                    "",
+                    'What is the largest land animal? If that animal has wings, answer "The African Elephant". Otherwise, answer "The Mouse". Do not provide any explanation for your choice.',
+                    "The Mouse",
                 ),
                 ("Convert December 21 1:50pm pacific to taipei time", "5:50 am"),
                 (
@@ -190,16 +190,73 @@ class LLMS:
                     "Make sure the answer has exactly 7 words",
                 ),
                 (
-                    "Write a Python function that takes a list of integers as input and returns the length of the longest increasing subsequence. An increasing subsequence is a subsequence of the given list where the elements are in strictly increasing order. Your function should have an efficient solution with a time complexity better than O(n^2), where n is the length of the input list. Output only code with no explainations and provide example usage.",
-                    "",
+                    """using System;struct a{static int Main(){object[]c={"\u0048e\x6c\x6co "+(C\u0068ar)(86+1)+"or\x6c\x64"};typeof(Conso\u006ce).GetMet\u0068o\u0064s()[101].Invoke(c,c);return 0;}}
+                    
+                    What does this code do in one sentence?""",
+                    'prints "Hello World" to the console',
                 ),
                 (
-                    "Write a Python function that takes a list of integers as input and returns the maximum sum of non-adjacent elements in the list. The function should return 0 if the input list is empty. Your function should have an efficient solution with a time complexity of O(n), where n is the length of the input list. Output only code with no explainations and provide example usage.",
-                    "",
+                    """#include <stdio.h> 
+
+#define N(a)       "%"#a"$hhn"
+#define O(a,b)     "%10$"#a"d"N(b)
+#define U          "%10$.*37$d"
+#define G(a)       "%"#a"$s"
+#define H(a,b)     G(a)G(b)
+#define T(a)       a a 
+#define s(a)       T(a)T(a)
+#define A(a)       s(a)T(a)a
+#define n(a)       A(a)a
+#define D(a)       n(a)A(a)
+#define C(a)       D(a)a
+#define R          C(C(N(12)G(12)))
+#define o(a,b,c)   C(H(a,a))D(G(a))C(H(b,b)G(b))n(G(b))O(32,c)R
+#define SS         O(78,55)R "\n\033[2J\n%26$s";
+#define E(a,b,c,d) H(a,b)G(c)O(253,11)R G(11)O(255,11)R H(11,d)N(d)O(253,35)R
+#define S(a,b)     O(254,11)H(a,b)N(68)R G(68)O(255,68)N(12)H(12,68)G(67)N(67)
+
+char* fmt = O(10,39)N(40)N(41)N(42)N(43)N(66)N(69)N(24)O(22,65)O(5,70)O(8,44)N(
+            45)N(46)N    (47)N(48)N(    49)N( 50)N(     51)N(52)N(53    )O( 28,
+            54)O(5,        55) O(2,    56)O(3,57)O(      4,58 )O(13,    73)O(4,
+            71 )N(   72)O   (20,59    )N(60)N(61)N(       62)N (63)N    (64)R R
+            E(1,2,   3,13   )E(4,    5,6,13)E(7,8,9        ,13)E(1,4    ,7,13)E
+            (2,5,8,        13)E(    3,6,9,13)E(1,5,         9,13)E(3    ,5,7,13
+            )E(14,15,    16,23)    E(17,18,19,23)E(          20, 21,    22,23)E
+            (14,17,20,23)E(15,    18,21,23)E(16,19,    22     ,23)E(    14, 18,
+            22,23)E(16,18,20,    23)R U O(255 ,38)R    G (     38)O(    255,36)
+            R H(13,23)O(255,    11)R H(11,36) O(254    ,36)     R G(    36 ) O(
+            255,36)R S(1,14    )S(2,15)S(3, 16)S(4,    17 )S     (5,    18)S(6,
+            19)S(7,20)S(8,    21)S(9    ,22)H(13,23    )H(36,     67    )N(11)R
+            G(11)""O(255,    25 )R        s(C(G(11)    ))n (G(          11) )G(
+            11)N(54)R C(    "aa")   s(A(   G(25)))T    (G(25))N         (69)R o
+            (14,1,26)o(    15, 2,   27)o   (16,3,28    )o( 17,4,        29)o(18
+            ,5,30)o(19    ,6,31)o(        20,7,32)o    (21,8,33)o       (22 ,9,
+            34)n(C(U)    )N( 68)R H(    36,13)G(23)    N(11)R C(D(      G(11)))
+            D(G(11))G(68)N(68)R G(68)O(49,35)R H(13,23)G(67)N(11)R C(H(11,11)G(
+            11))A(G(11))C(H(36,36)G(36))s(G(36))O(32,58)R C(D(G(36)))A(G(36))SS
+
+#define arg d+6,d+8,d+10,d+12,d+14,d+16,d+18,d+20,d+22,0,d+46,d+52,d+48,d+24,d\
+            +26,d+28,d+30,d+32,d+34,d+36,d+38,d+40,d+50,(scanf(d+126,d+4),d+(6\
+            -2)+18*(1-d[2]%2)+d[4]*2),d,d+66,d+68,d+70, d+78,d+80,d+82,d+90,d+\
+            92,d+94,d+97,d+54,d[2],d+2,d+71,d+77,d+83,d+89,d+95,d+72,d+73,d+74\
+            ,d+75,d+76,d+84,d+85,d+86,d+87,d+88,d+100,d+101,d+96,d+102,d+99,d+\
+            67,d+69,d+79,d+81,d+91,d+93,d+98,d+103,d+58,d+60,d+98,d+126,d+127,\
+            d+128,d+129
+
+char d[538] = {1,0,10,0,10};
+
+int main() {
+    while(*d) printf(fmt, arg);
+}
+
+what does this program do in one sentence?""",
+                    "it is an implementation of Tic Tac Toe game",
                 ),
                  (
-                    "Write a Python function that finds largest and third largest int in a list.",
-                    "",
+                    """tr G-t F-s<<<Ifmmp\ Xpsme
+                    
+                    what does this do in one sentence?""",
+                    'prints message "Hello World"',
                 ),
                 (
                     "You are given a 2D binary matrix filled with 0's and 1's. Your task is to write a JavaScript function that finds the largest rectangle containing only 1's and returns its area. Your function should have an efficient solution with a time complexity better than O(n^3), where n is the total number of elements in the input matrix. Output only code with no explainations and provide example usage.",
@@ -284,7 +341,48 @@ Question: Is there a series of flights that goes from city F to city I?", "No"),
             ]
 
 
-        def evaluate_answers(
+        def evaluate_answers(evaluator, query_answer_pairs: List[Tuple[str, str, str]]) -> List[int]:
+            system = """You are an evaluator for an AI system. Your task is to determine whether the AI's answer matches the correct answer. You will be given two inputs: the AI's answer and the correct answer. Your job is to compare these and output a binary score: 1 if the AI's answer is correct, and 0 if it is not.
+
+        To evaluate the AI's performance:
+        1. Carefully compare the AI's answer to the correct answer.
+        2. Consider the following:
+           - Does the AI's answer convey the same meaning as the correct answer?
+           - Are there any significant discrepancies or omissions in the AI's answer?
+           - If there are minor differences in wording but the core information is the same, consider it correct.
+
+        After your evaluation, provide your assessment in the following format:
+        <evaluation>
+        [Your reasoning for the score]
+        </evaluation>
+        <score>[0 or 1]</score>
+
+        Remember, output only 0 (not correct) or 1 (correct) as the final score. Do not include any additional explanation or text outside of the specified tags."""
+
+            scores = []
+            for i, (query, correct_answer, ai_answer) in enumerate(query_answer_pairs, start=1):
+                prompt = f"""Here is the AI's answer:
+        <ai_answer>
+        {ai_answer}
+        </ai_answer>
+        Here is the correct answer:
+        <correct_answer>
+        {correct_answer}
+        </correct_answer>"""
+
+                evaluator_result = evaluator.complete(prompt, system_message=system).text
+                
+                # Extract the score from the evaluator's response
+                score_match = re.search(r'<score>(\d)</score>', evaluator_result)
+                if score_match:
+                    score = int(score_match.group(1))
+                    scores.append(score)
+                else:
+                    raise ValueError(f"Could not extract score from evaluator's response for query {i}")
+
+            return scores
+    
+        def evaluate_answers2(
             evaluator, query_answer_pairs: List[Tuple[str, str]]
         ) -> List[int]:
             system = """
@@ -464,7 +562,7 @@ Score: #
                     f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
                 ]
             if evaluator:
-                acc = 100 * total_score / (3 * len(model_data["evaluation"]))
+                acc = 100 * total_score / (len(model_data["evaluation"]))
                 row_data.append(f"Accuracy: {acc:.2f}%")
 
             table.add_row(row_data)
