@@ -531,10 +531,12 @@ Score: #
 
             total_tokens = 0
             total_score = 0
+            valid_evaluations = 0
             for index, output_data in enumerate(model_data["outputs"]):
                 total_tokens += output_data["tokens"]
-                if evaluator:
+                if evaluator and model_results[model]["evaluation"][index] is not None:
                     total_score += model_results[model]["evaluation"][index]
+                    valid_evaluations += 1
                 row_data = [
                     str(model),
                     output_data["text"],
@@ -568,9 +570,8 @@ Score: #
                     f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
                 ]
             if evaluator:
-                valid_evaluations = [e for e in model_data["evaluation"] if e is not None]
-                if valid_evaluations:
-                    acc = 100 * sum(valid_evaluations) / len(valid_evaluations)
+                if valid_evaluations > 0:
+                    acc = 100 * total_score / valid_evaluations
                     row_data.append(f"Accuracy: {acc:.2f}%")
                 else:
                     row_data.append("Accuracy: N/A")
