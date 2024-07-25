@@ -2,6 +2,8 @@ import asyncio
 import os
 import re
 import statistics
+import threading
+import queue
 from dataclasses import dataclass
 from prettytable import PrettyTable
 from .providers import OpenAIProvider
@@ -417,7 +419,7 @@ Score: #
 
         model_results = {}
 
-        def process_prompt(model, prompt, index, evaluator, **kwargs):
+        def process_prompt(model, prompt, index, evaluator, evaluation_queue, **kwargs):
             print(model, index)
             result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
             output_data = {
@@ -429,21 +431,24 @@ Score: #
             }
             
             if evaluator:
-                evaluation = evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])
-                output_data["evaluation"] = evaluation[0]
+                evaluation_thread = threading.Thread(
+                    target=lambda: evaluation_queue.put((index, evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])[0]))
+                )
+                evaluation_thread.start()
             
             return output_data
 
         def process_prompts_sequentially(model, prompts, evaluator, **kwargs):
             results = []
+            evaluation_queue = queue.Queue()
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 futures = [
-                    executor.submit(process_prompt, model, prompt, index, evaluator, **kwargs)
+                    executor.submit(process_prompt, model, prompt, index, evaluator, evaluation_queue, **kwargs)
                     for index, prompt in enumerate(prompts)
                 ]
                 for future in concurrent.futures.as_completed(futures):
                     results.append(future.result())
-            return model, results
+            return model, results, evaluation_queue
 
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
@@ -453,19 +458,31 @@ Score: #
             ]
 
             for future in as_completed(futures):
-                model, outputs = future.result()
+                model, outputs, evaluation_queue = future.result()
                 model_results[model] = {
                     "outputs": outputs,
                     "total_latency": 0,
                     "total_cost": 0,
-                    "evaluation": [],
+                    "evaluation": [None] * len(outputs),
                 }
 
                 for output_data in outputs:
                     model_results[model]["total_latency"] += output_data["latency"]
                     model_results[model]["total_cost"] += output_data["cost"]
-                    if evaluator:
-                        model_results[model]["evaluation"].append(output_data["evaluation"])
+
+                if evaluator:
+                    # Process evaluation results as they become available
+                    def process_evaluations():
+                        while True:
+                            try:
+                                index, evaluation = evaluation_queue.get(timeout=1)
+                                model_results[model]["evaluation"][index] = evaluation
+                            except queue.Empty:
+                                break
+
+                    evaluation_processor = threading.Thread(target=process_evaluations)
+                    evaluation_processor.start()
+                    evaluation_processor.join()  # Wait for all evaluations to complete
 
         for model in model_results:
             outputs = model_results[model]["outputs"]
