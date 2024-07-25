@@ -203,6 +203,7 @@ models.benchmark(evaluator=gpt4)
 
 | Model                                   | Tokens         | Cost ($)   | Latency (s) | Speed (tokens/sec) | Evaluation |
 |-----------------------------------------|----------------|------------|-------------|--------------------|------------|
+| OpenAIProvider('gpt-3.5-turbo') | Total Tokens: 964 | Total Cost: 0.00953 | Median Latency: 0.60 | Aggregated speed: 41.73 | Accuracy: 19.35% |
 | OpenAIProvider('gpt-4')                 | Total Tokens: 1123 | Total Cost: 0.18111 | Median Latency: 1.23 | Aggregated speed: 18.27 | Accuracy: 22.58% |
 | AnthropicProvider('claude-3-haiku-20240307') | Total Tokens: 3877 | Total Cost: 0.00593 | Median Latency: 1.32 | Aggregated speed: 90.25 | Accuracy: 22.58% |
 | OpenAIProvider('gpt-4o-mini')           | Total Tokens: 3708 | Total Cost: 0.00279 | Median Latency: 1.04 | Aggregated speed: 54.97 | Accuracy: 29.03% |
