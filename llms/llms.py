@@ -417,9 +417,9 @@ Score: #
 
         model_results = {}
 
-        def process_prompt(model, prompt, index, **kwargs):
+        def process_prompt(model, prompt, index, evaluator, **kwargs):
             print(model, index)
-            result = model.complete(prompt, max_tokens=1000, temperature=0, **kwargs)
+            result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
             output_data = {
                 "text": result.text,
                 "tokens": result.meta["tokens_completion"],
@@ -427,13 +427,18 @@ Score: #
                 "cost": result.meta["cost"],
                 "prompt_index": index,
             }
+            
+            if evaluator:
+                evaluation = evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])
+                output_data["evaluation"] = evaluation[0]
+            
             return output_data
 
-        def process_prompts_sequentially(model, prompts, **kwargs):
+        def process_prompts_sequentially(model, prompts, evaluator, **kwargs):
             results = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 futures = [
-                    executor.submit(process_prompt, model, prompt[0], index, **kwargs)
+                    executor.submit(process_prompt, model, prompt, index, evaluator, **kwargs)
                     for index, prompt in enumerate(prompts)
                 ]
                 for future in concurrent.futures.as_completed(futures):
@@ -443,7 +448,7 @@ Score: #
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(process_prompts_sequentially, model, problems, **kwargs)
+                executor.submit(process_prompts_sequentially, model, problems, evaluator, **kwargs)
                 for model in self._providers
             ]
 
@@ -453,11 +458,14 @@ Score: #
                     "outputs": outputs,
                     "total_latency": 0,
                     "total_cost": 0,
+                    "evaluation": [],
                 }
 
                 for output_data in outputs:
                     model_results[model]["total_latency"] += output_data["latency"]
                     model_results[model]["total_cost"] += output_data["cost"]
+                    if evaluator:
+                        model_results[model]["evaluation"].append(output_data["evaluation"])
 
         for model in model_results:
             outputs = model_results[model]["outputs"]
@@ -470,25 +478,6 @@ Score: #
             model_results[model]["aggregated_speed"] = total_tokens / total_latency
 
         if evaluator:
-            for model in model_results:
-                all_query_answer_pairs = []
-                model_data = model_results[model]
-                for output_data in model_data["outputs"]:
-                    prompt_index = output_data["prompt_index"]
-                    all_query_answer_pairs.append(
-                        (
-                            problems[prompt_index][0],
-                            problems[prompt_index][1],
-                            output_data["text"],
-                        )
-                    )
-
-                evaluation = evaluate_answers(evaluator, all_query_answer_pairs)
-                # Add evaluation to results
-                model_results[model]["evaluation"] = []
-                for i in range(len(model_results[model]["outputs"])):
-                    model_results[model]["evaluation"].append(evaluation[i])
-            print(model_results)
             sorted_models = sorted(
                 model_results,
                 key=lambda x: model_results[x]["aggregated_speed"]
