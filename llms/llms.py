@@ -398,20 +398,25 @@ Score: #
                     target=lambda: evaluation_queue.put((index, evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])[0]))
                 )
                 evaluation_thread.start()
+                output_data['evaluation_thread'] = evaluation_thread
             
             return output_data
 
         def process_prompts_sequentially(model, prompts, evaluator, **kwargs):
             results = []
             evaluation_queue = queue.Queue()
+            evaluation_threads = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 futures = [
                     executor.submit(process_prompt, model, prompt, index, evaluator, evaluation_queue, **kwargs)
                     for index, prompt in enumerate(prompts)
                 ]
                 for future in concurrent.futures.as_completed(futures):
-                    results.append(future.result())
-            return model, results, evaluation_queue
+                    result = future.result()
+                    results.append(result)
+                    if evaluator:
+                        evaluation_threads.append(result.get('evaluation_thread'))
+            return model, results, evaluation_queue, evaluation_threads
 
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
@@ -421,7 +426,7 @@ Score: #
             ]
 
             for future in as_completed(futures):
-                model, outputs, evaluation_queue = future.result()
+                model, outputs, evaluation_queue, evaluation_threads = future.result()
                 model_results[model] = {
                     "outputs": outputs,
                     "total_latency": 0,
@@ -434,18 +439,14 @@ Score: #
                     model_results[model]["total_cost"] += output_data["cost"]
 
                 if evaluator:
-                    # Process evaluation results as they become available
-                    def process_evaluations():
-                        while True:
-                            try:
-                                index, evaluation = evaluation_queue.get(timeout=1)
-                                model_results[model]["evaluation"][index] = evaluation
-                            except queue.Empty:
-                                break
+                    # Wait for all evaluation threads to complete
+                    for thread in evaluation_threads:
+                        thread.join()
 
-                    evaluation_processor = threading.Thread(target=process_evaluations)
-                    evaluation_processor.start()
-                    evaluation_processor.join()  # Wait for all evaluations to complete
+                    # Process all evaluation results
+                    while not evaluation_queue.empty():
+                        index, evaluation = evaluation_queue.get()
+                        model_results[model]["evaluation"][index] = evaluation
 
         for model in model_results:
             outputs = model_results[model]["outputs"]
