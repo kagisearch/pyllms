@@ -18,6 +18,7 @@ from .providers import GoogleGenAIProvider
 from .providers import MistralProvider
 from .providers import OllamaProvider
 from .providers import DeepSeekProvider
+from .providers import GroqProvider
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
@@ -50,7 +51,8 @@ class LLMS:
         Provider(MistralProvider, api_key_name="MISTRAL_API_KEY"),
         Provider(GoogleProvider, needs_api_key=False),
         Provider(OllamaProvider, needs_api_key=False),
-        Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY")
+        Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY"),
+        Provider(GroqProvider, api_key_name="GROQ_API_KEY")
     ]
     _providers: List[BaseProvider] = []
     _models: List[str] = []

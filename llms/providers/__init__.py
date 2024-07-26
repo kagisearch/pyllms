@@ -10,3 +10,4 @@ from .openai import OpenAIProvider
 from .mistral import MistralProvider
 from .ollama import OllamaProvider
 from .deepseek import DeepSeekProvider
+from .groq import GroqProvider
