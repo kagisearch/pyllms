@@ -194,26 +194,31 @@ Models are appearing like mushrooms after rain and everyone is interested in thr
 PyLLMs icludes an automated benchmark system. The quality of models is evaluated using a powerful model (for example gpt-4) on a range of predefined questions, or you can supply your own.
 
 ```
-model=llms.init(model=['claude-3-haiku-20240307','gpt-4o-mini','claude-3-5-sonnet-20240620','gpt-4o','mistral-large-latest','open-mistral-nemo','gpt-4','gpt-3.5-turbo'])
+model=llms.init(model=['claude-3-haiku-20240307','gpt-4o-mini','claude-3-5-sonnet-20240620','gpt-4o','mistral-large-latest','open-mistral-nemo','gpt-4','gpt-3.5-turbo','deepseek-coder','deepseek-chat','llama-3.1-8b-instant','llama-3.1-70b-versatile'])
 
 gpt4=llms.init('gpt-4o')
 
 models.benchmark(evaluator=gpt4)
 ```
 
-| Model                                   | Tokens         | Cost ($)   | Latency (s) | Speed (tokens/sec) | Evaluation |
+| Model                                   | Tokens         | Total Cost ($)   | Median Latency (s) | Speed (tokens/sec) | Accuracy |
 |-----------------------------------------|----------------|------------|-------------|--------------------|------------|
-|   AnthropicProvider('claude-3-haiku-20240307')  | Total Tokens: 4425 | Total Cost: 0.00665 | Median Latency: 1.26 | Aggregated speed: 94.31 | Accuracy: 16.67% |
-|             OpenAIProvider('gpt-4')             | Total Tokens: 1147 | Total Cost: 0.18711 | Median Latency: 1.27 | Aggregated speed: 16.71 | Accuracy: 19.44% |
-|         OpenAIProvider('gpt-3.5-turbo')         | Total Tokens: 1049 | Total Cost: 0.01000 | Median Latency: 0.53 | Aggregated speed: 33.48 | Accuracy: 22.22% |
-|          OpenAIProvider('gpt-4o-mini')          | Total Tokens: 4258 | Total Cost: 0.00313 | Median Latency: 0.99 | Aggregated speed: 66.10 | Accuracy: 30.56% |
-|       MistralProvider('open-mistral-nemo')      | Total Tokens: 2958 | Total Cost: 0.10475 | Median Latency: 0.68 | Aggregated speed: 87.00 | Accuracy: 36.11% |
-| AnthropicProvider('claude-3-5-sonnet-20240620') | Total Tokens: 5447 | Total Cost: 0.09501 | Median Latency: 2.65 | Aggregated speed: 52.32 | Accuracy: 41.67% |
-|     MistralProvider('mistral-large-latest')     | Total Tokens: 3633 | Total Cost: 0.12440 | Median Latency: 1.87 | Aggregated speed: 40.74 | Accuracy: 47.22% |
-|             OpenAIProvider('gpt-4o')            | Total Tokens: 5893 | Total Cost: 0.10803 | Median Latency: 1.41 | Aggregated speed: 59.76 | Accuracy: 52.78% |
+|         OpenAIProvider('gpt-3.5-turbo')         | 1569 | 0.01552 | 0.51 | 45.03 | 22.00% |
+|       MistralProvider('open-mistral-nemo')      | 4135 | 0.00323 | 0.65 | 82.65 | 22.00% |
+|             OpenAIProvider('gpt-4')             | 2477 | 0.33408 | 1.32 | 16.68 | 26.00% |
+| DeepSeekProvider('deepseek-coder') | 8079 | 0.00327 | 4.13 | 16.72 | 28.00% |
+|   AnthropicProvider('claude-3-haiku-20240307')  | 5642 | 0.00881 | 1.33 | 55.46 | 28.00% |
+| DeepSeekProvider('deepseek-chat')  | 7310 | 0.00304 | 4.81 | 17.20 | 32.00% |
+|          OpenAIProvider('gpt-4o-mini')          | 6029 | 0.00451 | 1.64 | 36.92 | 34.00% |
+|     GroqProvider('llama-3.1-70b-versatile')     | 5190 | 0.00781 | 0.71 | 81.62 | 40.00% |
+|     MistralProvider('mistral-large-latest')     | 5097 | 0.06787 | 3.08 | 18.03 | 44.00% |
+| AnthropicProvider('claude-3-5-sonnet-20240620') | 6595 | 0.12018 | 2.54 | 48.90 | 46.00% |
+|             OpenAIProvider('gpt-4o')            | 7482 | 0.14310 | 1.60 | 48.00 | 52.00% |
 
+Overall Model Quality (Composite Score) (0.7 accuracy; 0.2 speed; 0.1 cost) as of July 2024
+![Overall Model Quality (Composite Score)](https://github.com/user-attachments/assets/61d84ba9-d9ca-4a57-96c1-055a96fb05e3)
 
-To evaluate models on your own prompts, simply pass a list of questions and optional answers as tuple. The evaluator will automatically evaluate the responses:
+To evaluate models on your own prompts, simply pass a list of questions and answers as tuple. The evaluator will automatically evaluate the responses:
 
 ```
 models.benchmark(prompts=[("what is the capital of finland", "helsinki")], evaluator=gpt4)
