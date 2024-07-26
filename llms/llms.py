@@ -714,9 +714,9 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
             if evaluator:
                 if valid_evaluations > 0:
                     acc = 100 * total_score / valid_evaluations
-                    row_data.append(f"Accuracy: {acc:.2f}%")
+                    row_data.append(f"{acc:.2f}%")
                 else:
-                    row_data.append("Accuracy: N/A")
+                    row_data.append("N/A")
 
             table.add_row(row_data)
 
