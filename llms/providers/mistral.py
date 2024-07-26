@@ -19,8 +19,8 @@ class MistralProvider(BaseProvider):
         "open-mixtral-8x7b": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
         "mistral-small-latest": {"prompt": 2.0, "completion": 6.0, "token_limit": 32_000},
         "mistral-medium-latest": {"prompt": 2.7, "completion": 8.1, "token_limit": 32_000},
-        "mistral-large-latest": {"prompt": 8.0, "completion": 24.0, "token_limit": 32_000},
-        "open-mistral-nemo": {"prompt": 8.0, "completion": 24.0, "token_limit": 32_000},
+        "mistral-large-latest": {"prompt": 3.0, "completion": 9.0, "token_limit": 32_000},
+        "open-mistral-nemo": {"prompt": 0.3, "completion": 0.3, "token_limit": 32_000},
     }
 
     def __init__(

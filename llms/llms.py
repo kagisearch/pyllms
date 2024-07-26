@@ -697,19 +697,19 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
                 row_data = [
                     str(model),
                     "",
-                    f"Total Tokens: {total_tokens}",
-                    f"Total Cost: {model_data['total_cost']:.5f}",
-                    f"Median Latency: {model_data['median_latency']:.2f}",
-                    f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
+                    f"{total_tokens}",
+                    f"{model_data['total_cost']:.5f}",
+                    f"{model_data['median_latency']:.2f}",
+                    f"{total_tokens/model_data['total_latency']:.2f}",
                 ]
 
             else:
                 row_data = [
                     str(model),
-                    f"Total Tokens: {total_tokens}",
-                    f"Total Cost: {model_data['total_cost']:.5f}",
-                    f"Median Latency: {model_data['median_latency']:.2f}",
-                    f"Aggregated speed: {total_tokens/model_data['total_latency']:.2f}",
+                    f"{total_tokens}",
+                    f"{model_data['total_cost']:.5f}",
+                    f"{model_data['median_latency']:.2f}",
+                    f"{total_tokens/model_data['total_latency']:.2f}",
                 ]
             if evaluator:
                 if valid_evaluations > 0:
