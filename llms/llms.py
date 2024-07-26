@@ -172,6 +172,29 @@ class LLMS:
     def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False, **kwargs):
         if not problems:
             problems = [
+            ("Write a one paragraph cover letter for a job in a tech company. Make sure to use the word ”the” exactly twice.",
+            "Correct answer will use the word 'the' exactly twice."),
+            ("write three sentences, each ending with the word 'and'",
+            "Correct answer will have three sentences, and each will end with the word 'and'"),
+            ("what is the capital of finland? if it begins with a letter h, respond 'Oslo' otherwise respond Helsinki.",
+            "Oslo"),
+            ("write a sentence about trees with no words beginning with the letter t",
+            "Correct answer will have no words begin with the letter t"),
+            (
+            ("write 7 numbers between 10 and 110. none of them should begin with 1,5,3,4,2,6,8 or 7",
+            "Correct answer will have 7 numbers and none of them will begin with 1, 2, 3, 4, 5, 6, 7, 8"),
+            ('If a + b + c = 30 and b = 10 and c = 5. Is a = 20? Answer only ”My answer is yes.” or ”My answer is no.” or ”My answer is maybe.”',
+            "My answer is no."),
+            ("""given sentence 'today is a sunny day' and instructions 
+
+1. replace words with number of commas equal to the length of the word 
+
+2. if there are three or more commas in the new sentence, replace commas with dots
+
+print the output""","...... ,, , ...... ..."),
+('Given the sentence "The cat jumped over the fence" write the sentence again adding number in square brackets after each word corrsepnsing to its poistion in the sentence. then add those numbers and add a number in square brackets equal to the sum.',
+"The [1] cat [2] jumped [3] over [4] the [5] fence [6] [21]"),
+
                 (
                     "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
                     "pull",
@@ -281,6 +304,18 @@ how to spell cheap under this rule?",
                 ("Alan, Bob, Colin, Dave and Emily are standing in a circle. Alan is on Bob’s immediate left. Bob is on Colin’s immediate left. Colin is on Dave’s immediate left. Dave is on Emily’s immediate left. Who is on Alan’s immediate right?", "Bob"),
                 ("-2-2-2-2-2-2*-2*-2-2/-2=", "-17"),
                 ('what is the 13th letter of the word "supralapsarian"', "a"),
+                ("How much is 7! * 3! -1234.5 ?", "29005.5"),
+                 (
+                    """Capture the essence of this in exactly 7 words: There’s much that divides us in Northern Ireland though one thing is guaranteed to bring us together: local phrases. Call it slang, call it colloquialisms, we all know only too well how important words are to where we’re from… and when it comes to the phrases that make us ‘us,’ we’ve got a lot to say.
+                    """,
+                    "If the number of words in answer is 7, mark it as correct.",
+                ),
+                (
+                    "is 9677 a prime number?",
+                    "yes",
+                ),
+                ('Sort the following list into alphabetical order. apple, banana, orange, grape, box, cube. Separate items with exactly 6 asterisks symbols: *******',
+                'answer should match this sequence: apple*******banana*******box*******cube*******grape*******orange'),
                 (
                     'Vlad\'s uncle can still beat him in sprinting although he is 30 years younger. who is "he" referring to?',
                     "Vlad",
@@ -425,7 +460,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
         model_results = {}
 
         def process_prompt(model, prompt, index, evaluator, evaluation_queue, **kwargs):
-            print(model, index)
+            print(model, index)#, prompt[0])
             result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
             output_data = {
                 "text": result.text,
