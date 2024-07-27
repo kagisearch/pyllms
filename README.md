@@ -217,7 +217,8 @@ models.benchmark(evaluator=gpt4)
 |             OpenAIProvider('gpt-4o')            | 7482 | 0.14310 | 1.60 | 48.00 | 52.00% |
 
 Overall Model Quality (Composite Score) (0.7 accuracy; 0.2 speed; 0.1 cost) as of July 26 2024
-![Overall Model Quality (Composite Score) - Updated](https://github.com/user-attachments/assets/ec4ce7a7-ec2a-4022-8abe-f725ba2aef89)
+
+![Overall Model Quality (Composite Score) - Updated-1](https://github.com/user-attachments/assets/96044104-a903-4f28-b75e-fbc3ba92315b)
 
 
 To evaluate models on your own prompts, simply pass a list of questions and answers as tuple. The evaluator will automatically evaluate the responses:
