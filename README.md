@@ -216,8 +216,9 @@ models.benchmark(evaluator=gpt4)
 | AnthropicProvider('claude-3-5-sonnet-20240620') | 6595 | 0.12018 | 2.54 | 48.90 | 46.00% |
 |             OpenAIProvider('gpt-4o')            | 7482 | 0.14310 | 1.60 | 48.00 | 52.00% |
 
-Overall Model Quality (Composite Score) (0.7 accuracy; 0.2 speed; 0.1 cost) as of July 2024
-![Overall Model Quality (Composite Score)](https://github.com/user-attachments/assets/61d84ba9-d9ca-4a57-96c1-055a96fb05e3)
+Overall Model Quality (Composite Score) (0.7 accuracy; 0.2 speed; 0.1 cost) as of July 26 2024
+![Overall Model Quality (Composite Score) - Updated](https://github.com/user-attachments/assets/ec4ce7a7-ec2a-4022-8abe-f725ba2aef89)
+
 
 To evaluate models on your own prompts, simply pass a list of questions and answers as tuple. The evaluator will automatically evaluate the responses:
 
