@@ -207,6 +207,7 @@ models.benchmark(evaluator=gpt4)
 |       MistralProvider('open-mistral-nemo')      | 4135 | 0.00323 | 0.65 | 82.65 | 22.00% |
 |             OpenAIProvider('gpt-4')             | 2477 | 0.33408 | 1.32 | 16.68 | 26.00% |
 | DeepSeekProvider('deepseek-coder') | 8079 | 0.00327 | 4.13 | 16.72 | 28.00% |
+| GroqProvider('llama-3.1-8b-instant') |  6628  | 0.00085  |     2.26    |       82.02        |   28.00%   |
 |   AnthropicProvider('claude-3-haiku-20240307')  | 5642 | 0.00881 | 1.33 | 55.46 | 28.00% |
 | DeepSeekProvider('deepseek-chat')  | 7310 | 0.00304 | 4.81 | 17.20 | 32.00% |
 |          OpenAIProvider('gpt-4o-mini')          | 6029 | 0.00451 | 1.64 | 36.92 | 34.00% |
