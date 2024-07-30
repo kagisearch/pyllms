@@ -15,3 +15,4 @@ protobuf
 grpcio~=1.54.2
 google-generativeai
 ollama
+reka-api
