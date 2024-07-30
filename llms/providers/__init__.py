@@ -11,3 +11,4 @@ from .mistral import MistralProvider
 from .ollama import OllamaProvider
 from .deepseek import DeepSeekProvider
 from .groq import GroqProvider
+from .reka import RekaProvider
