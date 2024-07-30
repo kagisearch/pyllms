@@ -185,7 +185,7 @@ class LLMS:
             ("write a sentence about trees with no words beginning with the letter t",
             "Correct answer will have no words begin with the letter t"),
             ("write 7 numbers between 10 and 110. none of them should begin with 1,5,3,4,2,6,8 or 7",
-            "Correct answer will have 7 numbers and none of them will begin with 1, 2, 3, 4, 5, 6, 7, 8"),
+            "Correct answer will have 7 numbers and they will be between 90 and 99"),
             ('If a + b + c = 30 and b = 10 and c = 5. Is a = 20? Answer only ”My answer is yes.” or ”My answer is no.” or ”My answer is maybe.”',
             "My answer is no."),
             ("""given sentence 'today is a sunny day' and instructions 
