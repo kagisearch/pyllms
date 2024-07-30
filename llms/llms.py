@@ -4,6 +4,7 @@ import re
 import statistics
 import threading
 import queue
+import time
 from dataclasses import dataclass
 from prettytable import PrettyTable
 from .providers import OpenAIProvider
