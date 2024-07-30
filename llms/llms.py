@@ -32,23 +32,26 @@ class Provider:
     needs_api_key: bool = True
 
 
+def create_provider(provider_class, api_key_name=None, needs_api_key=True):
+    return Provider(provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key)
+
 class LLMS:
     _provider_map = {
-        "OpenAI": Provider(OpenAIProvider, api_key_name="OPENAI_API_KEY"),
-        "Anthropic": Provider(AnthropicProvider, api_key_name="ANTHROPIC_API_KEY"),
-        "BedrockAnthropic": Provider(BedrockAnthropicProvider, needs_api_key=False),
-        "AI21": Provider(AI21Provider, api_key_name="AI21_API_KEY"),
-        "Cohere": Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
-        "AlephAlpha": Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
-        "HuggingfaceHub": Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
-        "GoogleGenAI": Provider(GoogleGenAIProvider, api_key_name="GOOGLE_API_KEY"),
-        "Mistral": Provider(MistralProvider, api_key_name="MISTRAL_API_KEY"),
-        "Google": Provider(GoogleProvider, needs_api_key=False),
-        "Ollama": Provider(OllamaProvider, needs_api_key=False),
-        "DeepSeek": Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY"),
-        "Groq": Provider(GroqProvider, api_key_name="GROQ_API_KEY"),
-        "Reka": Provider(RekaProvider, api_key_name="REKA_API_KEY"),
-        "Together": Provider(TogetherProvider, api_key_name="TOGETHER_API_KEY"),
+        "OpenAI": create_provider(OpenAIProvider, "OPENAI_API_KEY"),
+        "Anthropic": create_provider(AnthropicProvider, "ANTHROPIC_API_KEY"),
+        "BedrockAnthropic": create_provider(BedrockAnthropicProvider, needs_api_key=False),
+        "AI21": create_provider(AI21Provider, "AI21_API_KEY"),
+        "Cohere": create_provider(CohereProvider, "COHERE_API_KEY"),
+        "AlephAlpha": create_provider(AlephAlphaProvider, "ALEPHALPHA_API_KEY"),
+        "HuggingfaceHub": create_provider(HuggingfaceHubProvider, "HUGGINFACEHUB_API_KEY"),
+        "GoogleGenAI": create_provider(GoogleGenAIProvider, "GOOGLE_API_KEY"),
+        "Mistral": create_provider(MistralProvider, "MISTRAL_API_KEY"),
+        "Google": create_provider(GoogleProvider, needs_api_key=False),
+        "Ollama": create_provider(OllamaProvider, needs_api_key=False),
+        "DeepSeek": create_provider(DeepSeekProvider, "DEEPSEEK_API_KEY"),
+        "Groq": create_provider(GroqProvider, "GROQ_API_KEY"),
+        "Reka": create_provider(RekaProvider, "REKA_API_KEY"),
+        "Together": create_provider(TogetherProvider, "TOGETHER_API_KEY"),
     }
     _providers: List[BaseProvider] = []
     _models: List[str] = []
