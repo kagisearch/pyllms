@@ -132,6 +132,10 @@ export ALEPHALPHA_API_KEY="your_api_key_here"
 export HUGGINFACEHUB_API_KEY="your_api_key_here"
 export GOOGLE_API_KEY="your_api_key_here"
 export MISTRAL_API_KEY="your_api_key_here"
+export REKA_API_KEY="your_api_key_here"
+export TOGETHER_API_KEY="your_api_key_here"
+export GROQ_API_KEY="your_api_key_here"
+export DEEPSEEK_API_KEY="your_api_key_here"
 
 export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
