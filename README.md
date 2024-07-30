@@ -50,7 +50,7 @@ pip install pyllms
 ```python
 import llms
 
-model = llms.init('gpt-4')
+model = llms.init('gpt-4o')
 result = model.complete("What is 5+5?")
 
 print(result.text)
@@ -63,7 +63,7 @@ print(result.text)
 ```python
 import llms
 
-model = llms.init('gpt-4')
+model = llms.init('gpt-4o')
 result = model.complete(
     "What is the capital of the country where Mozart was born?",
     temperature=0.1,
