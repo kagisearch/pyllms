@@ -792,18 +792,16 @@ Question: Is there a series of flights that goes from city F to city I?",
         self._models = [default_model] if model is None else ([model] if isinstance(model, str) else model)
 
     def _initialize_providers(self, kwargs):
-        self._providers = []
-        for single_model in self._models:
-            for provider in self._provider_map.values():
-                if single_model in provider.provider.MODEL_INFO:
-                    LOGGER.info(f"Found {single_model} in {provider.provider.__name__}")
-                    if provider.api_key or not provider.needs_api_key:
-                        self._providers.append(
-                            provider.provider(
-                                api_key=provider.api_key,
-                                model=single_model,
-                                **kwargs
-                            )
-                        )
-                    else:
-                        raise ValueError(f"Invalid API key for model {single_model}")
+        self._providers = [
+            provider.provider(api_key=provider.api_key, model=single_model, **kwargs)
+            for single_model in self._models
+            for provider in self._provider_map.values()
+            if single_model in provider.provider.MODEL_INFO
+            and (provider.api_key or not provider.needs_api_key)
+        ]
+        
+        if not self._providers:
+            raise ValueError("No valid providers found for the specified models")
+        
+        for provider in self._providers:
+            LOGGER.info(f"Initialized {provider.model} with {provider.__class__.__name__}")
