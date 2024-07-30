@@ -1,3 +1,4 @@
+# Standard library imports
 import asyncio
 import concurrent.futures
 import os
@@ -11,8 +12,10 @@ from dataclasses import dataclass
 from logging import getLogger
 from typing import List, Optional, Tuple, Type, Union
 
+# Third-party imports
 from prettytable import PrettyTable
 
+# Local imports
 from .providers import (
     AI21Provider,
     AlephAlphaProvider,
