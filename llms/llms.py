@@ -788,11 +788,8 @@ Question: Is there a series of flights that goes from city F to city I?",
         }
 
     def _set_models(self, model):
-        if model is None:
-            default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
-            self._models = [default_model]
-        else:
-            self._models = [model] if isinstance(model, str) else model
+        default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
+        self._models = [default_model] if model is None else ([model] if isinstance(model, str) else model)
 
     def _initialize_providers(self, kwargs):
         self._providers = []
