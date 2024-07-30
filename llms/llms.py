@@ -779,8 +779,11 @@ Question: Is there a series of flights that goes from city F to city I?",
             return table.get_html_string()
     def _load_api_keys(self, kwargs):
         self._provider_map = {
-            name: provider._replace(
-                api_key=kwargs.pop(provider.api_key_name.lower(), None) or os.getenv(provider.api_key_name)
+            name: Provider(
+                provider=provider.provider,
+                api_key_name=provider.api_key_name,
+                api_key=kwargs.pop(provider.api_key_name.lower(), None) or os.getenv(provider.api_key_name),
+                needs_api_key=provider.needs_api_key
             )
             for name, provider in self._provider_map.items()
             if provider.api_key_name
