@@ -164,15 +164,33 @@ models.benchmark(prompts=[("What is the capital of Finland?", "Helsinki")], eval
 
 ## Supported Models
 
-To get a list of supported models:
+To get a full list of supported models:
 
 ```python
 model = llms.init()
 model.list()
 model.list("gpt")  # lists only models with 'gpt' in name/provider name
 ```
+Currently supported models (may be outdated):
 
-For a full list of supported models and providers, please refer to the [Supported Models](#supported-models) section in the original README.
+| **Provider**              | **Models**                                                                                               |
+|---------------------------|---------------------------------------------------------------------------------------------------------|
+| HuggingfaceHubProvider    | hf_pythia, hf_falcon40b, hf_falcon7b, hf_mptinstruct, hf_mptchat, hf_llava, hf_dolly, hf_vicuna          |
+| GroqProvider              | llama-3.1-8b-instant, llama-3.1-405b-reasoning, llama-3.1-70b-versatile                                  |
+| DeepSeekProvider          | deepseek-chat, deepseek-coder                                                                            |
+| MistralProvider           | mistral-tiny, open-mistral-7b, open-mistral-nemo, mistral-small, open-mixtral-8x7b, mistral-small-latest, mistral-medium-latest, mistral-large-latest |
+| OpenAIProvider            | gpt-4o-mini, gpt-3.5-turbo, gpt-3.5-turbo-1106, gpt-3.5-turbo-instruct, gpt-4o, gpt-4-1106-preview, gpt-4-turbo-preview, gpt-4-turbo |
+| GoogleProvider            | gemini-1.5-pro-preview-0514, gemini-1.5-flash-preview-0514, chat-bison, text-bison, text-bison-32k, code-bison, code-bison-32k, codechat-bison, codechat-bison-32k, gemini-pro |
+| GoogleGenAIProvider       | chat-bison-genai, text-bison-genai, gemini-1.5-pro-latest                                               |
+| AnthropicProvider         | claude-3-haiku-20240307, claude-instant-v1.1, claude-instant-v1, claude-instant-1, claude-instant-1.2, claude-3-sonnet-20240229, claude-3-5-sonnet-20240620, claude-2.1, claude-v1, claude-v1-100k, claude-3-opus-20240229 |
+| BedrockAnthropicProvider  | anthropic.claude-3-haiku-20240307-v1:0, anthropic.claude-instant-v1, anthropic.claude-v1, anthropic.claude-v2, anthropic.claude-3-sonnet-20240229-v1:0 |
+| TogetherProvider          | meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo                                                           |
+| RekaProvider              | reka-edge, reka-flash, reka-core                                                                        |
+| AlephAlphaProvider        | luminous-base, luminous-extended, luminous-supreme, luminous-supreme-control                            |
+| AI21Provider              | j2-grande-instruct, j2-jumbo-instruct, command, command-nightly                                         |
+| CohereProvider            | command, command-nightly                                                                                 |
+
+
 
 ## Advanced Usage
 
