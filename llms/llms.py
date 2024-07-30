@@ -1,33 +1,37 @@
 import asyncio
+import concurrent.futures
 import os
+import queue
 import re
 import statistics
 import threading
-import queue
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from logging import getLogger
+from typing import List, Optional, Tuple, Type, Union
+
 from prettytable import PrettyTable
-from .providers import OpenAIProvider
-from .providers import AnthropicProvider
-from .providers import BedrockAnthropicProvider
-from .providers import AI21Provider
-from .providers import CohereProvider
-from .providers import AlephAlphaProvider
-from .providers import HuggingfaceHubProvider
-from .providers import GoogleProvider
-from .providers import GoogleGenAIProvider
-from .providers import MistralProvider
-from .providers import OllamaProvider
-from .providers import DeepSeekProvider
-from .providers import GroqProvider
-from .providers import RekaProvider
-from .providers import TogetherProvider
+
+from .providers import (
+    AI21Provider,
+    AlephAlphaProvider,
+    AnthropicProvider,
+    BedrockAnthropicProvider,
+    CohereProvider,
+    DeepSeekProvider,
+    GoogleGenAIProvider,
+    GoogleProvider,
+    GroqProvider,
+    HuggingfaceHubProvider,
+    MistralProvider,
+    OllamaProvider,
+    OpenAIProvider,
+    RekaProvider,
+    TogetherProvider,
+)
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional, Tuple, Type, Union
-from logging import getLogger
 
 
 LOGGER = getLogger(__name__)
