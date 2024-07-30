@@ -201,26 +201,7 @@ gpt4=llms.init('gpt-4o')
 models.benchmark(evaluator=gpt4)
 ```
 
-| Model                                   | Tokens         | Total Cost ($)   | Median Latency (s) | Speed (tokens/sec) | Accuracy |
-|-----------------------------------------|----------------|------------|-------------|--------------------|------------|
-|         OpenAIProvider('gpt-3.5-turbo')         | 1569 | 0.01552 | 0.51 | 45.03 | 22.00% |
-|       MistralProvider('open-mistral-nemo')      | 4135 | 0.00323 | 0.65 | 82.65 | 22.00% |
-|             OpenAIProvider('gpt-4')             | 2477 | 0.33408 | 1.32 | 16.68 | 26.00% |
-| DeepSeekProvider('deepseek-coder') | 8079 | 0.00327 | 4.13 | 16.72 | 28.00% |
-| GroqProvider('llama-3.1-8b-instant') |  6628  | 0.00085  |     2.26    |       82.02        |   28.00%   |
-|   AnthropicProvider('claude-3-haiku-20240307')  | 5642 | 0.00881 | 1.33 | 55.46 | 28.00% |
-| DeepSeekProvider('deepseek-chat')  | 7310 | 0.00304 | 4.81 | 17.20 | 32.00% |
-|          OpenAIProvider('gpt-4o-mini')          | 6029 | 0.00451 | 1.64 | 36.92 | 34.00% |
-|     GroqProvider('llama-3.1-70b-versatile')     | 5190 | 0.00781 | 0.71 | 81.62 | 40.00% |
-|     MistralProvider('mistral-large-latest')     | 5097 | 0.06787 | 3.08 | 18.03 | 44.00% |
-| AnthropicProvider('claude-3-5-sonnet-20240620') | 6595 | 0.12018 | 2.54 | 48.90 | 46.00% |
-|             OpenAIProvider('gpt-4o')            | 7482 | 0.14310 | 1.60 | 48.00 | 52.00% |
-
-Overall Model Quality (Composite Score) (0.5 accuracy; 0.3 speed; 0.2 cost) as of July 26 2024
-
-
-![Overall Model Quality (Composite Score by Rank) with Updated Weights](https://github.com/user-attachments/assets/93e42566-a632-44ba-b5eb-5ae20fb31c13)
-
+Check [Kagi LLM Benchmarking Project](https://help.kagi.com/kagi/ai/llm-benchmark.html) for latest benchmarks!
 
 To evaluate models on your own prompts, simply pass a list of questions and answers as tuple. The evaluator will automatically evaluate the responses:
 
@@ -240,27 +221,25 @@ To get a list of supported models, call list(). Models will be shown in the orde
 >>> model.list("gpt') # lists only models with 'gpt' in name/provider name
 ```
 
-Here is a pretty table of supported models (in alphabetical order).
-```
+Here is a table of supported models (in alphabetical order).
 
-| Provider            | Name                   | Prompt Cost | Completion Cost | Token Limit |
-|---------------------|------------------------|-------------|-----------------|-------------|
-| AI21Provider        | j2-grande-instruct     |        10.0 |            10.0 |        8192 |
-| AI21Provider        | j2-jumbo-instruct      |        15.0 |            15.0 |        8192 |
-| AlephAlphaProvider  | luminous-base          |         6.6 |             7.6 |        2048 |
-| AlephAlphaProvider  | luminous-extended      |         9.9 |            10.9 |        2048 |
-| AlephAlphaProvider  | luminous-supreme       |        38.5 |            42.5 |        2048 |
-| AlephAlphaProvider  | luminous-supreme-control |      48.5 |            53.6 |        2048 |
-| AnthropicProvider   | claude-instant-v1      |        1.63 |            5.51 |        9000 |
-| AnthropicProvider   | claude-v1              |       11.02 |           32.68 |        9000 |
-| CohereProvider      | command                |        25.0 |            25.0 |        8192 |
-| CohereProvider      | command-nightly        |        25.0 |            25.0 |        8192 |
-| GoogleProvider      | chat-bison             |         0.5 |             0.5 |        2048 |
-| HuggingfaceHub      | hf_pythia              |         0.0 |             0.0 |        2048 |
-| OpenAIProvider      | gpt-3.5-turbo          |         2.0 |             2.0 |        4000 |
-| OpenAIProvider      | gpt-4                  |        30.0 |            60.0 |        8000 |
+| **Provider**              | **Models**                                                                                               |
+|---------------------------|---------------------------------------------------------------------------------------------------------|
+| HuggingfaceHubProvider    | hf_pythia, hf_falcon40b, hf_falcon7b, hf_mptinstruct, hf_mptchat, hf_llava, hf_dolly, hf_vicuna          |
+| GroqProvider              | llama-3.1-8b-instant, llama-3.1-405b-reasoning, llama-3.1-70b-versatile                                  |
+| DeepSeekProvider          | deepseek-chat, deepseek-coder                                                                            |
+| MistralProvider           | mistral-tiny, open-mistral-7b, open-mistral-nemo, mistral-small, open-mixtral-8x7b, mistral-small-latest, mistral-medium-latest, mistral-large-latest |
+| OpenAIProvider            | gpt-4o-mini, gpt-3.5-turbo, gpt-3.5-turbo-1106, gpt-3.5-turbo-instruct, gpt-4o, gpt-4-1106-preview, gpt-4-turbo-preview, gpt-4-turbo |
+| GoogleProvider            | gemini-1.5-pro-preview-0514, gemini-1.5-flash-preview-0514, chat-bison, text-bison, text-bison-32k, code-bison, code-bison-32k, codechat-bison, codechat-bison-32k, gemini-pro |
+| GoogleGenAIProvider       | chat-bison-genai, text-bison-genai, gemini-1.5-pro-latest                                               |
+| AnthropicProvider         | claude-3-haiku-20240307, claude-instant-v1.1, claude-instant-v1, claude-instant-1, claude-instant-1.2, claude-3-sonnet-20240229, claude-3-5-sonnet-20240620, claude-2.1, claude-v1, claude-v1-100k, claude-3-opus-20240229 |
+| BedrockAnthropicProvider  | anthropic.claude-3-haiku-20240307-v1:0, anthropic.claude-instant-v1, anthropic.claude-v1, anthropic.claude-v2, anthropic.claude-3-sonnet-20240229-v1:0 |
+| TogetherProvider          | meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo                                                           |
+| RekaProvider              | reka-edge, reka-flash, reka-core                                                                        |
+| AlephAlphaProvider        | luminous-base, luminous-extended, luminous-supreme, luminous-supreme-control                            |
+| AI21Provider              | j2-grande-instruct, j2-jumbo-instruct, command, command-nightly                                         |
+| CohereProvider            | command, command-nightly                                                                                 |
 
-```
 
 Useful links:\
 [OpenAI documentation](https://platform.openai.com/docs/api-reference/completions)\
