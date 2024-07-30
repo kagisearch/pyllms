@@ -791,13 +791,18 @@ Question: Is there a series of flights that goes from city F to city I?",
         default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
         self._models = [default_model] if model is None else ([model] if isinstance(model, str) else model)
 
+    def _validate_model(self, single_model, provider):
+        return (
+            single_model in provider.provider.MODEL_INFO
+            and (provider.api_key or not provider.needs_api_key)
+        )
+
     def _initialize_providers(self, kwargs):
         self._providers = [
             provider.provider(api_key=provider.api_key, model=single_model, **kwargs)
             for single_model in self._models
             for provider in self._provider_map.values()
-            if single_model in provider.provider.MODEL_INFO
-            and (provider.api_key or not provider.needs_api_key)
+            if self._validate_model(single_model, provider)
         ]
         
         if not self._providers:
