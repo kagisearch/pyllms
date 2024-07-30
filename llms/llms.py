@@ -3,7 +3,6 @@ import re
 import statistics
 import threading
 import queue
-import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from logging import getLogger
@@ -32,11 +31,11 @@ class Provider:
     needs_api_key: bool = True
 
 
-def create_provider(provider_class, api_key_name=None, needs_api_key=True):
+def create_provider(provider_class: Type[BaseProvider], api_key_name: Optional[str] = None, needs_api_key: bool = True) -> Provider:
     return Provider(provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key)
 
 class LLMS:
-    _provider_map = {
+    _provider_map: Dict[str, Provider] = {
         "OpenAI": create_provider(OpenAIProvider, "OPENAI_API_KEY"),
         "Anthropic": create_provider(AnthropicProvider, "ANTHROPIC_API_KEY"),
         "BedrockAnthropic": create_provider(BedrockAnthropicProvider, needs_api_key=False),
@@ -66,39 +65,24 @@ class LLMS:
         return f"LLMS({','.join(self._models)})"
 
     @property
-    def n_provider(self):
+    def n_provider(self) -> int:
         return len(self._providers)
 
     def list(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
-        model_info_list = []
-
-        for provider in [p.provider for p in self._possible_providers]:
-            for model, cost in provider.MODEL_INFO.items():
-                if query and (
-                    (query.lower() not in model.lower())
-                    and (query.lower() not in provider.__name__.lower())
-                ):
-                    continue
-                model_info = {
-                    "provider": provider.__name__,
-                    "name": model,
-                    "cost": cost,
-                }
-                model_info_list.append(model_info)
-
-        sorted_list = sorted(
-            model_info_list, key=lambda x: x["cost"]["prompt"] + x["cost"]["completion"]
-        )
-        return sorted_list
+        return [
+            {
+                "provider": provider.__name__,
+                "name": model,
+                "cost": cost,
+            }
+            for provider in [p.provider for p in self._possible_providers]
+            for model, cost in provider.MODEL_INFO.items()
+            if not query or (query.lower() in model.lower() or query.lower() in provider.__name__.lower())
+        ]
 
     def count_tokens(self, content: Union[str, List[Dict[str, Any]]]) -> Union[int, List[int]]:
-        results = []
-        for provider in self._providers:
-            results.append(provider.count_tokens(content))
-        if self.n_provider > 1:
-            return results
-        else:
-            return results[0]
+        results = [provider.count_tokens(content) for provider in self._providers]
+        return results if self.n_provider > 1 else results[0]
 
     def complete(self, prompt: str, **kwargs: Any) -> Union[Result, Results]:
         def _generate(provider):
