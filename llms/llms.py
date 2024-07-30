@@ -175,7 +175,7 @@ class LLMS:
             raise ValueError("Streaming is possible only with a single model")
         return await self._providers[0].acomplete_stream(prompt, **kwargs)
 
-    def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False, **kwargs):
+    def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False, rate=0, **kwargs):
         if not problems:
             problems = [
             ("Write a one paragraph cover letter for a job in a tech company. Make sure to use the word ”the” exactly twice.",
@@ -582,15 +582,16 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
             
             return output_data
 
-        def process_prompts_sequentially(model, prompts, evaluator, **kwargs):
+        def process_prompts_sequentially(model, prompts, evaluator, rate, **kwargs):
             results = []
             evaluation_queue = queue.Queue()
             evaluation_threads = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                futures = [
-                    executor.submit(process_prompt, model, prompt, index, evaluator, evaluation_queue, **kwargs)
-                    for index, prompt in enumerate(prompts)
-                ]
+                futures = []
+                for index, prompt in enumerate(prompts):
+                    if rate > 0:
+                        time.sleep(60 / rate)  # Wait to respect rate limit
+                    futures.append(executor.submit(process_prompt, model, prompt, index, evaluator, evaluation_queue, **kwargs))
                 for future in concurrent.futures.as_completed(futures):
                     result = future.result()
                     results.append(result)
@@ -601,7 +602,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(process_prompts_sequentially, model, problems, evaluator, **kwargs)
+                executor.submit(process_prompts_sequentially, model, problems, evaluator, rate, **kwargs)
                 for model in self._providers
             ]
 
