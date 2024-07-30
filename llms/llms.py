@@ -20,6 +20,7 @@ from .providers import OllamaProvider
 from .providers import DeepSeekProvider
 from .providers import GroqProvider
 from .providers import RekaProvider
+from .providers import TogetherProvider
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
@@ -54,7 +55,8 @@ class LLMS:
         Provider(OllamaProvider, needs_api_key=False),
         Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY"),
         Provider(GroqProvider, api_key_name="GROQ_API_KEY"),
-        Provider(RekaProvider, api_key_name="REKA_API_KEY")
+        Provider(RekaProvider, api_key_name="REKA_API_KEY"),
+        Provider(TogetherProvider, api_key_name="TOGETHER_API_KEY")
     ]
     _providers: List[BaseProvider] = []
     _models: List[str] = []
