@@ -7,7 +7,7 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from logging import getLogger
-from typing import List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union, Dict, Any, Callable
 
 from prettytable import PrettyTable
 
@@ -53,7 +53,7 @@ class LLMS:
     _providers: List[BaseProvider] = []
     _models: List[str] = []
 
-    def __init__(self, model: Union[str, List[str], None] = None, **kwargs):
+    def __init__(self, model: Union[str, List[str], None] = None, **kwargs: Any) -> None:
         """Programmatically load api keys and instantiate providers."""
         self._load_api_keys(kwargs)
         self._set_models(model)
@@ -66,7 +66,7 @@ class LLMS:
     def n_provider(self):
         return len(self._providers)
 
-    def list(self, query=None):
+    def list(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
         model_info_list = []
 
         for provider in [p.provider for p in self._possible_providers]:
@@ -88,7 +88,7 @@ class LLMS:
         )
         return sorted_list
 
-    def count_tokens(self, content):
+    def count_tokens(self, content: Union[str, List[Dict[str, Any]]]) -> Union[int, List[int]]:
         results = []
         for provider in self._providers:
             results.append(provider.count_tokens(content))
@@ -97,7 +97,7 @@ class LLMS:
         else:
             return results[0]
 
-    def complete(self, prompt: str, **kwargs) -> Union[Result, Results]:
+    def complete(self, prompt: str, **kwargs: Any) -> Union[Result, Results]:
         def _generate(provider):
             result = provider.complete(prompt, **kwargs)
             return result
@@ -119,7 +119,7 @@ class LLMS:
     async def acomplete(
         self,
         prompt: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> Union[Result, Results]:
         if self.n_provider > 1:
             results = []
@@ -131,19 +131,24 @@ class LLMS:
             provider = self._providers[0]
             return await provider.acomplete(prompt, **kwargs)
 
-    def complete_stream(self, prompt, **kwargs) -> StreamResult:
+    def complete_stream(self, prompt: str, **kwargs: Any) -> StreamResult:
         if self.n_provider > 1:
             raise ValueError("Streaming is possible only with a single model")
         return self._providers[0].complete_stream(prompt, **kwargs)
 
-    async def acomplete_stream(self, prompt, **kwargs) -> AsyncStreamResult:
+    async def acomplete_stream(self, prompt: str, **kwargs: Any) -> AsyncStreamResult:
         if self.n_provider > 1:
             raise ValueError("Streaming is possible only with a single model")
         return await self._providers[0].acomplete_stream(prompt, **kwargs)
 
     def benchmark(
-        self, problems=None, evaluator=None, show_outputs=False, html=False, **kwargs
-    ):
+        self,
+        problems: Optional[List[Tuple[str, str]]] = None,
+        evaluator: Optional[BaseProvider] = None,
+        show_outputs: bool = False,
+        html: bool = False,
+        **kwargs: Any
+    ) -> Union[PrettyTable, str]:
         if not problems:
             problems = [
                 (
@@ -778,7 +783,7 @@ Question: Is there a series of flights that goes from city F to city I?",
             return table
         else:
             return table.get_html_string()
-    def _load_api_keys(self, kwargs):
+    def _load_api_keys(self, kwargs: Dict[str, Any]) -> None:
         self._provider_map = {
             name: Provider(
                 provider=provider.provider,
@@ -790,17 +795,17 @@ Question: Is there a series of flights that goes from city F to city I?",
             if provider.api_key_name
         }
 
-    def _set_models(self, model):
+    def _set_models(self, model: Optional[Union[str, List[str]]]) -> None:
         default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
         self._models = [default_model] if model is None else ([model] if isinstance(model, str) else model)
 
-    def _validate_model(self, single_model, provider):
+    def _validate_model(self, single_model: str, provider: Provider) -> bool:
         return (
             single_model in provider.provider.MODEL_INFO
             and (provider.api_key or not provider.needs_api_key)
         )
 
-    def _initialize_providers(self, kwargs):
+    def _initialize_providers(self, kwargs: Dict[str, Any]) -> None:
         self._providers = [
             provider.provider(api_key=provider.api_key, model=single_model, **kwargs)
             for single_model in self._models
