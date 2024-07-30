@@ -3,6 +3,7 @@ import re
 import statistics
 import threading
 import queue
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from logging import getLogger
