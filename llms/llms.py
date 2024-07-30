@@ -1,63 +1,64 @@
-# Standard library imports
 import asyncio
-import concurrent.futures
 import os
-import queue
 import re
 import statistics
 import threading
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import queue
 from dataclasses import dataclass
-from logging import getLogger
-from typing import List, Optional, Tuple, Type, Union, Dict, Any
-
-# Third-party imports
 from prettytable import PrettyTable
+from .providers import OpenAIProvider
+from .providers import AnthropicProvider
+from .providers import BedrockAnthropicProvider
+from .providers import AI21Provider
+from .providers import CohereProvider
+from .providers import AlephAlphaProvider
+from .providers import HuggingfaceHubProvider
+from .providers import GoogleProvider
+from .providers import GoogleGenAIProvider
+from .providers import MistralProvider
+from .providers import OllamaProvider
+from .providers import DeepSeekProvider
+from .providers import GroqProvider
+from .providers import RekaProvider
+from .providers import TogetherProvider
 
-# Local imports
-from .providers import (
-    AI21Provider,
-    AlephAlphaProvider,
-    AnthropicProvider,
-    BedrockAnthropicProvider,
-    CohereProvider,
-    DeepSeekProvider,
-    GoogleGenAIProvider,
-    GoogleProvider,
-    GroqProvider,
-    HuggingfaceHubProvider,
-    MistralProvider,
-    OllamaProvider,
-    OpenAIProvider,
-    RekaProvider,
-    TogetherProvider,
-)
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Optional, Tuple, Type, Union
+from logging import getLogger
 
 
 LOGGER = getLogger(__name__)
 
 
+@dataclass
+class Provider:
+    provider: Type[BaseProvider]
+    api_key_name: Optional[str] = None
+    api_key: Optional[str] = None
+    needs_api_key: bool = True
+
+
 class LLMS:
-    _possible_providers: Dict[str, Dict[str, Any]] = {
-        "OpenAI": {"provider": OpenAIProvider, "api_key_name": "OPENAI_API_KEY"},
-        "Anthropic": {"provider": AnthropicProvider, "api_key_name": "ANTHROPIC_API_KEY"},
-        "BedrockAnthropic": {"provider": BedrockAnthropicProvider, "needs_api_key": False},
-        "AI21": {"provider": AI21Provider, "api_key_name": "AI21_API_KEY"},
-        "Cohere": {"provider": CohereProvider, "api_key_name": "COHERE_API_KEY"},
-        "AlephAlpha": {"provider": AlephAlphaProvider, "api_key_name": "ALEPHALPHA_API_KEY"},
-        "HuggingfaceHub": {"provider": HuggingfaceHubProvider, "api_key_name": "HUGGINFACEHUB_API_KEY"},
-        "GoogleGenAI": {"provider": GoogleGenAIProvider, "api_key_name": "GOOGLE_API_KEY"},
-        "Mistral": {"provider": MistralProvider, "api_key_name": "MISTRAL_API_KEY"},
-        "Google": {"provider": GoogleProvider, "needs_api_key": False},
-        "Ollama": {"provider": OllamaProvider, "needs_api_key": False},
-        "DeepSeek": {"provider": DeepSeekProvider, "api_key_name": "DEEPSEEK_API_KEY"},
-        "Groq": {"provider": GroqProvider, "api_key_name": "GROQ_API_KEY"},
-        "Reka": {"provider": RekaProvider, "api_key_name": "REKA_API_KEY"},
-        "Together": {"provider": TogetherProvider, "api_key_name": "TOGETHER_API_KEY"}
-    }
+    _possible_providers: List[Provider] = [
+        Provider(OpenAIProvider, api_key_name="OPENAI_API_KEY"),
+        Provider(AnthropicProvider, api_key_name="ANTHROPIC_API_KEY"),
+        Provider(BedrockAnthropicProvider, needs_api_key=False),
+        Provider(AI21Provider, api_key_name="AI21_API_KEY"),
+        Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
+        Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
+        Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
+        Provider(GoogleGenAIProvider, api_key_name="GOOGLE_API_KEY"),
+        Provider(MistralProvider, api_key_name="MISTRAL_API_KEY"),
+        Provider(GoogleProvider, needs_api_key=False),
+        Provider(OllamaProvider, needs_api_key=False),
+        Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY"),
+        Provider(GroqProvider, api_key_name="GROQ_API_KEY"),
+        Provider(RekaProvider, api_key_name="REKA_API_KEY"),
+        Provider(TogetherProvider, api_key_name="TOGETHER_API_KEY")
+    ]
     _providers: List[BaseProvider] = []
     _models: List[str] = []
 
@@ -67,7 +68,14 @@ class LLMS:
                  ):
         """Programmatically load api keys and instantiate providers."""
 
-        self._load_api_keys(kwargs)
+        for provider in [p for p in self._possible_providers if p.api_key_name]:
+            assert provider.api_key_name  # for static type checking only
+            api_key = None
+            if provider.api_key_name.lower() in kwargs:  # get api key from kwargs
+                api_key = kwargs.pop(provider.api_key_name.lower())
+            elif provider.api_key_name in os.environ:  # otherwise, get it from environment variable
+                api_key = os.getenv(provider.api_key_name)
+            provider.api_key = api_key
 
         if model is None:  # if no model is specified, use default: from environment variable or gpt-3.5-turbo
             default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
@@ -75,25 +83,15 @@ class LLMS:
         else:
             self._models = [model] if isinstance(model, str) else model
 
-        self._instantiate_providers(kwargs)
-
-    def _load_api_keys(self, kwargs):
-        for provider_info in self._possible_providers.values():
-            api_key_name = provider_info.get("api_key_name")
-            if api_key_name:
-                api_key = kwargs.pop(api_key_name.lower(), None) or os.getenv(api_key_name)
-                provider_info["api_key"] = api_key
-
-    def _instantiate_providers(self, kwargs):
+        self._providers = []
         for single_model in self._models:
-            for provider_name, provider_info in self._possible_providers.items():
-                provider_class = provider_info["provider"]
-                if single_model in provider_class.MODEL_INFO:
-                    LOGGER.info(f"Found {single_model} in {provider_name}")
-                    if provider_info.get("api_key"):
-                        self._providers.append(provider_class(api_key=provider_info["api_key"], model=single_model))
-                    elif not provider_info.get("needs_api_key", True):
-                        self._providers.append(provider_class(model=single_model, **kwargs))
+            for provider in self._possible_providers:
+                if single_model in provider.provider.MODEL_INFO:
+                    LOGGER.info(f"Found {single_model} in {provider.provider.__name__}")
+                    if provider.api_key:
+                        self._providers.append(provider.provider(api_key=provider.api_key, model=single_model))
+                    elif not provider.needs_api_key:
+                        self._providers.append(provider.provider(model=single_model, **kwargs))
                     else:
                         raise ValueError("Invalid API key and model combination", single_model)
 
@@ -180,7 +178,7 @@ class LLMS:
             raise ValueError("Streaming is possible only with a single model")
         return await self._providers[0].acomplete_stream(prompt, **kwargs)
 
-    def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False, rate=0, **kwargs):
+    def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False, **kwargs):
         if not problems:
             problems = [
             ("Write a one paragraph cover letter for a job in a tech company. Make sure to use the word ”the” exactly twice.",
@@ -587,16 +585,15 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
             
             return output_data
 
-        def process_prompts_sequentially(model, prompts, evaluator, rate, **kwargs):
+        def process_prompts_sequentially(model, prompts, evaluator, **kwargs):
             results = []
             evaluation_queue = queue.Queue()
             evaluation_threads = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                futures = []
-                for index, prompt in enumerate(prompts):
-                    if rate > 0:
-                        time.sleep(60 / rate)  # Wait to respect rate limit
-                    futures.append(executor.submit(process_prompt, model, prompt, index, evaluator, evaluation_queue, **kwargs))
+                futures = [
+                    executor.submit(process_prompt, model, prompt, index, evaluator, evaluation_queue, **kwargs)
+                    for index, prompt in enumerate(prompts)
+                ]
                 for future in concurrent.futures.as_completed(futures):
                     result = future.result()
                     results.append(result)
@@ -607,7 +604,7 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(process_prompts_sequentially, model, problems, evaluator, rate, **kwargs)
+                executor.submit(process_prompts_sequentially, model, problems, evaluator, **kwargs)
                 for model in self._providers
             ]
 
