@@ -57,15 +57,12 @@ class LLMS:
         Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY"),
         Provider(GroqProvider, api_key_name="GROQ_API_KEY"),
         Provider(RekaProvider, api_key_name="REKA_API_KEY"),
-        Provider(TogetherProvider, api_key_name="TOGETHER_API_KEY")
+        Provider(TogetherProvider, api_key_name="TOGETHER_API_KEY"),
     ]
     _providers: List[BaseProvider] = []
     _models: List[str] = []
 
-    def __init__(self,
-                 model: Union[str, List[str], None] = None,
-                 **kwargs
-                 ):
+    def __init__(self, model: Union[str, List[str], None] = None, **kwargs):
         """Programmatically load api keys and instantiate providers."""
 
         for provider in [p for p in self._possible_providers if p.api_key_name]:
@@ -73,11 +70,15 @@ class LLMS:
             api_key = None
             if provider.api_key_name.lower() in kwargs:  # get api key from kwargs
                 api_key = kwargs.pop(provider.api_key_name.lower())
-            elif provider.api_key_name in os.environ:  # otherwise, get it from environment variable
+            elif (
+                provider.api_key_name in os.environ
+            ):  # otherwise, get it from environment variable
                 api_key = os.getenv(provider.api_key_name)
             provider.api_key = api_key
 
-        if model is None:  # if no model is specified, use default: from environment variable or gpt-3.5-turbo
+        if (
+            model is None
+        ):  # if no model is specified, use default: from environment variable or gpt-3.5-turbo
             default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
             self._models = [default_model]
         else:
@@ -89,11 +90,19 @@ class LLMS:
                 if single_model in provider.provider.MODEL_INFO:
                     LOGGER.info(f"Found {single_model} in {provider.provider.__name__}")
                     if provider.api_key:
-                        self._providers.append(provider.provider(api_key=provider.api_key, model=single_model))
+                        self._providers.append(
+                            provider.provider(
+                                api_key=provider.api_key, model=single_model
+                            )
+                        )
                     elif not provider.needs_api_key:
-                        self._providers.append(provider.provider(model=single_model, **kwargs))
+                        self._providers.append(
+                            provider.provider(model=single_model, **kwargs)
+                        )
                     else:
-                        raise ValueError("Invalid API key and model combination", single_model)
+                        raise ValueError(
+                            "Invalid API key and model combination", single_model
+                        )
 
     def __repr__(self) -> str:
         return f"LLMS({','.join(self._models)})"
@@ -178,37 +187,61 @@ class LLMS:
             raise ValueError("Streaming is possible only with a single model")
         return await self._providers[0].acomplete_stream(prompt, **kwargs)
 
-    def benchmark(self, problems=None, evaluator=None, show_outputs=False, html=False, **kwargs):
+    def benchmark(
+        self, problems=None, evaluator=None, show_outputs=False, html=False, **kwargs
+    ):
         if not problems:
             problems = [
-            ("Write a one paragraph cover letter for a job in a tech company. Make sure to use the word ”the” exactly twice.",
-            "Correct answer will use the word 'the' exactly twice."),
-            ("write three sentences, each ending with the word 'and'",
-            "Correct answer will have three sentences, and each will end with the word 'and'"),
-            ("what is the capital of finland? if it begins with a letter h, respond 'Oslo' otherwise respond Helsinki.",
-            "Oslo"),
-            ("write a sentence about trees with no words beginning with the letter t",
-            "Correct answer will have no words begin with the letter t"),
-            ("write 7 numbers between 10 and 110. none of them should begin with 1,5,3,4,2,6,8 or 7",
-            "Correct answer will have 7 numbers and they will be between 90 and 99"),
-            ('If a + b + c = 30 and b = 10 and c = 5. Is a = 20? Answer only ”My answer is yes.” or ”My answer is no.” or ”My answer is maybe.”',
-            "My answer is no."),
-            ("""given sentence 'today is a sunny day' and instructions 
+                (
+                    "Write a one paragraph cover letter for a job in a tech company. Make sure to use the word ”the” exactly twice.",
+                    "Correct answer will use the word 'the' exactly twice.",
+                ),
+                (
+                    "write three sentences, each ending with the word 'and'",
+                    "Correct answer will have three sentences, and each will end with the word 'and'",
+                ),
+                (
+                    "what is the capital of finland? if it begins with a letter h, respond 'Oslo' otherwise respond Helsinki.",
+                    "Oslo",
+                ),
+                (
+                    "write a sentence about trees with no words beginning with the letter t",
+                    "Correct answer will have no words begin with the letter t",
+                ),
+                (
+                    "write 7 numbers between 10 and 110. none of them should begin with 1,5,3,4,2,6,8 or 7",
+                    "Correct answer will have 7 numbers and they will be between 90 and 99",
+                ),
+                (
+                    "If a + b + c = 30 and b = 10 and c = 5. Is a = 20? Answer only ”My answer is yes.” or ”My answer is no.” or ”My answer is maybe.”",
+                    "My answer is no.",
+                ),
+                (
+                    """given sentence 'today is a sunny day' and instructions 
 
 1. replace words with number of commas equal to the length of the word 
 
 2. if there are three or more commas in the new sentence, replace commas with dots
 
-print the output""","...... ,, , ...... ..."),
-('Given the sentence "The cat jumped over the fence" write the sentence again adding number in square brackets after each word corrsepnsing to its poistion in the sentence. then add those numbers and add a number in square brackets equal to the sum.',
-"The [1] cat [2] jumped [3] over [4] the [5] fence [6] [21]"),
-
+print the output""",
+                    "...... ,, , ...... ...",
+                ),
+                (
+                    'Given the sentence "The cat jumped over the fence" write the sentence again adding number in square brackets after each word corrsepnsing to its poistion in the sentence. then add those numbers and add a number in square brackets equal to the sum.',
+                    "The [1] cat [2] jumped [3] over [4] the [5] fence [6] [21]",
+                ),
                 (
                     "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
                     "pull",
                 ),
-                ('Given the string: "A# B# #B A# A# #B #B A# A# #B A# A#" Could you check for any instances of "A# #B" and replace them with "B# #A"? print only the answer', "B# B# #A B# B# #A #A B# B# #A B# B#"),
-                ("Kevin currently has 8 apples. He ate 3 apples yesterday. How many apples does Kevin have now?", "8"),
+                (
+                    'Given the string: "A# B# #B A# A# #B #B A# A# #B A# A#" Could you check for any instances of "A# #B" and replace them with "B# #A"? print only the answer',
+                    "B# B# #A B# B# #A #A B# B# #A B# B#",
+                ),
+                (
+                    "Kevin currently has 8 apples. He ate 3 apples yesterday. How many apples does Kevin have now?",
+                    "8",
+                ),
                 (
                     'What is the largest land animal? If that animal has wings, answer "The African Elephant". Otherwise, answer "The Mouse". Do not provide any explanation for your choice.',
                     "The Mouse",
@@ -224,7 +257,8 @@ print the output""","...... ,, , ...... ..."),
                     What does this code do in one sentence?""",
                     'prints "Hello World" to the console',
                 ),
-                ("""#define _POSIX_SOURCE
+                (
+                    """#define _POSIX_SOURCE
 #include                                <time.h>
 #include                               <stdio.h>
 #define                             extern/* ioccc*/
@@ -259,8 +293,10 @@ print the output""","...... ,, , ...... ..."),
 #include                               <errno.h>
 
 what does this do, in one sentence?""",
-"Calculate Easter dates within the Gregorian Calendar."),
-("""%:define _POSIX_SOURCE
+                    "Calculate Easter dates within the Gregorian Calendar.",
+                ),
+                (
+                    """%:define _POSIX_SOURCE
 #include<fcntl.h>
 #include<stdio.h>
 #include<unistd.h>
@@ -321,7 +357,8 @@ i-3; w             =e+s+1; l=q+N*   (j-1)-      j*(j-1   )/ 2 ;            do{ *
  st_mode)&&S O     )r=J(r          ,F ); }      H r)P(r    ); u 0; }/*     Obfuscated C
 
 IS FREE THINKS MONEY GROWS ON DIRECTORY TREE */""",
-"program that finds and reports duplicate files"),
+                    "program that finds and reports duplicate files",
+                ),
                 (
                     """#include <stdio.h> 
 
@@ -379,7 +416,8 @@ int main() {
 what does this program do in one sentence?""",
                     "it is an obfuscated implementation of a Tic Tac Toe game",
                 ),
-                ("""#include <stdio.h>
+                (
+                    """#include <stdio.h>
 #define  f(f,g){z e=0;for(;e<f;e++)g;}
 #define  i(f,g)static z f(z a){return g;}
 #define  j(f,g)static void f(z*a,z*b,z*c){g}
@@ -396,7 +434,8 @@ b*c>>32))*a>>21)+(3*a*a*b>>6)+((b>>4)*(b>>4)*b>>46))>>18)+a*a*a)h(m,t((b<<16)|(c
 "crsmyiajqhwy{unwa|hjoi`hlxhpxrzb~edko~rtr~ileqyjk`znqgsuitvgqnfdfa||wedvnmhozkpokootqzcexeld~oibqzpcsuw{ib{x`m`hsa`jmn}wcfzpb";
 
 what does this program do, in one sentence?""",
-"This program prints its own SHA-512 hash"),
+                    "This program prints its own SHA-512 hash",
+                ),
                 ("How many r's are in strawberry?", "3"),
                 (
                     "Use  g to substitute c, m to substitute p, a to substitute e, o to substitute h and n to substitute a\
@@ -407,11 +446,14 @@ how to spell cheap under this rule?",
                     "two workers paint the fence in 8 hours. how long will it take one worker paint the same fence if they are injured and need to take a 30 min break after every hour of work?",
                     "23.5 hours",
                 ),
-                ("Alan, Bob, Colin, Dave and Emily are standing in a circle. Alan is on Bob’s immediate left. Bob is on Colin’s immediate left. Colin is on Dave’s immediate left. Dave is on Emily’s immediate left. Who is on Alan’s immediate right?", "Bob"),
+                (
+                    "Alan, Bob, Colin, Dave and Emily are standing in a circle. Alan is on Bob’s immediate left. Bob is on Colin’s immediate left. Colin is on Dave’s immediate left. Dave is on Emily’s immediate left. Who is on Alan’s immediate right?",
+                    "Bob",
+                ),
                 ("-2-2-2-2-2-2*-2*-2-2/-2=", "-17"),
                 ('what is the 13th letter of the word "supralapsarian"', "a"),
                 ("How much is 7! * 3! -1234.5 ?", "29005.5"),
-                 (
+                (
                     """Capture the essence of this in exactly 7 words: There’s much that divides us in Northern Ireland though one thing is guaranteed to bring us together: local phrases. Call it slang, call it colloquialisms, we all know only too well how important words are to where we’re from… and when it comes to the phrases that make us ‘us,’ we’ve got a lot to say.
                     """,
                     "If the number of words in answer is 7, mark it as correct.",
@@ -420,26 +462,29 @@ how to spell cheap under this rule?",
                     "is 9677 a prime number?",
                     "yes",
                 ),
-                ('Sort the following list into alphabetical order. apple, banana, orange, grape, box, cube. Separate items with exactly 6 asterisks symbols: *******',
-                'answer should match this sequence: apple*******banana*******box*******cube*******grape*******orange'),
+                (
+                    "Sort the following list into alphabetical order. apple, banana, orange, grape, box, cube. Separate items with exactly 6 asterisks symbols: *******",
+                    "answer should match this sequence: apple*******banana*******box*******cube*******grape*******orange",
+                ),
                 (
                     'Vlad\'s uncle can still beat him in sprinting although he is 30 years younger. who is "he" referring to?',
                     "Vlad",
                 ),
                 (
                     "A farmer and a sheep are standing on one side of a river. There is a boat with enough room for one human and one animal. what is the fewest number of trips for farmer to get across the river with the sheep?",
-                    "one"
+                    "one",
                 ),
                 (
                     "Words: cmomittee, te, unnimously, agred, t, implment, te, nw, plocy, aftr, throgh, discusion, an, consdration\
                     Rearrange the words and fix typos to form a meaningful sentence",
-                    "Answer should match this exactly: The committee unanimously agreed to implement the new policy after thorough discussion and consideration."
+                    "Answer should match this exactly: The committee unanimously agreed to implement the new policy after thorough discussion and consideration.",
                 ),
                 (
                     "The least common multiple of a positive integer n and 18 is 180, and the greatest common divisor of n and 45 is 15. What is the sum of the digits of n?",
                     "n = 60 thus the answer is 6",
                 ),
-                ("""section .data
+                (
+                    """section .data
     a dd 0
     b dd 0
 
@@ -461,47 +506,68 @@ _start:
     xor edi, edi
     syscall
 
-what does this do, in one sentence?""", "swaps the values of two variables 'a' and 'b' using without using a temporary variable"),
-                ("""The sky was a brilliant shade of blue, dotted with fluffy white clouds.
-                In the above sentence add the word 'green' after 'blue' and 'black' after 'clouds'. then remove words 'shade' and 'clouds'. then move the word 'sky' forward three words. Substitute "brilliant" with "vibrant". Replace "dotted" with "adorned". Move "was a" to the end of the sentence. what is left?""",
-                "Answer should match this exactly: The vibrant sky of blue green, adorned with fluffy white black was a."
+what does this do, in one sentence?""",
+                    "swaps the values of two variables 'a' and 'b' using without using a temporary variable",
                 ),
-                ("""Begin with these sentence:
+                (
+                    """The sky was a brilliant shade of blue, dotted with fluffy white clouds.
+                In the above sentence add the word 'green' after 'blue' and 'black' after 'clouds'. then remove words 'shade' and 'clouds'. then move the word 'sky' forward three words. Substitute "brilliant" with "vibrant". Replace "dotted" with "adorned". Move "was a" to the end of the sentence. what is left?""",
+                    "Answer should match this exactly: The vibrant sky of blue green, adorned with fluffy white black was a.",
+                ),
+                (
+                    """Begin with these sentence:
 "The quick brown fox jumps over the lazy dog. A wizard's job is to vex chumps quickly in fog."
 Now, follow these instructions:
 
 Remove all words containing the letter 'i'.""",
-                    "Answer should match this exactly: The brown fox jumps over the lazy dog. A job to vex chumps fog."
+                    "Answer should match this exactly: The brown fox jumps over the lazy dog. A job to vex chumps fog.",
                 ),
-                ("""Begin with these sentence:
+                (
+                    """Begin with these sentence:
 "The quick brown fox jumps over the lazy dog. A wizard's job is to vex chumps quickly in fog."
 Now, follow these instructions:
 - Insert the word "cybernetic" after every word ending in 's'.""",
-                "Answer should match this exactly: The quick brown fox jumps cybernetic over the lazy dog. A wizard's cybernetic job is cybernetic to vex chumps cybernetic quickly in fog."
+                    "Answer should match this exactly: The quick brown fox jumps cybernetic over the lazy dog. A wizard's cybernetic job is cybernetic to vex chumps cybernetic quickly in fog.",
                 ),
                 (
                     "what square is the black king on in this chess position: 1Bb3BN/R2Pk2r/1Q5B/4q2R/2bN4/4Q1BK/1p6/1bq1R1rb w - - 0 1",
                     "e7",
                 ),
-                ("In a room there are only three sisters. Anna is reading a book. Alice is playing chess with someone. What is the third sister, Amanda doing?","Playing chess with Alice"),
-                
-                ('is 9.11 bigger number than 9.9?','no, it is not'),
-                ("You have six horses and want to race them to see which is fastest. How many races would you need to do this?","one"),
-                ("I do not not not like eggs. Do I like eggs?","No"),
-                ("John has two brothers - called Snap and Crackle. The three children's names are: Snap, Crackle and _.","John"),
-                ("How many boxes do I have if I have three boxes with one box inside each, and one box inside them?","9"),
-                ("Given a QWERTY keyboard layout, if HEART goes to JRSTY, what does HIGB go to?","JOHN"),
-                
-                
+                (
+                    "In a room there are only three sisters. Anna is reading a book. Alice is playing chess with someone. What is the third sister, Amanda doing?",
+                    "Playing chess with Alice",
+                ),
+                ("is 9.11 bigger number than 9.9?", "no, it is not"),
+                (
+                    "You have six horses and want to race them to see which is fastest. How many races would you need to do this?",
+                    "one",
+                ),
+                ("I do not not not like eggs. Do I like eggs?", "No"),
+                (
+                    "John has two brothers - called Snap and Crackle. The three children's names are: Snap, Crackle and _.",
+                    "John",
+                ),
+                (
+                    "How many boxes do I have if I have three boxes with one box inside each, and one box inside them?",
+                    "9",
+                ),
+                (
+                    "Given a QWERTY keyboard layout, if HEART goes to JRSTY, what does HIGB go to?",
+                    "JOHN",
+                ),
                 (
                     "An arrow points up. We rotate it 90 degrees to the clockwise, mirror it along its flat end, and rotate it another 90 degrees clockwise. Which direction is it pointing?",
                     "up",
                 ),
-                ("""1. Start with the word "CIPHER".
+                (
+                    """1. Start with the word "CIPHER".
 2. Count the number of letters in "CIPHER". Add 1 to this number.
 3. Take the letter in "ALPHABET" at the position of the number you got in step 2 and remove it.
-Print the output""","Answer should match this exactly: ALPHABT"),
-                ("Current flight information (the following flights are one-way only, and all the flights available are included below):\n\
+Print the output""",
+                    "Answer should match this exactly: ALPHABT",
+                ),
+                (
+                    "Current flight information (the following flights are one-way only, and all the flights available are included below):\n\
 There is a flight from city G to city B\n\
 There is a flight from city H to city K\n\
 There is a flight from city L to city M\n\
@@ -512,15 +578,22 @@ There is a flight from city L to city A\n\
 There is a flight from city H to city N\n\
 There is a flight from city B to city D\n\
 There is a flight from city J to city C\n\
-Question: Is there a series of flights that goes from city F to city I?", "No, there is no series of flights from F to I"),
-            ('Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?', '1'),
-            ('Imagine there is a circular pond in an oasis, with two trees at the edge of the pond, on opposite sides. Bob sets up a hammock by hanging it between the two trees. He gets into the hammock and falls asleep. If he were to roll over in his sleep and fall out of the hammock, where would he fall?',
-                'water, in the center of the pond'
-            ),
+Question: Is there a series of flights that goes from city F to city I?",
+                    "No, there is no series of flights from F to I",
+                ),
+                (
+                    "Bob (a boy) has 3 sisters. Each sister has 2 brothers. How many brothers does Bob have?",
+                    "1",
+                ),
+                (
+                    "Imagine there is a circular pond in an oasis, with two trees at the edge of the pond, on opposite sides. Bob sets up a hammock by hanging it between the two trees. He gets into the hammock and falls asleep. If he were to roll over in his sleep and fall out of the hammock, where would he fall?",
+                    "water, in the center of the pond",
+                ),
             ]
 
-
-        def evaluate_answers(evaluator, query_answer_pairs: List[Tuple[str, str, str]]) -> List[int]:
+        def evaluate_answers(
+            evaluator, query_answer_pairs: List[Tuple[str, str, str]]
+        ) -> List[int]:
             system = """You are an evaluator for an AI system. Your task is to determine whether the AI's answer matches the correct answer. You will be given two inputs: the AI's answer and the correct answer. Your job is to compare these and output a binary score: 1 if the AI's answer is correct, and 0 if it is not.
 
         To evaluate the AI's performance:
@@ -539,7 +612,9 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
         Remember, output only 0 (not correct) or 1 (correct) as the final score. Do not include any additional explanation or text outside of the specified tags."""
 
             scores = []
-            for i, (query, correct_answer, ai_answer) in enumerate(query_answer_pairs, start=1):
+            for i, (query, correct_answer, ai_answer) in enumerate(
+                query_answer_pairs, start=1
+            ):
                 prompt = f"""Here is the AI's answer:
         <ai_answer>
         {ai_answer}
@@ -549,24 +624,27 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
         {correct_answer}
         </correct_answer>"""
 
-                evaluator_result = evaluator.complete(prompt, system_message=system).text
-                #print(correct_answer, ai_answer, evaluator_result)
-                
+                evaluator_result = evaluator.complete(
+                    prompt, system_message=system
+                ).text
+                # print(correct_answer, ai_answer, evaluator_result)
+
                 # Extract the score from the evaluator's response
-                score_match = re.search(r'<score>(\d)</score>', evaluator_result)
+                score_match = re.search(r"<score>(\d)</score>", evaluator_result)
                 if score_match:
                     score = int(score_match.group(1))
                     scores.append(score)
                 else:
-                    raise ValueError(f"Could not extract score from evaluator's response for query {i}")
+                    raise ValueError(
+                        f"Could not extract score from evaluator's response for query {i}"
+                    )
 
             return scores
-    
 
         model_results = {}
 
         def process_prompt(model, prompt, index, evaluator, evaluation_queue, **kwargs):
-            print(model, index)#, prompt[0])
+            print(model, index)  # , prompt[0])
             result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
             output_data = {
                 "text": result.text,
@@ -575,14 +653,21 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
                 "cost": result.meta["cost"],
                 "prompt_index": index,
             }
-            
+
             if evaluator:
                 evaluation_thread = threading.Thread(
-                    target=lambda: evaluation_queue.put((index, evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])[0]))
+                    target=lambda: evaluation_queue.put(
+                        (
+                            index,
+                            evaluate_answers(
+                                evaluator, [(prompt[0], prompt[1], result.text)]
+                            )[0],
+                        )
+                    )
                 )
                 evaluation_thread.start()
-                output_data['evaluation_thread'] = evaluation_thread
-            
+                output_data["evaluation_thread"] = evaluation_thread
+
             return output_data
 
         def process_prompts_sequentially(model, prompts, evaluator, **kwargs):
@@ -591,20 +676,30 @@ Question: Is there a series of flights that goes from city F to city I?", "No, t
             evaluation_threads = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 futures = [
-                    executor.submit(process_prompt, model, prompt, index, evaluator, evaluation_queue, **kwargs)
+                    executor.submit(
+                        process_prompt,
+                        model,
+                        prompt,
+                        index,
+                        evaluator,
+                        evaluation_queue,
+                        **kwargs,
+                    )
                     for index, prompt in enumerate(prompts)
                 ]
                 for future in concurrent.futures.as_completed(futures):
                     result = future.result()
                     results.append(result)
                     if evaluator:
-                        evaluation_threads.append(result.get('evaluation_thread'))
+                        evaluation_threads.append(result.get("evaluation_thread"))
             return model, results, evaluation_queue, evaluation_threads
 
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(process_prompts_sequentially, model, problems, evaluator, **kwargs)
+                executor.submit(
+                    process_prompts_sequentially, model, problems, evaluator, **kwargs
+                )
                 for model in self._providers
             ]
 
