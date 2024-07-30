@@ -3,7 +3,7 @@ import re
 import statistics
 import threading
 import queue
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import concurrent.futures
 from dataclasses import dataclass
 from logging import getLogger
 from typing import List, Optional, Tuple, Type, Union
@@ -121,12 +121,11 @@ class LLMS:
         **kwargs,
     ) -> Union[Result, Results]:
         if self.n_provider > 1:
-            tasks = [
-                provider.acomplete(prompt, **kwargs) for provider in self._providers
-            ]
-            results = await asyncio.gather(*tasks, return_exceptions=False)
+            results = []
+            for provider in self._providers:
+                result = await provider.acomplete(prompt, **kwargs)
+                results.append(result)
             return Results(results)
-
         else:
             provider = self._providers[0]
             return await provider.acomplete(prompt, **kwargs)
