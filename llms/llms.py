@@ -6,23 +6,12 @@ import threading
 import queue
 from dataclasses import dataclass
 from prettytable import PrettyTable
-from .providers import OpenAIProvider
-from .providers import AnthropicProvider
-from .providers import BedrockAnthropicProvider
-from .providers import AI21Provider
-from .providers import CohereProvider
-from .providers import AlephAlphaProvider
-from .providers import HuggingfaceHubProvider
-from .providers import GoogleProvider
-from .providers import GoogleGenAIProvider
-from .providers import MistralProvider
-from .providers import OllamaProvider
-from .providers import DeepSeekProvider
-from .providers import GroqProvider
-from .providers import RekaProvider
-from .providers import TogetherProvider
-
-from .providers.base_provider import BaseProvider
+from .providers import (
+    OpenAIProvider, AnthropicProvider, BedrockAnthropicProvider, AI21Provider,
+    CohereProvider, AlephAlphaProvider, HuggingfaceHubProvider, GoogleProvider,
+    GoogleGenAIProvider, MistralProvider, OllamaProvider, DeepSeekProvider,
+    GroqProvider, RekaProvider, TogetherProvider, BaseProvider
+)
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -42,67 +31,31 @@ class Provider:
 
 
 class LLMS:
-    _possible_providers: List[Provider] = [
-        Provider(OpenAIProvider, api_key_name="OPENAI_API_KEY"),
-        Provider(AnthropicProvider, api_key_name="ANTHROPIC_API_KEY"),
-        Provider(BedrockAnthropicProvider, needs_api_key=False),
-        Provider(AI21Provider, api_key_name="AI21_API_KEY"),
-        Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
-        Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
-        Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
-        Provider(GoogleGenAIProvider, api_key_name="GOOGLE_API_KEY"),
-        Provider(MistralProvider, api_key_name="MISTRAL_API_KEY"),
-        Provider(GoogleProvider, needs_api_key=False),
-        Provider(OllamaProvider, needs_api_key=False),
-        Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY"),
-        Provider(GroqProvider, api_key_name="GROQ_API_KEY"),
-        Provider(RekaProvider, api_key_name="REKA_API_KEY"),
-        Provider(TogetherProvider, api_key_name="TOGETHER_API_KEY"),
-    ]
+    _provider_map = {
+        "OpenAI": Provider(OpenAIProvider, api_key_name="OPENAI_API_KEY"),
+        "Anthropic": Provider(AnthropicProvider, api_key_name="ANTHROPIC_API_KEY"),
+        "BedrockAnthropic": Provider(BedrockAnthropicProvider, needs_api_key=False),
+        "AI21": Provider(AI21Provider, api_key_name="AI21_API_KEY"),
+        "Cohere": Provider(CohereProvider, api_key_name="COHERE_API_KEY"),
+        "AlephAlpha": Provider(AlephAlphaProvider, api_key_name="ALEPHALPHA_API_KEY"),
+        "HuggingfaceHub": Provider(HuggingfaceHubProvider, api_key_name="HUGGINFACEHUB_API_KEY"),
+        "GoogleGenAI": Provider(GoogleGenAIProvider, api_key_name="GOOGLE_API_KEY"),
+        "Mistral": Provider(MistralProvider, api_key_name="MISTRAL_API_KEY"),
+        "Google": Provider(GoogleProvider, needs_api_key=False),
+        "Ollama": Provider(OllamaProvider, needs_api_key=False),
+        "DeepSeek": Provider(DeepSeekProvider, api_key_name="DEEPSEEK_API_KEY"),
+        "Groq": Provider(GroqProvider, api_key_name="GROQ_API_KEY"),
+        "Reka": Provider(RekaProvider, api_key_name="REKA_API_KEY"),
+        "Together": Provider(TogetherProvider, api_key_name="TOGETHER_API_KEY"),
+    }
     _providers: List[BaseProvider] = []
     _models: List[str] = []
 
     def __init__(self, model: Union[str, List[str], None] = None, **kwargs):
         """Programmatically load api keys and instantiate providers."""
-
-        for provider in [p for p in self._possible_providers if p.api_key_name]:
-            assert provider.api_key_name  # for static type checking only
-            api_key = None
-            if provider.api_key_name.lower() in kwargs:  # get api key from kwargs
-                api_key = kwargs.pop(provider.api_key_name.lower())
-            elif (
-                provider.api_key_name in os.environ
-            ):  # otherwise, get it from environment variable
-                api_key = os.getenv(provider.api_key_name)
-            provider.api_key = api_key
-
-        if (
-            model is None
-        ):  # if no model is specified, use default: from environment variable or gpt-3.5-turbo
-            default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
-            self._models = [default_model]
-        else:
-            self._models = [model] if isinstance(model, str) else model
-
-        self._providers = []
-        for single_model in self._models:
-            for provider in self._possible_providers:
-                if single_model in provider.provider.MODEL_INFO:
-                    LOGGER.info(f"Found {single_model} in {provider.provider.__name__}")
-                    if provider.api_key:
-                        self._providers.append(
-                            provider.provider(
-                                api_key=provider.api_key, model=single_model
-                            )
-                        )
-                    elif not provider.needs_api_key:
-                        self._providers.append(
-                            provider.provider(model=single_model, **kwargs)
-                        )
-                    else:
-                        raise ValueError(
-                            "Invalid API key and model combination", single_model
-                        )
+        self._load_api_keys(kwargs)
+        self._set_models(model)
+        self._initialize_providers(kwargs)
 
     def __repr__(self) -> str:
         return f"LLMS({','.join(self._models)})"
@@ -824,3 +777,32 @@ Question: Is there a series of flights that goes from city F to city I?",
             return table
         else:
             return table.get_html_string()
+    def _load_api_keys(self, kwargs):
+        for provider in self._provider_map.values():
+            if provider.api_key_name:
+                api_key = kwargs.pop(provider.api_key_name.lower(), None) or os.getenv(provider.api_key_name)
+                provider.api_key = api_key
+
+    def _set_models(self, model):
+        if model is None:
+            default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
+            self._models = [default_model]
+        else:
+            self._models = [model] if isinstance(model, str) else model
+
+    def _initialize_providers(self, kwargs):
+        self._providers = []
+        for single_model in self._models:
+            for provider in self._provider_map.values():
+                if single_model in provider.provider.MODEL_INFO:
+                    LOGGER.info(f"Found {single_model} in {provider.provider.__name__}")
+                    if provider.api_key or not provider.needs_api_key:
+                        self._providers.append(
+                            provider.provider(
+                                api_key=provider.api_key,
+                                model=single_model,
+                                **kwargs
+                            )
+                        )
+                    else:
+                        raise ValueError(f"Invalid API key for model {single_model}")
