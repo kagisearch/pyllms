@@ -12,3 +12,4 @@ from .ollama import OllamaProvider
 from .deepseek import DeepSeekProvider
 from .groq import GroqProvider
 from .reka import RekaProvider
+from .together import TogetherProvider
