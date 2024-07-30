@@ -10,8 +10,9 @@ from .providers import (
     OpenAIProvider, AnthropicProvider, BedrockAnthropicProvider, AI21Provider,
     CohereProvider, AlephAlphaProvider, HuggingfaceHubProvider, GoogleProvider,
     GoogleGenAIProvider, MistralProvider, OllamaProvider, DeepSeekProvider,
-    GroqProvider, RekaProvider, TogetherProvider, BaseProvider
+    GroqProvider, RekaProvider, TogetherProvider
 )
+from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
