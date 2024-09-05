@@ -19,7 +19,7 @@ setup(
     install_requires=[
         "openai>=1",
         "tiktoken",
-        "anthropic>=0.18",
+        "anthropic>=0.3",
         "ai21",
         "cohere",
         "aleph-alpha-client",
@@ -29,8 +29,10 @@ setup(
         "protobuf>=3.20.3",
         "grpcio>=1.54.2",
         "google-generativeai",
-        "mistralai",
+        "mistralai<1.0",
         "ollama",
+        "reka-api",
+        "together",
     ],
     extras_require={
         "local": ["einops", "accelerate"]

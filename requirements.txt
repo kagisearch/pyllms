@@ -16,3 +16,5 @@ grpcio~=1.54.2
 google-generativeai
 ollama
 reka-api
+mistralai<1.0
+together
