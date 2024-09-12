@@ -94,7 +94,6 @@ class OpenAIProvider(BaseProvider):
 
             model_inputs = {
                 "messages": messages,
-                "temperature": temperature,
                 "stream": stream,
                 **kwargs,
             }
@@ -104,6 +103,7 @@ class OpenAIProvider(BaseProvider):
                 model_inputs["max_completion_tokens"] = max_tokens
             else:
                 model_inputs["max_tokens"] = max_tokens
+                model_inputs["temperature"] = temperature
 
         else:
             if history:
