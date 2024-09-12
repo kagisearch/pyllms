@@ -21,9 +21,8 @@ class OpenAIProvider(BaseProvider):
         "gpt-4o": {"prompt": 5.0, "completion": 15.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-mini": {"prompt": 0.15, "completion": 0.60, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-2024-08-06": {"prompt": 2.50, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "o1-preview": {"prompt": 15.0, "completion": 60.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "o1-mini": {"prompt": 3.0, "completion": 12.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-
+        "o1-preview": {"prompt": 15.0, "completion": 60.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
+        "o1-mini": {"prompt": 3.0, "completion": 12.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
     }
 
     def __init__(
@@ -100,8 +99,8 @@ class OpenAIProvider(BaseProvider):
                 **kwargs,
             }
 
-            # Use max_completion_tokens for o1-preview and o1-mini models
-            if self.model in ["o1-preview", "o1-mini"]:
+            # Use max_completion_tokens for models that require it
+            if self.MODEL_INFO[self.model].get("use_max_completion_tokens", False):
                 model_inputs["max_completion_tokens"] = max_tokens
             else:
                 model_inputs["max_tokens"] = max_tokens
