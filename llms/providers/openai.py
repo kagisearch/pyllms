@@ -96,10 +96,16 @@ class OpenAIProvider(BaseProvider):
             model_inputs = {
                 "messages": messages,
                 "temperature": temperature,
-                "max_tokens": max_tokens,
                 "stream": stream,
                 **kwargs,
             }
+
+            # Use max_completion_tokens for o1-preview and o1-mini models
+            if self.model in ["o1-preview", "o1-mini"]:
+                model_inputs["max_completion_tokens"] = max_tokens
+            else:
+                model_inputs["max_tokens"] = max_tokens
+
         else:
             if history:
                 raise ValueError(
