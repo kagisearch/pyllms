@@ -13,6 +13,7 @@ class OpenRouterProvider(BaseProvider):
         "x-ai/grok-2": {"prompt": 5.0, "completion": 10.0, "token_limit": 32768, "is_chat": True},
         "nousresearch/hermes-3-llama-3.1-405b:free": {"prompt": 0.0, "completion": 0.0, "token_limit": 8192, "is_chat": True},
         "google/gemini-flash-1.5-exp": {"prompt": 0.0, "completion": 0.0, "token_limit": 1000000, "is_chat": True},
+        "liquid/lfm-40b": {"prompt": 0.0, "completion": 0.0, "token_limit": 32768, "is_chat": True},
     }
 
     def __init__(
