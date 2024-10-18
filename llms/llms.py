@@ -16,7 +16,7 @@ from .providers import (
     OpenAIProvider, AnthropicProvider, BedrockAnthropicProvider, AI21Provider,
     CohereProvider, AlephAlphaProvider, HuggingfaceHubProvider, GoogleProvider,
     GoogleGenAIProvider, MistralProvider, OllamaProvider, DeepSeekProvider,
-    GroqProvider, RekaProvider, TogetherProvider
+    GroqProvider, RekaProvider, TogetherProvider, OpenRouterProvider
 )
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
@@ -53,6 +53,7 @@ class LLMS:
         "Groq": create_provider(GroqProvider, "GROQ_API_KEY"),
         "Reka": create_provider(RekaProvider, "REKA_API_KEY"),
         "Together": create_provider(TogetherProvider, "TOGETHER_API_KEY"),
+        "OpenRouter": create_provider(OpenRouterProvider, "OPENROUTER_API_KEY"),
     }
     _providers: List[BaseProvider] = []
     _models: List[str] = []

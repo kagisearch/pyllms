@@ -13,3 +13,4 @@ from .deepseek import DeepSeekProvider
 from .groq import GroqProvider
 from .reka import RekaProvider
 from .together import TogetherProvider
+from .openrouter import OpenRouterProvider
