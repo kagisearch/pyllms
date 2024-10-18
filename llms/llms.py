@@ -138,8 +138,8 @@ class LLMS:
                     "Correct answer will use the word 'the' exactly twice.",
                 ),
                 (
-                    "write three sentences, each ending with the word 'and'",
-                    "Correct answer will have three sentences, and each will end with the word 'and'",
+                    "write three sentences, each ending with the word 'band'",
+                    "Correct answer will have three sentences, and each sentence will have 'band' as the last word",
                 ),
                 (
                     "what is the capital of finland? if it begins with a letter h, respond 'Oslo' otherwise respond Helsinki.",
@@ -168,8 +168,8 @@ print the output""",
                     "...... ,, , ...... ...",
                 ),
                 (
-                    'Given the sentence "The cat jumped over the fence" write the sentence again adding number in square brackets after each word corrsepnsing to its poistion in the sentence. then add those numbers and add a number in square brackets equal to the sum.',
-                    "The [1] cat [2] jumped [3] over [4] the [5] fence [6] [21]",
+                    'Given the sentence "The cat jumped over the fence twice" write the sentence again adding a number in square brackets after each word corrsepnsing to its poistion in the sentence starting with 1. then add those numbers and write a the sum at the end number with no brackets.',
+                    "answer should match exactly this sequence: The [1] cat [2] jumped [3] over [4] the [5] fence [6] twice [7] 28",
                 ),
                 (
                     "A glass door has ‘push’ written on it in mirror writing. Should you push or pull it and why?",
@@ -187,7 +187,7 @@ print the output""",
                     'What is the largest land animal? If that animal has wings, answer "The African Elephant". Otherwise, answer "The Mouse". Do not provide any explanation for your choice.',
                     "The Mouse",
                 ),
-                ("Convert December 21 1:50pm pacific to taipei time", "5:50 am"),
+                ("Oliver picks 34 kiwis on Friday. Then he picks 58 kiwis on Saturday. On Sunday, he picks double the number of kiwis he did on Friday, but five of them were a bit smaller than average. How many kiwis does Oliver have?", "150"),
                 (
                     "In my kitchen there's a table with a cup with a ball inside. I moved the cup to my bed in my bedroom and turned the cup upside down. I grabbed the cup again and moved to the main room. Where's the ball now?",
                     "on the bed in the bedroom",
@@ -377,7 +377,7 @@ b*c>>32))*a>>21)+(3*a*a*b>>6)+((b>>4)*(b>>4)*b>>46))>>18)+a*a*a)h(m,t((b<<16)|(c
 what does this program do, in one sentence?""",
                     "This program prints its own SHA-512 hash",
                 ),
-                ("How many r's are in strawberry?", "3"),
+                ("How many w's are in strawberry?", "1"),
                 (
                     "Use  g to substitute c, m to substitute p, a to substitute e, o to substitute h and n to substitute a\
 how to spell cheap under this rule?",
@@ -393,19 +393,19 @@ how to spell cheap under this rule?",
                 ),
                 ("-2-2-2-2-2-2*-2*-2-2/-2=", "-17"),
                 ('what is the 13th letter of the word "supralapsarian"', "a"),
-                ("How much is 7! * 3! -1234.5 ?", "29005.5"),
+                ("A loaf of sourdough at the cafe costs $8. Muffins cost $3 each. If we purchase 10 loaves of sourdough and 10 muffins, how much more do the sourdough loaves cost compared to the muffins, if we plan to donate 3 loaves of sourdough and 2 muffins from this purchase?", "$50"),
                 (
-                    """Capture the essence of this in exactly 7 words: There’s much that divides us in Northern Ireland though one thing is guaranteed to bring us together: local phrases. Call it slang, call it colloquialisms, we all know only too well how important words are to where we’re from… and when it comes to the phrases that make us ‘us,’ we’ve got a lot to say.
+                    """Liam wants to buy some school supplies. He buys 24 erasers that now cost $6.75 each, 10 notebooks that now cost $11.0 each, and a ream of bond paper that now costs $9. How much should Liam pay now, assuming that due to inflation, prices were 10% cheaper last year?
                     """,
-                    "If the number of words in answer is 7, mark it as correct.",
+                    "$281",
                 ),
                 (
                     "is 9677 a prime number?",
-                    "yes",
+                    "yes it is a primer number",
                 ),
                 (
-                    "Sort the following list into alphabetical order. apple, banana, orange, grape, box, cube. Separate items with exactly 6 asterisks symbols: *******",
-                    "answer should match this sequence: apple*******banana*******box*******cube*******grape*******orange",
+                    "Sort the following list into alphabetical order. apple, code, banana, gun, orange, grape, box, cube. Separate items with as many asterisk characters (*) as the length of previous word",
+                    "answer should exactly match this sequence: apple*****banana******box***code****cube****grape*****gun***orange",
                 ),
                 (
                     'Vlad\'s uncle can still beat him in sprinting although he is 30 years younger. who is "he" referring to?',
@@ -416,7 +416,7 @@ how to spell cheap under this rule?",
                     "one",
                 ),
                 (
-                    "Words: cmomittee, te, unnimously, agred, t, implment, te, nw, plocy, aftr, throgh, discusion, an, consdration\
+                    "Words: cmomittee, te, unimously, agred, t, implmnt, te, nw, plocy, aftr, throgh, discusion, an, consdraton\
                     Rearrange the words and fix typos to form a meaningful sentence",
                     "Answer should match this exactly: The committee unanimously agreed to implement the new policy after thorough discussion and consideration.",
                 ),
