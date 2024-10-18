@@ -784,12 +784,12 @@ Question: Is there a series of flights that goes from city F to city I?",
             hard_table.add_row([index, question])
 
         # Add these tables to the main table
-        table.add_row(["", "", "", "", "", "", ""])
-        table.add_row(["Easiest Questions (All models correct)", "", "", "", "", "", ""])
-        table.add_row([easy_table.get_string(), "", "", "", "", "", ""])
-        table.add_row(["", "", "", "", "", "", ""])
-        table.add_row(["Hardest Questions (No model correct)", "", "", "", "", "", ""])
-        table.add_row([hard_table.get_string(), "", "", "", "", "", ""])
+        table.add_row([""] * len(headers))
+        table.add_row(["Easiest Questions (All models correct)"] + [""] * (len(headers) - 1))
+        table.add_row([easy_table.get_string()] + [""] * (len(headers) - 1))
+        table.add_row([""] * len(headers))
+        table.add_row(["Hardest Questions (No model correct)"] + [""] * (len(headers) - 1))
+        table.add_row([hard_table.get_string()] + [""] * (len(headers) - 1))
 
         if not html:
             return table
