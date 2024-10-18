@@ -778,10 +778,10 @@ Question: Is there a series of flights that goes from city F to city I?",
         hard_table = PrettyTable(["Index", "Question"])
 
         for index, question in easiest_questions:
-            easy_table.add_row([index, question])
+            easy_table.add_row([index, question[:100] + ('...' if len(question) > 100 else '')])
         
         for index, question in hardest_questions:
-            hard_table.add_row([index, question])
+            hard_table.add_row([index, question[:100] + ('...' if len(question) > 100 else '')])
 
         # Add these tables to the main table
         table.add_row([""] * len(headers))
