@@ -12,6 +12,7 @@ class OpenRouterProvider(BaseProvider):
         "nvidia/llama-3.1-nemotron-70b-instruct": {"prompt": 0.35, "completion": 0.4, "token_limit": 131072, "is_chat": True},
         "x-ai/grok-2": {"prompt": 5.0, "completion": 10.0, "token_limit": 32768, "is_chat": True},
         "nousresearch/hermes-3-llama-3.1-405b:free": {"prompt": 0.0, "completion": 0.0, "token_limit": 8192, "is_chat": True},
+        "google/gemini-flash-1.5-exp": {"prompt": 0.0, "completion": 0.0, "token_limit": 1000000, "is_chat": True},
     }
 
     def __init__(
