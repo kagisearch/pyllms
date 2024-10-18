@@ -4,7 +4,7 @@
 import os, math
 from typing import Dict
 
-import google.generativeai as palm
+import google.generativeai as genai
 
 from ..results.result import Result
 from .base_provider import BaseProvider
@@ -17,7 +17,10 @@ class GoogleGenAIProvider(BaseProvider):
         "chat-bison-genai": {"prompt": 0.5, "completion": 0.5, "token_limit": 0, "uses_characters": True},
         "text-bison-genai": {"prompt": 1.0, "completion": 1.0, "token_limit": 0, "uses_characters": True},
         "gemini-1.5-pro": {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
-        "gemini-1.5-flash": {"prompt": 0.35, "completion": 1.05, "token_limit": 128000, "uses_characters": True},
+        "gemini-1.5-pro-latest": {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
+        "gemini-1.5-flash": {"prompt": 0.075, "completion": 0.3, "token_limit": 128000, "uses_characters": True},
+        "gemini-1.5-flash-latest": {"prompt": 0.075, "completion": 0.3, "token_limit": 128000, "uses_characters": True},
+        "gemini-1.5-pro-exp-0801" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
     }
     
     def __init__(self, api_key=None, model=None, **kwargs):
@@ -27,15 +30,14 @@ class GoogleGenAIProvider(BaseProvider):
         if api_key is None:
             api_key = os.getenv("GOOGLE_API_KEY")
 
-        self.client = palm.configure(api_key=api_key)
+        self.client = genai.configure(api_key=api_key)
 
         self.model = model
         if model.startswith('text-'):
-            self.client = palm.generate_text
+            self.client = genai.generate_text
             self.mode = 'text'
         else:
-            self.client = palm.chat
-            self.async_client = palm.chat_async
+            self.client = genai.GenerativeModel(model)
             self.mode = 'chat'
 
 
@@ -52,8 +54,8 @@ class GoogleGenAIProvider(BaseProvider):
             messages=kwargs.pop("messages", [])
             messages=messages + [prompt]
             model_inputs = {
-                "messages": messages,
-                "temperature": temperature,
+                #"messages": messages,
+                #"temperature": temperature,
                 **kwargs,
             }
         else:
@@ -80,10 +82,10 @@ class GoogleGenAIProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            response = self.client(**model_inputs)
+            response = self.client.generate_content(prompt)
         
         if self.mode == 'chat':
-            completion = response.last
+            completion = response.text
         else:
             completion = response.result
 
