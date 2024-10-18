@@ -773,28 +773,23 @@ Question: Is there a series of flights that goes from city F to city I?",
             elif all_incorrect:
                 hardest_questions.append((i, problem[0]))
 
-        # Create tables for easiest and hardest questions
-        easy_table = PrettyTable(["Index", "Question"])
-        hard_table = PrettyTable(["Index", "Question"])
+        # Create a new table for easiest and hardest questions
+        questions_table = PrettyTable(["Category", "Index", "Question"])
+        questions_table.align["Question"] = "l"  # Left-align the Question column
 
         for index, question in easiest_questions:
-            easy_table.add_row([index, question[:100] + ('...' if len(question) > 100 else '')])
+            questions_table.add_row(["Easiest", index, question[:100] + ('...' if len(question) > 100 else '')])
         
         for index, question in hardest_questions:
-            hard_table.add_row([index, question[:100] + ('...' if len(question) > 100 else '')])
+            questions_table.add_row(["Hardest", index, question[:100] + ('...' if len(question) > 100 else '')])
 
-        # Add these tables to the main table
-        table.add_row([""] * len(headers))
-        table.add_row(["Easiest Questions (All models correct)"] + [""] * (len(headers) - 1))
-        table.add_row([easy_table.get_string()] + [""] * (len(headers) - 1))
-        table.add_row([""] * len(headers))
-        table.add_row(["Hardest Questions (No model correct)"] + [""] * (len(headers) - 1))
-        table.add_row([hard_table.get_string()] + [""] * (len(headers) - 1))
+        # Return both tables
+        return table, questions_table
 
         if not html:
-            return table
+            return table, questions_table
         else:
-            return table.get_html_string()
+            return table.get_html_string(), questions_table.get_html_string()
     def _load_api_keys(self, kwargs: Dict[str, Any]) -> None:
         self._provider_map = {
             name: Provider(
