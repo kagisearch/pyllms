@@ -761,6 +761,36 @@ Question: Is there a series of flights that goes from city F to city I?",
 
             table.add_row(row_data)
 
+        # Track easiest and hardest questions
+        easiest_questions = []
+        hardest_questions = []
+        for i, problem in enumerate(problems):
+            all_correct = all(model_results[model]['evaluation'][i] == 1 for model in model_results)
+            all_incorrect = all(model_results[model]['evaluation'][i] == 0 for model in model_results)
+            
+            if all_correct:
+                easiest_questions.append((i, problem[0]))
+            elif all_incorrect:
+                hardest_questions.append((i, problem[0]))
+
+        # Create tables for easiest and hardest questions
+        easy_table = PrettyTable(["Index", "Question"])
+        hard_table = PrettyTable(["Index", "Question"])
+
+        for index, question in easiest_questions:
+            easy_table.add_row([index, question])
+        
+        for index, question in hardest_questions:
+            hard_table.add_row([index, question])
+
+        # Add these tables to the main table
+        table.add_row(["", "", "", "", "", "", ""])
+        table.add_row(["Easiest Questions (All models correct)", "", "", "", "", "", ""])
+        table.add_row([easy_table.get_string(), "", "", "", "", "", ""])
+        table.add_row(["", "", "", "", "", "", ""])
+        table.add_row(["Hardest Questions (No model correct)", "", "", "", "", "", ""])
+        table.add_row([hard_table.get_string(), "", "", "", "", "", ""])
+
         if not html:
             return table
         else:
