@@ -14,6 +14,7 @@ class OpenRouterProvider(BaseProvider):
         "nousresearch/hermes-3-llama-3.1-405b:free": {"prompt": 0.0, "completion": 0.0, "token_limit": 8192, "is_chat": True},
         "google/gemini-flash-1.5-exp": {"prompt": 0.0, "completion": 0.0, "token_limit": 1000000, "is_chat": True},
         "liquid/lfm-40b": {"prompt": 0.0, "completion": 0.0, "token_limit": 32768, "is_chat": True},
+        "mistralai/ministral-8b": {"prompt": 0.1, "completion": 0.1, "token_limit": 128000, "is_chat": True},
     }
 
     def __init__(
