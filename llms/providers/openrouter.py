@@ -111,12 +111,15 @@ class OpenRouterProvider(BaseProvider):
         with self.track_latency():
             response = self.client.chat.completions.create(model=self.model, **model_inputs)
 
-        completion = response.choices[0].message.content.strip()
-        usage = response.usage
+        if not response or not hasattr(response, 'choices') or not response.choices:
+            raise ValueError("Unexpected response structure from OpenRouter API")
+
+        completion = response.choices[0].message.content.strip() if response.choices[0].message else ""
+        usage = response.usage if hasattr(response, 'usage') else None
 
         meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
+            "tokens_prompt": usage.prompt_tokens if usage else 0,
+            "tokens_completion": usage.completion_tokens if usage else 0,
             "latency": self.latency,
         }
         return Result(
