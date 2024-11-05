@@ -662,19 +662,22 @@ Question: Is there a series of flights that goes from city F to city I?",
                         "evaluation": [None] * len(outputs),
                     }
 
-                for output_data in outputs:
-                    model_results[model]["total_latency"] += output_data["latency"]
-                    model_results[model]["total_cost"] += output_data["cost"]
+                    for output_data in outputs:
+                        model_results[model]["total_latency"] += output_data["latency"]
+                        model_results[model]["total_cost"] += output_data["cost"]
 
-                if evaluator:
-                    # Wait for all evaluation threads to complete
-                    for thread in evaluation_threads:
-                        thread.join()
+                    if evaluator:
+                        # Wait for all evaluation threads to complete
+                        for thread in evaluation_threads:
+                            thread.join()
 
-                    # Process all evaluation results
-                    while not evaluation_queue.empty():
-                        index, evaluation = evaluation_queue.get()
-                        model_results[model]["evaluation"][index] = evaluation
+                        # Process all evaluation results
+                        while not evaluation_queue.empty():
+                            index, evaluation = evaluation_queue.get()
+                            model_results[model]["evaluation"][index] = evaluation
+                except Exception as e:
+                    print(f"Error processing results for model {model}: {str(e)}")
+                    continue
 
         for model in model_results:
             outputs = model_results[model]["outputs"]
