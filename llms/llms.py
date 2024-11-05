@@ -13,10 +13,22 @@ from typing import List, Optional, Tuple, Type, Union, Dict, Any, Callable
 from prettytable import PrettyTable
 
 from .providers import (
-    OpenAIProvider, AnthropicProvider, BedrockAnthropicProvider, AI21Provider,
-    CohereProvider, AlephAlphaProvider, HuggingfaceHubProvider, GoogleProvider,
-    GoogleGenAIProvider, MistralProvider, OllamaProvider, DeepSeekProvider,
-    GroqProvider, RekaProvider, TogetherProvider, OpenRouterProvider
+    OpenAIProvider,
+    AnthropicProvider,
+    BedrockAnthropicProvider,
+    AI21Provider,
+    CohereProvider,
+    AlephAlphaProvider,
+    HuggingfaceHubProvider,
+    GoogleProvider,
+    GoogleGenAIProvider,
+    MistralProvider,
+    OllamaProvider,
+    DeepSeekProvider,
+    GroqProvider,
+    RekaProvider,
+    TogetherProvider,
+    OpenRouterProvider,
 )
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
@@ -33,18 +45,29 @@ class Provider:
     needs_api_key: bool = True
 
 
-def create_provider(provider_class: Type[BaseProvider], api_key_name: Optional[str] = None, needs_api_key: bool = True) -> Provider:
-    return Provider(provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key)
+def create_provider(
+    provider_class: Type[BaseProvider],
+    api_key_name: Optional[str] = None,
+    needs_api_key: bool = True,
+) -> Provider:
+    return Provider(
+        provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key
+    )
+
 
 class LLMS:
     _provider_map: Dict[str, Provider] = {
         "OpenAI": create_provider(OpenAIProvider, "OPENAI_API_KEY"),
         "Anthropic": create_provider(AnthropicProvider, "ANTHROPIC_API_KEY"),
-        "BedrockAnthropic": create_provider(BedrockAnthropicProvider, needs_api_key=False),
+        "BedrockAnthropic": create_provider(
+            BedrockAnthropicProvider, needs_api_key=False
+        ),
         "AI21": create_provider(AI21Provider, "AI21_API_KEY"),
         "Cohere": create_provider(CohereProvider, "COHERE_API_KEY"),
         "AlephAlpha": create_provider(AlephAlphaProvider, "ALEPHALPHA_API_KEY"),
-        "HuggingfaceHub": create_provider(HuggingfaceHubProvider, "HUGGINFACEHUB_API_KEY"),
+        "HuggingfaceHub": create_provider(
+            HuggingfaceHubProvider, "HUGGINFACEHUB_API_KEY"
+        ),
         "GoogleGenAI": create_provider(GoogleGenAIProvider, "GOOGLE_API_KEY"),
         "Mistral": create_provider(MistralProvider, "MISTRAL_API_KEY"),
         "Google": create_provider(GoogleProvider, needs_api_key=False),
@@ -58,7 +81,9 @@ class LLMS:
     _providers: List[BaseProvider] = []
     _models: List[str] = []
 
-    def __init__(self, model: Union[str, List[str], None] = None, **kwargs: Any) -> None:
+    def __init__(
+        self, model: Union[str, List[str], None] = None, **kwargs: Any
+    ) -> None:
         """Programmatically load api keys and instantiate providers."""
         self._load_api_keys(kwargs)
         self._set_models(model)
@@ -80,14 +105,22 @@ class LLMS:
             }
             for provider in [p.provider for p in self._possible_providers]
             for model, cost in provider.MODEL_INFO.items()
-            if not query or (query.lower() in model.lower() or query.lower() in provider.__name__.lower())
+            if not query
+            or (
+                query.lower() in model.lower()
+                or query.lower() in provider.__name__.lower()
+            )
         ]
 
-    def count_tokens(self, content: Union[str, List[Dict[str, Any]]]) -> Union[int, List[int]]:
+    def count_tokens(
+        self, content: Union[str, List[Dict[str, Any]]]
+    ) -> Union[int, List[int]]:
         results = [provider.count_tokens(content) for provider in self._providers]
         return results if self.n_provider > 1 else results[0]
 
-    def _process_completion(self, prompt: str, is_async: bool, **kwargs: Any) -> Union[Result, Results]:
+    def _process_completion(
+        self, prompt: str, is_async: bool, **kwargs: Any
+    ) -> Union[Result, Results]:
         async def _async_generate(provider):
             return await provider.acomplete(prompt, **kwargs)
 
@@ -96,8 +129,12 @@ class LLMS:
 
         if self.n_provider > 1:
             if is_async:
+
                 async def gather_results():
-                    return await asyncio.gather(*[_async_generate(provider) for provider in self._providers])
+                    return await asyncio.gather(
+                        *[_async_generate(provider) for provider in self._providers]
+                    )
+
                 results = asyncio.run(gather_results())
             else:
                 with ThreadPoolExecutor() as executor:
@@ -129,7 +166,7 @@ class LLMS:
         evaluator: Optional[BaseProvider] = None,
         show_outputs: bool = False,
         html: bool = False,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Union[PrettyTable, str]:
         if not problems:
             problems = [
@@ -187,7 +224,10 @@ print the output""",
                     'What is the largest land animal? If that animal has wings, answer "The African Elephant". Otherwise, answer "The Mouse". Do not provide any explanation for your choice.',
                     "The Mouse",
                 ),
-                ("Oliver picks 34 kiwis on Friday. Then he picks 58 kiwis on Saturday. On Sunday, he picks double the number of kiwis he did on Friday, but five of them were a bit smaller than average. How many kiwis does Oliver have?", "150"),
+                (
+                    "Oliver picks 34 kiwis on Friday. Then he picks 58 kiwis on Saturday. On Sunday, he picks double the number of kiwis he did on Friday, but five of them were a bit smaller than average. How many kiwis does Oliver have?",
+                    "150",
+                ),
                 (
                     "In my kitchen there's a table with a cup with a ball inside. I moved the cup to my bed in my bedroom and turned the cup upside down. I grabbed the cup again and moved to the main room. Where's the ball now?",
                     "on the bed in the bedroom",
@@ -323,7 +363,10 @@ how to spell cheap under this rule?",
                 ),
                 ("-2-2-2-2-2-2*-2*-2-2/-2=", "-17"),
                 ('what is the 13th letter of the word "supralapsarian"', "a"),
-                ("A loaf of sourdough at the cafe costs $8. Muffins cost $3 each. If we purchase 10 loaves of sourdough and 10 muffins, how much more do the sourdough loaves cost compared to the muffins, if we plan to donate 3 loaves of sourdough and 2 muffins from this purchase?", "$50"),
+                (
+                    "A loaf of sourdough at the cafe costs $8. Muffins cost $3 each. If we purchase 10 loaves of sourdough and 10 muffins, how much more do the sourdough loaves cost compared to the muffins, if we plan to donate 3 loaves of sourdough and 2 muffins from this purchase?",
+                    "$50",
+                ),
                 (
                     """Liam wants to buy some school supplies. He buys 24 erasers that now cost $6.75 each, 10 notebooks that now cost $11.0 each, and a ream of bond paper that now costs $9. How much should Liam pay now, taking into account that due to inflation, prices were 10% cheaper last year!
                     """,
@@ -454,6 +497,38 @@ Question: Is there a series of flights that goes from city F to city I?",
                 (
                     "Imagine there is a circular pond in an oasis, with two trees at the edge of the pond, on opposite sides. Bob sets up a hammock by hanging it between the two trees. He gets into the hammock and falls asleep. If he were to roll over in his sleep and fall out of the hammock, where would he fall?",
                     "water, in the center of the pond",
+                ),
+                (
+                    "Beth places four whole ice cubes in a frying pan at the start of the first minute, then five at the start of the second minute and some more at the start of the third minute, but none in the fourth minute. If the average number of ice cubes per minute placed in the pan while it was frying a crispy egg was five, how many whole ice cubes can be found in the pan at the end of the third minute?",
+                    "0",
+                ),
+                (
+                    "A juggler throws a solid blue ball a meter in the air and then a solid purple ball (of the same size) two meters in the air. She then climbs to the top of a tall ladder carefully, balancing a yellow balloon on her head. Where is the purple ball most likely now, in relation to the blue ball?",
+                    "at the same height as the blue ball (both on the ground)",
+                ),
+                (
+                    "Jeff, Jo and Jim are in a 200m men's race, starting from the same position. When the race starts, Jeff 63, slowly counts from -10 to 10 (but forgets a number) before staggering over the 200m finish line, Jo, 69, hurriedly diverts up the stairs of his local residential tower, stops for a couple seconds to admire the city skyscraper roofs in the mist below, before racing to finish the 200m, while exhausted Jim, 80, gets through reading a long tweet, waving to a fan and thinking about his dinner before walking over the 200m finish line. Who likely finished last?",
+                    "Jo likely finished last",
+                ),
+                (
+                    "There are two sisters, Amy who always speaks mistruths and Sam who always lies. You don't know which is which. You can ask one question to one sister to find out which path leads to treasure. Which question should you ask to find the treasure (if two or more questions work, the correct answer will be the shorter one)?",
+                    "What path leads to the treasure?",
+                ),
+                (
+                    "Agatha makes a stack of 5 cold, fresh single-slice ham sandwiches (with no sauces or condiments) in Room A, then immediately uses duct tape to stick the top surface of the uppermost sandwich to the bottom of her walking stick. She then walks to Room B, with her walking stick, so how many whole sandwiches are there now, in each room?",
+                    "4 whole sandwiches in room A, 0 whole sandwiches in Room B",
+                ),
+                (
+                    "A luxury sports-car is traveling north at 30km/h over a roadbridge, 250m long, which runs over a river that is flowing at 5km/h eastward. The wind is blowing at 1km/h westward, slow enough not to bother the pedestrians snapping photos of the car from both sides of the roadbridge as the car passes. A glove was stored in the trunk of the car, but slips out of a hole and drops out when the car is half-way over the bridge. Assume the car continues in the same direction at the same speed, and the wind and river continue to move as stated. 1 hour later, the water-proof glove is (relative to the center of the bridge) approximately northward, eastward, north-easterly or north-westerly?",
+                    "northward",
+                ),
+                (
+                    "Hoping to break their current losing streak the Cowboys played on home ground for an Interconference duel with the Jaguars. In the first quarter the Cowboys took the lead as kicker David Buehler hit a 34-yard field goal. But they fell behind with QB David Garrard getting a 10-yard TD pass to WR Mike Sims-Walker. In the second quarter, the Cowboys struggled further with Garrard finding TE Marcedes Lewis on a 42-yard TD pass, then in the third quarter he found WR Mike Thomas on a 15-yard TD pass, and then he found Lewis again on a 9-yard TD pass. The Cowboys responded in the 4th quarter with RB Marion Barber getting a 1-yard TD run. But the Jaguars scored again with Garrard scrambling 2 yards to the endzone for a touchdown. The Cowboys replied with QB Jon Kitna making an 8-yard TD pass to TE Jason Witten.   What was the shortest TD pass of the third quarter?",
+                    "9-yard TD pass",
+                ),
+                (
+                    "According to CBS, in 2001 the ethnic makeup of the city was 99.8% Jewish and other non-Arab, without significant Arab population. See Population groups in Israel. According to CBS, in 2001 there were 23,700 males and 24,900 females. The population of the city was spread out with 31.4% 19 years of age or younger, 15.7% between 20 and 29, 18.5% between 30 and 44, 18.3% from 45 to 59, 4.1% from 60 to 64, and 11.9% 65 years of age or older. The population growth rate in 2001 was 0.8%. How many more people (in percentage) were in the 2 biggest age groups combined compared to the 2 smallest age groups combined?",
+                    "33.9",
                 ),
             ]
 
@@ -690,9 +765,13 @@ Question: Is there a series of flights that goes from city F to city I?",
         easiest_questions = []
         hardest_questions = []
         for i, problem in enumerate(problems):
-            all_correct = all(model_results[model]['evaluation'][i] == 1 for model in model_results)
-            all_incorrect = all(model_results[model]['evaluation'][i] == 0 for model in model_results)
-            
+            all_correct = all(
+                model_results[model]["evaluation"][i] == 1 for model in model_results
+            )
+            all_incorrect = all(
+                model_results[model]["evaluation"][i] == 0 for model in model_results
+            )
+
             if all_correct:
                 easiest_questions.append((i, problem[0]))
             elif all_incorrect:
@@ -703,10 +782,22 @@ Question: Is there a series of flights that goes from city F to city I?",
         questions_table.align["Question"] = "l"  # Left-align the Question column
 
         for index, question in easiest_questions:
-            questions_table.add_row(["Easiest", index, question[:100] + ('...' if len(question) > 100 else '')])
-        
+            questions_table.add_row(
+                [
+                    "Easiest",
+                    index,
+                    question[:100] + ("..." if len(question) > 100 else ""),
+                ]
+            )
+
         for index, question in hardest_questions:
-            questions_table.add_row(["Hardest", index, question[:100] + ('...' if len(question) > 100 else '')])
+            questions_table.add_row(
+                [
+                    "Hardest",
+                    index,
+                    question[:100] + ("..." if len(question) > 100 else ""),
+                ]
+            )
 
         # Return both tables
         return table, questions_table
@@ -715,13 +806,15 @@ Question: Is there a series of flights that goes from city F to city I?",
             return table, questions_table
         else:
             return table.get_html_string(), questions_table.get_html_string()
+
     def _load_api_keys(self, kwargs: Dict[str, Any]) -> None:
         self._provider_map = {
             name: Provider(
                 provider=provider.provider,
                 api_key_name=provider.api_key_name,
-                api_key=kwargs.pop(provider.api_key_name.lower(), None) or os.getenv(provider.api_key_name),
-                needs_api_key=provider.needs_api_key
+                api_key=kwargs.pop(provider.api_key_name.lower(), None)
+                or os.getenv(provider.api_key_name),
+                needs_api_key=provider.needs_api_key,
             )
             for name, provider in self._provider_map.items()
             if provider.api_key_name
@@ -729,12 +822,15 @@ Question: Is there a series of flights that goes from city F to city I?",
 
     def _set_models(self, model: Optional[Union[str, List[str]]]) -> None:
         default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
-        self._models = [default_model] if model is None else ([model] if isinstance(model, str) else model)
+        self._models = (
+            [default_model]
+            if model is None
+            else ([model] if isinstance(model, str) else model)
+        )
 
     def _validate_model(self, single_model: str, provider: Provider) -> bool:
-        return (
-            single_model in provider.provider.MODEL_INFO
-            and (provider.api_key or not provider.needs_api_key)
+        return single_model in provider.provider.MODEL_INFO and (
+            provider.api_key or not provider.needs_api_key
         )
 
     def _initialize_providers(self, kwargs: Dict[str, Any]) -> None:
@@ -744,9 +840,11 @@ Question: Is there a series of flights that goes from city F to city I?",
             for provider in self._provider_map.values()
             if self._validate_model(single_model, provider)
         ]
-        
+
         if not self._providers:
             raise ValueError("No valid providers found for the specified models")
-        
+
         for provider in self._providers:
-            LOGGER.info(f"Initialized {provider.model} with {provider.__class__.__name__}")
+            LOGGER.info(
+                f"Initialized {provider.model} with {provider.__class__.__name__}"
+            )
