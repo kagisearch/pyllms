@@ -585,15 +585,19 @@ Question: Is there a series of flights that goes from city F to city I?",
         model_results = {}
 
         def process_prompt(model, prompt, index, evaluator, evaluation_queue, **kwargs):
-            print(model, index)  # , prompt[0])
-            result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
-            output_data = {
-                "text": result.text,
-                "tokens": result.meta["tokens_completion"],
-                "latency": result.meta["latency"],
-                "cost": result.meta["cost"],
-                "prompt_index": index,
-            }
+            try:
+                print(model, index)  # , prompt[0])
+                result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
+                output_data = {
+                    "text": result.text,
+                    "tokens": result.meta["tokens_completion"],
+                    "latency": result.meta["latency"],
+                    "cost": result.meta["cost"],
+                    "prompt_index": index,
+                }
+            except Exception as e:
+                print(f"Error with {model}: {str(e)}")
+                return None
 
             if evaluator:
                 evaluation_thread = threading.Thread(
@@ -630,7 +634,8 @@ Question: Is there a series of flights that goes from city F to city I?",
                 ]
                 for future in concurrent.futures.as_completed(futures):
                     result = future.result()
-                    results.append(result)
+                    if result is not None:
+                        results.append(result)
                     if evaluator:
                         evaluation_threads.append(result.get("evaluation_thread"))
             return model, results, evaluation_queue, evaluation_threads
@@ -645,13 +650,17 @@ Question: Is there a series of flights that goes from city F to city I?",
             ]
 
             for future in as_completed(futures):
-                model, outputs, evaluation_queue, evaluation_threads = future.result()
-                model_results[model] = {
-                    "outputs": outputs,
-                    "total_latency": 0,
-                    "total_cost": 0,
-                    "evaluation": [None] * len(outputs),
-                }
+                try:
+                    model, outputs, evaluation_queue, evaluation_threads = future.result()
+                    if not outputs:  # Skip if no successful outputs
+                        continue
+                    
+                    model_results[model] = {
+                        "outputs": outputs,
+                        "total_latency": 0,
+                        "total_cost": 0,
+                        "evaluation": [None] * len(outputs),
+                    }
 
                 for output_data in outputs:
                     model_results[model]["total_latency"] += output_data["latency"]
