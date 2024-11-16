@@ -530,6 +530,29 @@ Question: Is there a series of flights that goes from city F to city I?",
                     "According to CBS, in 2001 the ethnic makeup of the city was 99.8% Jewish and other non-Arab, without significant Arab population. See Population groups in Israel. According to CBS, in 2001 there were 23,700 males and 24,900 females. The population of the city was spread out with 31.4% 19 years of age or younger, 15.7% between 20 and 29, 18.5% between 30 and 44, 18.3% from 45 to 59, 4.1% from 60 to 64, and 11.9% 65 years of age or older. The population growth rate in 2001 was 0.8%. How many more people (in percentage) were in the 2 biggest age groups combined compared to the 2 smallest age groups combined?",
                     "33.9",
                 ),
+                (
+                    """For the period 2010-14, the estimated median income for a household in the town was $94,063, and the median income for a family was $129,000. Male full-time workers had a median income of $87,550 versus $53,141 for females. The per capita income for the town was $34,140. About 2.0% of families and 12.0% of the population were below the poverty line, including 3.4% of those under age 18 and 4.8% of those age 65 or over.how many percent of the population aged 65 or over were not below the poverty line?""",
+                    "88",
+                ),
+                (
+                    "What is the largest even integer that cannot be written as the sum of two odd composite numbers?",
+                    "38",
+                ),
+                (
+                    "Jenny and Kenny are walking in the same direction, Kenny at 3 feet per second and Jenny at 1 foot per second, on parallel paths that are 200 feet apart. A tall circular building 100 feet in diameter is centered midway between the paths. At the instant when the building first blocks the line of sight between Jenny and Kenny, they are 200 feet apart. Let $t\,$ be the amount of time, in seconds, before Jenny and Kenny can see each other again. If $t\,$ is written as a fraction in lowest terms, what is the sum of the numerator and denominator?",
+                    "163",
+                ),
+                (
+                    "Find the smallest prime that is the fifth term of an increasing arithmetic sequence, all four preceding terms also being prime.",
+                    "29",
+                ),
+                (
+                    "Abe can paint the room in 15 hours, Bea can paint 50 percent faster than Abe, and Coe can paint twice as fast as Abe. Abe begins to paint the room and works alone for the first hour and a half. Then Bea joins Abe, and they work together until half the room is painted. Then Coe joins Abe and Bea, and they work together until the entire room is painted. Find the number of minutes after Abe begins for the three of them to finish painting the room.",
+                    "334",
+                ),
+                ("In the fibonnaci sequence starting with 10, then seven unknown numbers in sequence and then 11, find the number in the sequence after 10. All numbers in this sequence adhere to fibonnaci sequence rules. Output solution as a fraction.", "-17/3"),
+                ("i have three balls next to each other; yellow then to the right blue then to the right red. i take two outmost balls and swap them then take blue and swap with yellow, then take two outmost and swap them, then swap  blue and yellow again. output just final orders of the balls and no other text", "yellow, blue, red"),
+                
             ]
 
         def evaluate_answers(
@@ -587,7 +610,9 @@ Question: Is there a series of flights that goes from city F to city I?",
         def process_prompt(model, prompt, index, evaluator, evaluation_queue, **kwargs):
             try:
                 print(model, index)  # , prompt[0])
-                result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
+                result = model.complete(
+                    prompt[0], max_tokens=1000, temperature=0, **kwargs
+                )
                 output_data = {
                     "text": result.text,
                     "tokens": result.meta["tokens_completion"],
@@ -651,10 +676,15 @@ Question: Is there a series of flights that goes from city F to city I?",
 
             for future in as_completed(futures):
                 try:
-                    model, outputs, evaluation_queue, evaluation_threads = future.result()
+                    (
+                        model,
+                        outputs,
+                        evaluation_queue,
+                        evaluation_threads,
+                    ) = future.result()
                     if not outputs:  # Skip if no successful outputs
                         continue
-                    
+
                     model_results[model] = {
                         "outputs": outputs,
                         "total_latency": 0,
