@@ -2,6 +2,7 @@ import os
 import re
 import statistics
 import threading
+import time
 import queue
 import concurrent.futures
 import asyncio
@@ -166,6 +167,7 @@ class LLMS:
         evaluator: Optional[BaseProvider] = None,
         show_outputs: bool = False,
         html: bool = False,
+        delay: float = 0,
         **kwargs: Any,
     ) -> Union[PrettyTable, str]:
         if not problems:
@@ -613,6 +615,8 @@ Question: Is there a series of flights that goes from city F to city I?",
                 result = model.complete(
                     prompt[0], max_tokens=1000, temperature=0, **kwargs
                 )
+                if delay > 0:
+                    time.sleep(delay)
                 output_data = {
                     "text": result.text,
                     "tokens": result.meta["tokens_completion"],
