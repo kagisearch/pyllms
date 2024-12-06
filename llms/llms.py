@@ -665,8 +665,8 @@ Question: Is there a series of flights that goes from city F to city I?",
                     result = future.result()
                     if result is not None:
                         results.append(result)
-                    if evaluator:
-                        evaluation_threads.append(result.get("evaluation_thread"))
+                        if evaluator and "evaluation_thread" in result:
+                            evaluation_threads.append(result.get("evaluation_thread"))
             return model, results, evaluation_queue, evaluation_threads
 
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
@@ -689,28 +689,32 @@ Question: Is there a series of flights that goes from city F to city I?",
                     if not outputs:  # Skip if no successful outputs
                         continue
 
-                    model_results[model] = {
-                        "outputs": outputs,
-                        "total_latency": 0,
-                        "total_cost": 0,
-                        "evaluation": [None] * len(outputs),
-                    }
+                    if outputs:  # Only process if we have valid outputs
+                        model_results[model] = {
+                            "outputs": outputs,
+                            "total_latency": 0,
+                            "total_cost": 0,
+                            "evaluation": [None] * len(outputs),
+                        }
 
-                    for output_data in outputs:
-                        model_results[model]["total_latency"] += output_data["latency"]
-                        model_results[model]["total_cost"] += output_data["cost"]
+                        for output_data in outputs:
+                            if output_data:  # Check if output_data is not None
+                                model_results[model]["total_latency"] += output_data["latency"]
+                                model_results[model]["total_cost"] += output_data["cost"]
 
-                    if evaluator:
-                        # Wait for all evaluation threads to complete
-                        for thread in evaluation_threads:
-                            thread.join()
+                        if evaluator and evaluation_threads:
+                            # Wait for all evaluation threads to complete
+                            for thread in evaluation_threads:
+                                if thread:  # Check if thread exists
+                                    thread.join()
 
-                        # Process all evaluation results
-                        while not evaluation_queue.empty():
-                            index, evaluation = evaluation_queue.get()
-                            model_results[model]["evaluation"][index] = evaluation
+                            # Process all evaluation results
+                            while not evaluation_queue.empty():
+                                index, evaluation = evaluation_queue.get()
+                                model_results[model]["evaluation"][index] = evaluation
                 except Exception as e:
-                    print(f"Error processing results for model {model}: {str(e)}")
+                    print(f"Error processing results: {str(e)}")
+                    # Don't add failed models to results
                     continue
 
         for model in model_results:
