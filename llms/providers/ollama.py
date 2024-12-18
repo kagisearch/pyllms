@@ -6,7 +6,7 @@ from ollama import Client, AsyncClient
 from ..results.result import Result, StreamResult, AsyncStreamResult
 from .base_provider import BaseProvider
 
-
+print('hi')
 def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
     model_info = {}
     try:
@@ -25,13 +25,13 @@ def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
     except Exception as e:
         # Log the error but continue with empty model info
         print(f"Warning: Could not connect to Ollama server: {str(e)}")
-        
+   
     return model_info
 
 
 class OllamaProvider(BaseProvider):
     MODEL_INFO = _get_model_info()
-
+    print(MODEL_INFO)
     def count_tokens(self, content: Union[str, List[Dict[str, Any]]]) -> int:
         """Estimate token count using simple word-based heuristic"""
         if isinstance(content, list):
