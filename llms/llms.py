@@ -864,11 +864,10 @@ Question: Is there a series of flights that goes from city F to city I?",
                 provider=provider.provider,
                 api_key_name=provider.api_key_name,
                 api_key=kwargs.pop(provider.api_key_name.lower(), None)
-                or os.getenv(provider.api_key_name),
+                or os.getenv(provider.api_key_name) if provider.api_key_name else None,
                 needs_api_key=provider.needs_api_key,
             )
             for name, provider in self._provider_map.items()
-            if provider.api_key_name
         }
 
     def _set_models(self, model: Optional[Union[str, List[str]]]) -> None:
