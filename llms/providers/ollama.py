@@ -110,18 +110,19 @@ class OllamaProvider(BaseProvider):
         system_message: Optional[List[dict]] = None,
         **kwargs
     ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            **kwargs
-        )
+        try:
+            model_inputs = self._prepare_model_inputs(
+                prompt=prompt,
+                history=history,
+                system_message=system_message,
+                **kwargs
+            )
 
-        with self.track_latency():
-            response = self.client.chat(model=self.model, **model_inputs)
+            with self.track_latency():
+                response = self.client.chat(model=self.model, **model_inputs)
 
-            message = response["message"]
-            completion = message["content"].strip()
+                message = response["message"]
+                completion = message["content"].strip()
         except Exception as e:
             raise RuntimeError(f"Ollama completion failed: {str(e)}")
 
