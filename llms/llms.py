@@ -105,7 +105,7 @@ class LLMS:
                 "name": model,
                 "cost": cost,
             }
-            for provider in [p.provider for p in self._possible_providers]
+            for provider in [p.provider for p in self._provider_map.values()]
             for model, cost in provider.MODEL_INFO.items()
             if not query
             or (
