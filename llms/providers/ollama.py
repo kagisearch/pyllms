@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Generator, List, Optional, Union, AsyncGenerator
+from typing import Any, Dict, Generator, List, Optional, Union, AsyncGenerator
 
 from ollama import Client, AsyncClient
 
