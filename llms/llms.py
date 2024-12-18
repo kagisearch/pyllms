@@ -881,6 +881,12 @@ Question: Is there a series of flights that goes from city F to city I?",
     def _validate_model(self, single_model: str, provider: Provider) -> bool:
         # Special case for Ollama provider which gets models dynamically
         if provider.provider.__name__ == "OllamaProvider":
+            # Try to match any model with Ollama provider if no other provider matches
+            for other_provider in self._provider_map.values():
+                if other_provider.provider.__name__ != "OllamaProvider":
+                    other_prefix = other_provider.provider.__name__.replace('Provider', '').lower()
+                    if single_model.lower().startswith(other_prefix):
+                        return False
             return not provider.needs_api_key
             
         # Check if model name starts with provider's class name prefix
