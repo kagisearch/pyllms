@@ -880,7 +880,10 @@ Question: Is there a series of flights that goes from city F to city I?",
         )
 
     def _validate_model(self, single_model: str, provider: Provider) -> bool:
-       
+        # Special case for Ollama provider which gets models dynamically
+        if provider.provider.__name__ == "OllamaProvider":
+            return not provider.needs_api_key
+        
         return single_model in provider.provider.MODEL_INFO and (
             provider.api_key or not provider.needs_api_key
         )
