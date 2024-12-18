@@ -890,7 +890,7 @@ Question: Is there a series of flights that goes from city F to city I?",
     def _initialize_providers(self, kwargs: Dict[str, Any]) -> None:
         print(self._provider_map.values())
         self._providers = [
-            provider.provider(api_key=provider.api_key, model=single_model, **kwargs)
+            provider.provider(model=single_model, **({**kwargs, 'api_key': provider.api_key} if provider.needs_api_key else kwargs))
             for single_model in self._models
             for provider in self._provider_map.values()
             if self._validate_model(single_model, provider)
