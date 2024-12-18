@@ -65,8 +65,11 @@ class OllamaProvider(BaseProvider):
         history: Optional[List[dict]] = None,
         system_message: Union[str, List[dict], None] = None,
         stream: bool = False,
+        max_tokens: Optional[int] = None,  # Add but don't use
         **kwargs
     ) -> Dict:
+        # Remove max_tokens from kwargs if present since Ollama doesn't support it
+        kwargs.pop('max_tokens', None)
         if self.is_chat_model:
             messages = [{"role": "user", "content": prompt}]
 
