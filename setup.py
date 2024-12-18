@@ -9,7 +9,7 @@ _project_homepage = "https://github.com/kagisearch/pyllms"
 
 setup(
     name="pyllms",
-    version="0.6.1",
+    version="0.7.0",
     description="Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, Mistral, OpenRouter, Reka, Groq, Together, Ollama, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -31,6 +31,8 @@ setup(
         "google-generativeai",
         "mistralai",
         "ollama",
+        "reka-api",
+        "together",
     ],
     extras_require={
         "local": ["einops", "accelerate"]
