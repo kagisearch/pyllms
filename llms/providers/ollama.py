@@ -190,19 +190,19 @@ class OllamaProvider(BaseProvider):
         **kwargs
     ) -> Result:
         try:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            **kwargs
-        )
+            model_inputs = self._prepare_model_inputs(
+                prompt=prompt,
+                history=history,
+                system_message=system_message,
+                **kwargs
+            )
 
-        with self.track_latency():
-            response = await self.async_client.chat(model=self.model, **model_inputs)
+            with self.track_latency():
+                response = await self.async_client.chat(model=self.model, **model_inputs)
 
-        message = response["message"]
-        completion = ""
-        completion = message["content"].strip()
+            message = response["message"]
+            completion = ""
+            completion = message["content"].strip()
 
         meta = {
             "tokens_prompt": response["prompt_eval_count"],
