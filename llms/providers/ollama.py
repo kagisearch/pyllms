@@ -13,19 +13,34 @@ def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
         pulled_models = Client(host=ollama_host).list().get("models", [])
         for model in pulled_models:
             name = model["name"]
-            model_info[name] = {}
+            # Ollama models are free to use locally
+            model_info[name] = {
+                "prompt": 0.0,
+                "completion": 0.0,
+                "token_limit": 4096  # Default token limit
+            }
 
         if not pulled_models:
             raise ValueError("Could not retrieve any models from Ollama")
-    except Exception:
-        # In the event ollama is not running or can't be reached, return an empty dictionary
-        pass
-
+    except Exception as e:
+        # Log the error but continue with empty model info
+        print(f"Warning: Could not connect to Ollama server: {str(e)}")
+        
     return model_info
 
 
 class OllamaProvider(BaseProvider):
     MODEL_INFO = _get_model_info()
+
+    def count_tokens(self, content: Union[str, List[Dict[str, Any]]]) -> int:
+        """Estimate token count using simple word-based heuristic"""
+        if isinstance(content, list):
+            # For chat messages, concatenate all content
+            text = " ".join(msg["content"] for msg in content)
+        else:
+            text = content
+        # Rough estimation: split on whitespace and punctuation
+        return len(text.split())
 
     def __init__(
         self,
@@ -105,9 +120,10 @@ class OllamaProvider(BaseProvider):
         with self.track_latency():
             response = self.client.chat(model=self.model, **model_inputs)
 
-        message = response["message"]
-        completion = ""
-        completion = message["content"].strip()
+            message = response["message"]
+            completion = message["content"].strip()
+        except Exception as e:
+            raise RuntimeError(f"Ollama completion failed: {str(e)}")
 
         meta = {
             "tokens_prompt": response["prompt_eval_count"],
@@ -172,6 +188,7 @@ class OllamaProvider(BaseProvider):
         system_message: Optional[List[dict]] = None,
         **kwargs
     ) -> Result:
+        try:
         model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
@@ -180,7 +197,7 @@ class OllamaProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = self.async_client.chat(model=self.model, **model_inputs)
+            response = await self.async_client.chat(model=self.model, **model_inputs)
 
         message = response["message"]
         completion = ""
