@@ -204,11 +204,13 @@ class OllamaProvider(BaseProvider):
             completion = ""
             completion = message["content"].strip()
 
-        meta = {
-            "tokens_prompt": response["prompt_eval_count"],
-            "tokens_completion": response["eval_count"],
-            "latency": response["total_duration"],
-        }
+            meta = {
+                "tokens_prompt": response["prompt_eval_count"],
+                "tokens_completion": response["eval_count"],
+                "latency": response["total_duration"],
+            }
+        except Exception as e:
+            raise RuntimeError(f"Ollama completion failed: {str(e)}")
 
         return Result(
             text=completion,
