@@ -51,7 +51,7 @@ def create_provider(
     api_key_name: Optional[str] = None,
     needs_api_key: bool = True,
 ) -> Provider:
-    print(provider_class)
+   
     return Provider(
         provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key
     )
@@ -888,7 +888,7 @@ Question: Is there a series of flights that goes from city F to city I?",
         )
 
     def _initialize_providers(self, kwargs: Dict[str, Any]) -> None:
-        print(self._provider_map.values())
+      
         self._providers = [
             provider.provider(model=single_model, **({**kwargs, 'api_key': provider.api_key} if provider.needs_api_key else kwargs))
             for single_model in self._models

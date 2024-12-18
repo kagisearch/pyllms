@@ -134,7 +134,7 @@ class OllamaProvider(BaseProvider):
         meta = {
             "tokens_prompt": response["prompt_eval_count"],
             "tokens_completion": response["eval_count"],
-            "latency": response["total_duration"],
+            "latency": self.latency,
         }
 
         return Result(
@@ -212,7 +212,7 @@ class OllamaProvider(BaseProvider):
             meta = {
                 "tokens_prompt": response["prompt_eval_count"],
                 "tokens_completion": response["eval_count"],
-                "latency": response["total_duration"],
+                "latency":  self.latency,
             }
         except Exception as e:
             raise RuntimeError(f"Ollama completion failed: {str(e)}")
