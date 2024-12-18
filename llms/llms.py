@@ -882,7 +882,12 @@ Question: Is there a series of flights that goes from city F to city I?",
         # Special case for Ollama provider which gets models dynamically
         if provider.provider.__name__ == "OllamaProvider":
             return not provider.needs_api_key
-        
+            
+        # Check if model name starts with provider's class name prefix
+        provider_prefix = provider.provider.__name__.replace('Provider', '').lower()
+        if not single_model.lower().startswith(provider_prefix):
+            return False
+            
         return single_model in provider.provider.MODEL_INFO and (
             provider.api_key or not provider.needs_api_key
         )
