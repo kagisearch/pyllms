@@ -816,17 +816,24 @@ Question: Is there a series of flights that goes from city F to city I?",
         easiest_questions = []
         hardest_questions = []
         for i, problem in enumerate(problems):
-            all_correct = all(
-                model_results[model]["evaluation"][i] == 1 for model in model_results
-            )
-            all_incorrect = all(
-                model_results[model]["evaluation"][i] == 0 for model in model_results
-            )
+            valid_results = []
+            for model in model_results:
+                try:
+                    if len(model_results[model]["evaluation"]) > i:
+                        eval_result = model_results[model]["evaluation"][i]
+                        if eval_result is not None:
+                            valid_results.append(eval_result)
+                except (IndexError, KeyError):
+                    continue
+                
+            if valid_results:  # Only evaluate if we have valid results
+                all_correct = all(result == 1 for result in valid_results)
+                all_incorrect = all(result == 0 for result in valid_results)
 
-            if all_correct:
-                easiest_questions.append((i, problem[0]))
-            elif all_incorrect:
-                hardest_questions.append((i, problem[0]))
+                if all_correct:
+                    easiest_questions.append((i, problem[0]))
+                elif all_incorrect:
+                    hardest_questions.append((i, problem[0]))
 
         # Create a new table for easiest and hardest questions
         questions_table = PrettyTable(["Category", "Index", "Question"])
