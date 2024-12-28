@@ -16,6 +16,10 @@ class OpenRouterProvider(BaseProvider):
         "liquid/lfm-40b": {"prompt": 0.0, "completion": 0.0, "token_limit": 32768, "is_chat": True},
         "mistralai/ministral-8b": {"prompt": 0.1, "completion": 0.1, "token_limit": 128000, "is_chat": True},
         "qwen/qwen-2.5-72b-instruct": {"prompt": 0.35, "completion": 0.4, "token_limit": 131072, "is_chat": True},
+        "x-ai/grok-2-1212": {"prompt": 2.0, "completion": 10.0, "token_limit": 131072, "is_chat": True},
+        "amazon/nova-pro-v1": {"prompt": 0.8, "completion": 3.2, "token_limit": 300000, "is_chat": True, "image_input": 1.2},
+        "qwen/qwq-32b-preview": {"prompt": 0.12, "completion": 0.18, "token_limit": 32768, "is_chat": True},
+        "mistralai/mistral-large-2411": {"prompt": 2.0, "completion": 6.0, "token_limit": 128000, "is_chat": True}
     }
 
     def __init__(

@@ -542,7 +542,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                     "38",
                 ),
                 (
-                    "Jenny and Kenny are walking in the same direction, Kenny at 3 feet per second and Jenny at 1 foot per second, on parallel paths that are 200 feet apart. A tall circular building 100 feet in diameter is centered midway between the paths. At the instant when the building first blocks the line of sight between Jenny and Kenny, they are 200 feet apart. Let $t\,$ be the amount of time, in seconds, before Jenny and Kenny can see each other again. If $t\,$ is written as a fraction in lowest terms, what is the sum of the numerator and denominator?",
+                    "Jenny and Kenny are walking in the same direction, Kenny at 3 feet per second and Jenny at 1 foot per second, on parallel paths that are 200 feet apart. A tall circular building 100 feet in diameter is centered midway between the paths. At the instant when the building first blocks the line of sight between Jenny and Kenny, they are 200 feet apart. Let t be the amount of time, in seconds, before Jenny and Kenny can see each other again. If t is written as a fraction in lowest terms, what is the sum of the numerator and denominator?",
                     "163",
                 ),
                 (

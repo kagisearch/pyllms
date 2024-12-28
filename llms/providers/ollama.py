@@ -24,7 +24,8 @@ def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
             raise ValueError("Could not retrieve any models from Ollama")
     except Exception as e:
         # Log the error but continue with empty model info
-        print(f"Warning: Could not connect to Ollama server: {str(e)}")
+        # print(f"Warning: Could not connect to Ollama server: {str(e)}")
+        pass
    
     return model_info
 
