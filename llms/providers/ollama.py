@@ -12,7 +12,7 @@ def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
     try:
         pulled_models = Client(host=ollama_host).list().get("models", [])
         for model in pulled_models:
-            name = model["name"]
+            name = model["model"]
             # Ollama models are free to use locally
             model_info[name] = {
                 "prompt": 0.0,
