@@ -20,40 +20,31 @@ from .providers import (
     RekaProvider,
     TogetherProvider,
 )
-from .providers.base_provider import BaseProvider
+from .providers.base import Provider
 
 
 @dataclass
-class Provider:
-    provider: type[BaseProvider]
+class ProviderSpec:
+    kind: type[Provider]
     api_key_name: str | None = None
     api_key: str | None = None
-    needs_api_key: bool = True
-
-
-def create_provider(
-    provider_class: type[BaseProvider],
-    api_key_name: str | None = None,
-    needs_api_key: bool = True,
-) -> Provider:
-    return Provider(provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key)
 
 
 PROVIDER_MAP = {
-    "OpenAI": create_provider(OpenAIProvider, "OPENAI_API_KEY"),
-    "Anthropic": create_provider(AnthropicProvider, "ANTHROPIC_API_KEY"),
-    "BedrockAnthropic": create_provider(BedrockAnthropicProvider, needs_api_key=False),
-    "AI21": create_provider(AI21Provider, "AI21_API_KEY"),
-    "Cohere": create_provider(CohereProvider, "COHERE_API_KEY"),
-    "AlephAlpha": create_provider(AlephAlphaProvider, "ALEPHALPHA_API_KEY"),
-    "HuggingfaceHub": create_provider(HuggingfaceHubProvider, "HUGGINFACEHUB_API_KEY"),
-    "GoogleGenAI": create_provider(GoogleGenAIProvider, "GOOGLE_API_KEY"),
-    "Mistral": create_provider(MistralProvider, "MISTRAL_API_KEY"),
-    "Google": create_provider(GoogleProvider, needs_api_key=False),
-    "Ollama": create_provider(OllamaProvider, needs_api_key=False),
-    "DeepSeek": create_provider(DeepSeekProvider, "DEEPSEEK_API_KEY"),
-    "Groq": create_provider(GroqProvider, "GROQ_API_KEY"),
-    "Reka": create_provider(RekaProvider, "REKA_API_KEY"),
-    "Together": create_provider(TogetherProvider, "TOGETHER_API_KEY"),
-    "OpenRouter": create_provider(OpenRouterProvider, "OPENROUTER_API_KEY"),
+    "OpenAI": ProviderSpec(OpenAIProvider, "OPENAI_API_KEY"),
+    "Anthropic": ProviderSpec(AnthropicProvider, "ANTHROPIC_API_KEY"),
+    "BedrockAnthropic": ProviderSpec(BedrockAnthropicProvider),
+    "AI21": ProviderSpec(AI21Provider, "AI21_API_KEY"),
+    "Cohere": ProviderSpec(CohereProvider, "COHERE_API_KEY"),
+    "AlephAlpha": ProviderSpec(AlephAlphaProvider, "ALEPHALPHA_API_KEY"),
+    "HuggingfaceHub": ProviderSpec(HuggingfaceHubProvider, "HUGGINFACEHUB_API_KEY"),
+    "GoogleGenAI": ProviderSpec(GoogleGenAIProvider, "GOOGLE_API_KEY"),
+    "Mistral": ProviderSpec(MistralProvider, "MISTRAL_API_KEY"),
+    "Google": ProviderSpec(GoogleProvider),
+    "Ollama": ProviderSpec(OllamaProvider),
+    "DeepSeek": ProviderSpec(DeepSeekProvider, "DEEPSEEK_API_KEY"),
+    "Groq": ProviderSpec(GroqProvider, "GROQ_API_KEY"),
+    "Reka": ProviderSpec(RekaProvider, "REKA_API_KEY"),
+    "Together": ProviderSpec(TogetherProvider, "TOGETHER_API_KEY"),
+    "OpenRouter": ProviderSpec(OpenRouterProvider, "OPENROUTER_API_KEY"),
 }

@@ -1,13 +1,16 @@
-from typing import Optional, Union
+from __future__ import annotations
+
+import typing as t
+from dataclasses import dataclass
 
 import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
-from ..results.result import AsyncStreamResult, Result, StreamResult
-from .base_provider import BaseProvider
+from .base import StreamProvider, msg_as_str
 
 
-class OpenRouterProvider(BaseProvider):
+@dataclass
+class OpenRouterProvider(StreamProvider):
     MODEL_INFO = {
         "nvidia/llama-3.1-nemotron-70b-instruct": {
             "prompt": 0.35,
@@ -15,18 +18,48 @@ class OpenRouterProvider(BaseProvider):
             "token_limit": 131072,
             "is_chat": True,
         },
-        "x-ai/grok-2": {"prompt": 5.0, "completion": 10.0, "token_limit": 32768, "is_chat": True},
+        "x-ai/grok-2": {
+            "prompt": 5.0,
+            "completion": 10.0,
+            "token_limit": 32768,
+            "is_chat": True,
+        },
         "nousresearch/hermes-3-llama-3.1-405b:free": {
             "prompt": 0.0,
             "completion": 0.0,
             "token_limit": 8192,
             "is_chat": True,
         },
-        "google/gemini-flash-1.5-exp": {"prompt": 0.0, "completion": 0.0, "token_limit": 1000000, "is_chat": True},
-        "liquid/lfm-40b": {"prompt": 0.0, "completion": 0.0, "token_limit": 32768, "is_chat": True},
-        "mistralai/ministral-8b": {"prompt": 0.1, "completion": 0.1, "token_limit": 128000, "is_chat": True},
-        "qwen/qwen-2.5-72b-instruct": {"prompt": 0.35, "completion": 0.4, "token_limit": 131072, "is_chat": True},
-        "x-ai/grok-2-1212": {"prompt": 2.0, "completion": 10.0, "token_limit": 131072, "is_chat": True},
+        "google/gemini-flash-1.5-exp": {
+            "prompt": 0.0,
+            "completion": 0.0,
+            "token_limit": 1000000,
+            "is_chat": True,
+        },
+        "liquid/lfm-40b": {
+            "prompt": 0.0,
+            "completion": 0.0,
+            "token_limit": 32768,
+            "is_chat": True,
+        },
+        "mistralai/ministral-8b": {
+            "prompt": 0.1,
+            "completion": 0.1,
+            "token_limit": 128000,
+            "is_chat": True,
+        },
+        "qwen/qwen-2.5-72b-instruct": {
+            "prompt": 0.35,
+            "completion": 0.4,
+            "token_limit": 131072,
+            "is_chat": True,
+        },
+        "x-ai/grok-2-1212": {
+            "prompt": 2.0,
+            "completion": 10.0,
+            "token_limit": 131072,
+            "is_chat": True,
+        },
         "amazon/nova-pro-v1": {
             "prompt": 0.8,
             "completion": 3.2,
@@ -34,56 +67,55 @@ class OpenRouterProvider(BaseProvider):
             "is_chat": True,
             "image_input": 1.2,
         },
-        "qwen/qwq-32b-preview": {"prompt": 0.12, "completion": 0.18, "token_limit": 32768, "is_chat": True},
-        "mistralai/mistral-large-2411": {"prompt": 2.0, "completion": 6.0, "token_limit": 128000, "is_chat": True},
+        "qwen/qwq-32b-preview": {
+            "prompt": 0.12,
+            "completion": 0.18,
+            "token_limit": 32768,
+            "is_chat": True,
+        },
+        "mistralai/mistral-large-2411": {
+            "prompt": 2.0,
+            "completion": 6.0,
+            "token_limit": 128000,
+            "is_chat": True,
+        },
     }
 
-    def __init__(
-        self,
-        api_key: Union[str, None] = None,
-        model: Union[str, None] = None,
-        client_kwargs: Union[dict, None] = None,
-        async_client_kwargs: Union[dict, None] = None,
-    ):
-        if model is None:
-            model = list(self.MODEL_INFO.keys())[0]
-        self.model = model
-        if client_kwargs is None:
-            client_kwargs = {}
-        self.client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1", **client_kwargs)
-        if async_client_kwargs is None:
-            async_client_kwargs = {}
+    def __post_init__(self):
+        super().__post_init__()
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://openrouter.ai/api/v1",
+        )
         self.async_client = AsyncOpenAI(
-            api_key=api_key, base_url="https://openrouter.ai/api/v1", **async_client_kwargs
+            api_key=self.api_key,
+            base_url="https://openrouter.ai/api/v1",
         )
 
     @property
     def is_chat_model(self) -> bool:
         return self.MODEL_INFO[self.model]["is_chat"]
 
-    def count_tokens(self, content: Union[str, list[dict]]) -> int:
-        # OpenRouter uses the same tokenizer as OpenAI
+    def _count_tokens(self, content: list[dict]) -> int:
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        if isinstance(content, list):
-            formatting_token_count = 4
-            messages = content
-            messages_text = ["".join(message.values()) for message in messages]
-            tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
+        formatting_token_count = 4
+        messages = content
+        messages_text = [msg_as_str([message]) for message in messages]
+        tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
 
-            n_tokens_list = []
-            for token, message in zip(tokens, messages):
-                n_tokens = len(token) + formatting_token_count
-                if "name" in message:
-                    n_tokens += -1
-                n_tokens_list.append(n_tokens)
-            return sum(n_tokens_list)
-        return len(enc.encode(content, disallowed_special=()))
+        n_tokens_list = []
+        for token, message in zip(tokens, messages):
+            n_tokens = len(token) + formatting_token_count
+            if "name" in message:
+                n_tokens += -1
+            n_tokens_list.append(n_tokens)
+        return sum(n_tokens_list)
 
-    def _prepare_model_inputs(
+    def _prepare_input(
         self,
         prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
+        history: list[dict] | None = None,
+        system_message: str | list[dict] | None = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
@@ -111,135 +143,30 @@ class OpenRouterProvider(BaseProvider):
             **kwargs,
         }
 
-    def complete(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Optional[list[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-
-        with self.track_latency():
-            response = self.client.chat.completions.create(model=self.model, **model_inputs)
-
-        if not response or not hasattr(response, "choices") or not response.choices:
-            msg = "Unexpected response structure from OpenRouter API"
-            raise ValueError(msg)
-
-        completion = response.choices[0].message.content.strip() if response.choices[0].message else ""
-        usage = response.usage if hasattr(response, "usage") else None
-
-        meta = {
-            "tokens_prompt": usage.prompt_tokens if usage else 0,
-            "tokens_completion": usage.completion_tokens if usage else 0,
-            "latency": self.latency,
+    def _complete(self, data: dict) -> dict:
+        response = self.client.chat.completions.create(model=self.model, stream=False, **data)
+        assert response.usage
+        return {
+            "completion": response.choices[0].message.content,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta=meta,
-        )
 
-    async def acomplete(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Optional[list[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-
-        with self.track_latency():
-            response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
-
-        completion = response.choices[0].message.content.strip()
-        usage = response.usage
-
-        meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
-            "latency": self.latency,
+    async def _acomplete(self, data: dict) -> dict:
+        response = await self.async_client.chat.completions.create(model=self.model, stream=False, **data)
+        assert response.usage
+        return {
+            "completion": response.choices[0].message.content,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta=meta,
-        )
 
-    def complete_stream(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> StreamResult:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
-
-        response = self.client.chat.completions.create(model=self.model, **model_inputs)
-        stream = self._process_stream(response)
-
-        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    def _process_stream(self, response):
-        for chunk in response:
+    def _complete_stream(self, data: dict) -> t.Iterator[str]:
+        for chunk in self.client.chat.completions.create(model=self.model, stream=True, **data):
             if chunk.choices[0].delta.content is not None:
                 yield chunk.choices[0].delta.content
 
-    async def acomplete_stream(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> AsyncStreamResult:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
-
-        response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
-        stream = self._aprocess_stream(response)
-        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    async def _aprocess_stream(self, response):
-        async for chunk in response:
+    async def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
+        async for chunk in await self.async_client.chat.completions.create(model=self.model, stream=True, **data):
             if chunk.choices[0].delta.content is not None:
                 yield chunk.choices[0].delta.content

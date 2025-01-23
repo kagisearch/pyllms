@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 import json
-from collections.abc import AsyncGenerator, Generator
-from typing import Optional, Union
+import typing as t
+from dataclasses import dataclass
 
 import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
-from ..results.result import AsyncStreamResult, Result, StreamResult
-from .base_provider import BaseProvider
+from .base import StreamProvider, msg_as_str
 
 
-class OpenAIProvider(BaseProvider):
+@dataclass
+class OpenAIProvider(StreamProvider):
     # cost is per million tokens
     MODEL_INFO = {
         "gpt-3.5-turbo": {
@@ -19,55 +21,43 @@ class OpenAIProvider(BaseProvider):
             "is_chat": True,
             "output_limit": 4_096,
         },
-        "gpt-3.5-turbo-1106": {
+        "gpt-3.5-turbo-instruct": {
             "prompt": 2.0,
             "completion": 2.0,
-            "token_limit": 16_385,
-            "is_chat": True,
-            "output_limit": 4_096,
+            "token_limit": 4096,
+            "is_chat": False,
         },
-        "gpt-3.5-turbo-instruct": {"prompt": 2.0, "completion": 2.0, "token_limit": 4096, "is_chat": False},
-        "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8192, "is_chat": True},
-        "gpt-4-1106-preview": {
-            "prompt": 10.0,
-            "completion": 30.0,
-            "token_limit": 128000,
+        "gpt-4": {
+            "prompt": 30.0,
+            "completion": 60.0,
+            "token_limit": 8192,
             "is_chat": True,
-            "output_limit": 4_096,
-        },
-        "gpt-4-turbo-preview": {
-            "prompt": 10.0,
-            "completion": 30.0,
-            "token_limit": 128000,
-            "is_chat": True,
-            "output_limit": 4_096,
         },
         "gpt-4-turbo": {
             "prompt": 10.0,
             "completion": 30.0,
-            "token_limit": 128000,
+            "token_limit": 128_000,
             "is_chat": True,
             "output_limit": 4_096,
         },
-        "gpt-4o": {"prompt": 2.5, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-4o": {
+            "prompt": 2.5,
+            "completion": 10.0,
+            "token_limit": 128_000,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
         "gpt-4o-mini": {
             "prompt": 0.15,
             "completion": 0.60,
-            "token_limit": 128000,
-            "is_chat": True,
-            "output_limit": 4_096,
-        },
-        "gpt-4o-2024-08-06": {
-            "prompt": 2.50,
-            "completion": 10.0,
-            "token_limit": 128000,
+            "token_limit": 128_000,
             "is_chat": True,
             "output_limit": 4_096,
         },
         "o1-preview": {
             "prompt": 15.0,
             "completion": 60.0,
-            "token_limit": 128000,
+            "token_limit": 128_000,
             "is_chat": True,
             "output_limit": 4_096,
             "use_max_completion_tokens": True,
@@ -75,7 +65,7 @@ class OpenAIProvider(BaseProvider):
         "o1-mini": {
             "prompt": 3.0,
             "completion": 12.0,
-            "token_limit": 128000,
+            "token_limit": 128_000,
             "is_chat": True,
             "output_limit": 4_096,
             "use_max_completion_tokens": True,
@@ -83,318 +73,113 @@ class OpenAIProvider(BaseProvider):
         "o1": {
             "prompt": 15.0,
             "completion": 60.0,
-            "token_limit": 200000,
+            "token_limit": 200_000,
             "is_chat": True,
-            "output_limit": 100000,
+            "output_limit": 100_000,
             "use_max_completion_tokens": True,
         },
     }
 
-    def __init__(
-        self,
-        api_key: Union[str, None] = None,
-        model: Union[str, None] = None,
-        client_kwargs: Union[dict, None] = None,
-        async_client_kwargs: Union[dict, None] = None,
-    ):
-        if model is None:
-            model = list(self.MODEL_INFO.keys())[0]
-        self.model = model
-        if client_kwargs is None:
-            client_kwargs = {}
-        self.client = OpenAI(api_key=api_key, **client_kwargs)
-        if async_client_kwargs is None:
-            async_client_kwargs = {}
-        self.async_client = AsyncOpenAI(api_key=api_key, **async_client_kwargs)
+    def __post_init__(self):
+        super().__post_init__()
+        self.client = OpenAI(api_key=self.api_key)
+        self.async_client = AsyncOpenAI(api_key=self.api_key)
 
-    @property
-    def is_chat_model(self) -> bool:
-        return self.MODEL_INFO[self.model]["is_chat"]
-
-    def count_tokens(self, content: Union[str, list[dict]]) -> int:
+    def _count_tokens(self, content: list[dict]) -> int:
         enc = tiktoken.encoding_for_model(self.model)
-        if isinstance(content, list):
-            # When field name is present, ChatGPT will ignore the role token.
-            # Adopted from OpenAI cookbook
-            # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-            # every message follows <im_start>{role/name}\n{content}<im_end>\n
-            formatting_token_count = 4
+        # When field name is present, ChatGPT will ignore the role token.
+        # Adopted from OpenAI cookbook
+        # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
+        # every message follows <im_start>{role/name}\n{content}<im_end>\n
+        formatting_token_count = 4
 
-            messages = content
-            messages_text = ["".join(message.values()) for message in messages]
-            tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
+        messages = content
+        messages_text = [msg_as_str([message]) for message in messages]
+        tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
 
-            n_tokens_list = []
-            for token, message in zip(tokens, messages):
-                n_tokens = len(token) + formatting_token_count
-                if "name" in message:
-                    n_tokens += -1
-                n_tokens_list.append(n_tokens)
-            return sum(n_tokens_list)
-        return len(enc.encode(content, disallowed_special=()))
+        n_tokens_list = []
+        for token, message in zip(tokens, messages):
+            n_tokens = len(token) + formatting_token_count
+            if "name" in message:
+                n_tokens += -1
+            n_tokens_list.append(n_tokens)
+        return sum(n_tokens_list)
 
-    def _prepare_model_inputs(
+    def _prepare_input(
         self,
         prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
+        history: list[dict] | None = None,
+        system_message: str | list[dict] | None = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
     ) -> dict:
-        if self.is_chat_model:
-            messages = [{"role": "user", "content": prompt}]
+        messages = [{"role": "user", "content": prompt}]
 
-            if history:
-                messages = [*history, *messages]
+        if history:
+            messages = [*history, *messages]
 
-            if isinstance(system_message, str):
-                messages = [{"role": "system", "content": system_message}, *messages]
+        if isinstance(system_message, str):
+            messages = [{"role": "system", "content": system_message}, *messages]
 
-            # users can input multiple full system message in dict form
-            elif isinstance(system_message, list):
-                messages = [*system_message, *messages]
+        # users can input multiple full system message in dict form
+        elif isinstance(system_message, list):
+            messages = [*system_message, *messages]
 
-            model_inputs = {
-                "messages": messages,
-                "stream": stream,
-                **kwargs,
-            }
+        model_inputs = {
+            "messages": messages,
+            "stream": stream,
+            **kwargs,
+        }
 
-            # Use max_completion_tokens for models that require it
-            if self.MODEL_INFO[self.model].get("use_max_completion_tokens", False):
-                model_inputs["max_completion_tokens"] = max_tokens
-            else:
-                model_inputs["max_tokens"] = max_tokens
-                model_inputs["temperature"] = temperature
-
+        # Use max_completion_tokens for models that require it
+        if self.MODEL_INFO[self.model].get("use_max_completion_tokens", False):
+            model_inputs["max_completion_tokens"] = max_tokens
         else:
-            if history:
-                msg = f"history argument is not supported for {self.model} model"
-                raise ValueError(msg)
-
-            if system_message:
-                msg = f"system_message argument is not supported for {self.model} model"
-                raise ValueError(msg)
-
-            model_inputs = {
-                "prompt": prompt,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "stream": stream,
-                **kwargs,
-            }
+            model_inputs["max_tokens"] = max_tokens
+            model_inputs["temperature"] = temperature
         return model_inputs
 
-    def complete(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Optional[list[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        """
-        Args:
-            history: messages in OpenAI format, each dict must include role and content key.
-            system_message: system messages in OpenAI format, must have role and content key.
-              It can has name key to include few-shots examples.
-        """
-
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-
-        with self.track_latency():
-            if self.is_chat_model:
-                response = self.client.chat.completions.create(model=self.model, **model_inputs)
-            else:
-                response = self.client.completions.create(model=self.model, **model_inputs)
-
-        is_func_call = response.choices[0].finish_reason == "function_call"
-        function_call = {}
-        completion = ""
-        if self.is_chat_model:
-            if is_func_call:
-                function_call = {
-                    "name": response.choices[0].message.function_call.name,
-                    "arguments": json.loads(response.choices[0].message.function_call.arguments),
-                }
-            else:
-                completion = response.choices[0].message.content.strip()
+    def _complete(self, data: dict) -> dict:
+        response = self.client.chat.completions.create(model=self.model, stream=False, **data)
+        if response.choices[0].message.function_call:
+            function_call = {
+                "name": response.choices[0].message.function_call.name,
+                "arguments": json.loads(response.choices[0].message.function_call.arguments),
+            }
+            completion = ""
         else:
-            completion = response.choices[0].text.strip()
+            function_call = {}
+            completion = response.choices[0].message.content
 
-        usage = response.usage
-
-        meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
-            "latency": self.latency,
+        assert response.usage
+        return {
+            "completion": completion,
+            "function_call": function_call,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta=meta,
-            function_call=function_call,
-        )
 
-    async def acomplete(
+    async def _acomplete(
         self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Optional[list[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        """
-        Args:
-            history: messages in OpenAI format, each dict must include role and content key.
-            system_message: system messages in OpenAI format, must have role and content key.
-              It can has name key to include few-shots examples.
-        """
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
+        data: dict,
+    ) -> dict:
+        response = await self.async_client.chat.completions.create(model=self.model, stream=False, **data)
 
-        with self.track_latency():
-            if self.is_chat_model:
-                response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
-            else:
-                response = await self.async_client.completions.create(model=self.model, **model_inputs)
-
-        if self.is_chat_model:
-            completion = response.choices[0].message.content.strip()
-        else:
-            completion = response.choices[0].text.strip()
-
-        usage = response.usage
-
-        meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
-            "latency": self.latency,
+        assert response.usage
+        return {
+            "completion": response.choices[0].message.content,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta=meta,
-        )
 
-    def complete_stream(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> StreamResult:
-        """
-        Args:
-            history: messages in OpenAI format, each dict must include role and content key.
-            system_message: system messages in OpenAI format, must have role and content key.
-              It can has name key to include few-shots examples.
-        """
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
+    def _complete_stream(self, data: dict) -> t.Iterator[str]:
+        for chunk in self.client.chat.completions.create(model=self.model, stream=True, **data):
+            if c := chunk.choices[0].delta.content:
+                yield c
 
-        if self.is_chat_model:
-            response = self.client.chat.completions.create(model=self.model, **model_inputs)
-        else:
-            response = self.client.completions.create(model=self.model, **model_inputs)
-        stream = self._process_stream(response)
-
-        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    def _process_stream(self, response: Generator) -> Generator:
-        if self.is_chat_model:
-            chunk_generator = (chunk.choices[0].delta.content for chunk in response)
-        else:
-            chunk_generator = (chunk.choices[0].text for chunk in response)
-
-        while not (first_text := next(chunk_generator)):
-            continue
-        yield first_text.lstrip()
-        for chunk in chunk_generator:
-            if chunk is not None:
-                yield chunk
-
-    async def acomplete_stream(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> AsyncStreamResult:
-        """
-        Args:
-            history: messages in OpenAI format, each dict must include role and content key.
-            system_message: system messages in OpenAI format, must have role and content key.
-              It can has name key to include few-shots examples.
-        """
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
-
-        with self.track_latency():
-            if self.is_chat_model:
-                response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
-            else:
-                response = await self.async_client.completions.create(model=self.model, **model_inputs)
-        stream = self._aprocess_stream(response)
-        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    async def _aprocess_stream(self, response: AsyncGenerator) -> AsyncGenerator:
-        if self.is_chat_model:
-            while True:
-                first_completion = (await response.__anext__()).choices[0].delta.content
-                if first_completion:
-                    yield first_completion.lstrip()
-                    break
-
-            async for chunk in response:
-                completion = chunk.choices[0].delta.content
-                if completion is not None:
-                    yield completion
-        else:
-            while True:
-                first_completion = (await response.__anext__()).choices[0].text
-                if first_completion:
-                    yield first_completion.lstrip()
-                    break
-
-            async for chunk in response:
-                completion = chunk.choices[0].text
-                if completion is not None:
-                    yield completion
+    async def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
+        async for chunk in await self.async_client.chat.completions.create(model=self.model, stream=True, **data):
+            if c := chunk.choices[0].delta.content:
+                yield c

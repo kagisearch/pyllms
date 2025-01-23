@@ -1,3 +1,113 @@
+import concurrent.futures
+import queue
+import re
+import threading
+import time
+
+
+def evaluate_answers(evaluator, query_answer_pairs: list[tuple[str, str, str]]) -> list[int]:
+    system = """You are an evaluator for an AI system. Your task is to determine whether the AI's answer matches the correct answer. You will be given two inputs: the AI's answer and the correct answer. Your job is to compare these and output a binary score: 1 if the AI's answer is correct, and 0 if it is not.
+
+To evaluate the AI's performance:
+1. Carefully compare the AI's answer to the correct answer.
+2. Consider the following:
+    - Does the AI's answer convey the same meaning as the correct answer?
+    - Are there any significant discrepancies or omissions in the AI's answer?
+    - If there are minor differences in wording but the core information is the same, consider it correct.
+
+After your evaluation, provide your assessment in the following format:
+<evaluation>
+[Your reasoning for the score]
+</evaluation>
+<score>[0 or 1]</score>
+
+Remember, output only 0 (not correct) or 1 (correct) as the final score. Do not include any additional explanation or text outside of the specified tags."""
+
+    scores = []
+    for i, (_, correct_answer, ai_answer) in enumerate(query_answer_pairs, start=1):
+        prompt = f"""Here is the AI's answer:
+<ai_answer>
+{ai_answer}
+</ai_answer>
+Here is the correct answer:
+<correct_answer>
+{correct_answer}
+</correct_answer>"""
+
+        evaluator_result = evaluator.complete(prompt, system_message=system).text
+        # print(correct_answer, ai_answer, evaluator_result)
+
+        # Extract the score from the evaluator's response
+        score_match = re.search(r"<score>(\d)</score>", evaluator_result)
+        if score_match:
+            score = int(score_match.group(1))
+            scores.append(score)
+        else:
+            msg = f"Could not extract score from evaluator's response for query {i}"
+            raise ValueError(msg)
+
+    return scores
+
+
+def process_prompt(model, prompt, index, evaluator, evaluation_queue, delay, **kwargs):
+    try:
+        print(model, index)  # , prompt[0])
+        result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
+        if delay > 0:
+            time.sleep(delay)
+        output_data = {
+            "text": result.text,
+            "tokens": result.meta["tokens_completion"],
+            "latency": result.meta["latency"],
+            "cost": result.meta["cost"],
+            "prompt_index": index,
+        }
+    except Exception as e:
+        print(f"Error with {model}: {str(e)}")
+        return None
+
+    if evaluator:
+        evaluation_thread = threading.Thread(
+            target=lambda: evaluation_queue.put(
+                (
+                    index,
+                    evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])[0],
+                )
+            )
+        )
+        evaluation_thread.start()
+        output_data["evaluation_thread"] = evaluation_thread
+
+    return output_data
+
+
+def process_prompts_sequentially(model, prompts, evaluator, delay, **kwargs):
+    results = []
+    evaluation_queue = queue.Queue()
+    evaluation_threads = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        futures = [
+            executor.submit(
+                process_prompt,
+                model,
+                prompt,
+                index,
+                evaluator,
+                evaluation_queue,
+                delay,
+                **kwargs,
+            )
+            for index, prompt in enumerate(prompts)
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            if result is not None:
+                results.append(result)
+                if evaluator and "evaluation_thread" in result:
+                    evaluation_threads.append(result.get("evaluation_thread"))
+    return model, results, evaluation_queue, evaluation_threads
+
+
 PROBLEMS = [
     (
         'Write a one paragraph cover letter for a job in a tech company. Make sure to use the word "the" exactly twice.',

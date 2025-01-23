@@ -1,14 +1,14 @@
-# llms/providers/huggingface.py
+from __future__ import annotations
 
-import os
+from dataclasses import dataclass
 
-from huggingface_hub.inference_api import InferenceApi
+from huggingface_hub import InferenceClient
 
-from ..results.result import Result
-from .base_provider import BaseProvider
+from .base import SyncProvider, from_raw
 
 
-class HuggingfaceHubProvider(BaseProvider):
+@dataclass
+class HuggingfaceHubProvider(SyncProvider):
     MODEL_INFO = {
         "hf_pythia": {
             "full": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
@@ -66,59 +66,36 @@ class HuggingfaceHubProvider(BaseProvider):
         },
     }
 
-    def __init__(self, api_key=None, model=None):
-        if model is None:
-            model = list(self.MODEL_INFO.keys())[0]
-
+    def __post_init__(self, api_key=None, model=None):
+        super().__post_init__()
         self.model = model
+        self.client = InferenceClient(self.MODEL_INFO[model]["full"], token=api_key)
 
-        if api_key is None:
-            api_key = os.getenv("HUGGINFACEHUB_API_KEY")
-
-        self.client = InferenceApi(repo_id=self.MODEL_INFO[model]["full"], token=api_key)
-
-    def _prepare_model_inputs(
+    def _prepare_input(
         self,
         prompt: str,
         temperature: float = 1.0,
         max_tokens: int = 300,
         **kwargs,
-    ):
+    ) -> dict:
         if self.model == "hf_pythia":
             prompt = "<|prompter|" + prompt + "<|endoftext|><|assistant|>"
         max_new_tokens = kwargs.pop("max_length", max_tokens)
-        params = {
+        return {
+            "prompt": from_raw(prompt),
             "temperature": temperature,
             "max_length": max_new_tokens,
             **kwargs,
         }
-        return prompt, params
 
-    def complete(
-        self,
-        prompt: str,
-        temperature: float = 0.01,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        prompt, params = self._prepare_model_inputs(
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-        with self.track_latency():
-            response = self.client(inputs=prompt, params=params)
+    def _count_tokens(self, content: list[dict]) -> int:
+        raise
 
-        completion = response[0]["generated_text"][len(prompt) :]
-        meta = {
-            "tokens_prompt": -1,
-            "tokens_completion": -1,
-            "latency": self.latency,
+    def _complete(self, data: dict) -> dict:
+        prompt: dict = data.pop("prompt")
+        response = self.client.chat_completion(messages=[prompt], **data)
+        return {
+            "completion": response.choices[0].message,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs={"prompt": prompt, **params},
-            provider=self,
-            meta=meta,
-        )

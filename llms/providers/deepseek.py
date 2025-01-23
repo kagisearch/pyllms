@@ -1,13 +1,15 @@
-from typing import Optional, Union
+from __future__ import annotations
+
+from dataclasses import dataclass
 
 import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
-from ..results.result import AsyncStreamResult, Result, StreamResult
-from .base_provider import BaseProvider
+from .base import AsyncProvider
 
 
-class DeepSeekProvider(BaseProvider):
+@dataclass
+class DeepSeekProvider(AsyncProvider):
     MODEL_INFO = {
         "deepseek-chat": {
             "prompt": 0.14,
@@ -25,50 +27,42 @@ class DeepSeekProvider(BaseProvider):
         },
     }
 
-    def __init__(
-        self,
-        api_key: Union[str, None] = None,
-        model: Union[str, None] = None,
-        client_kwargs: Union[dict, None] = None,
-        async_client_kwargs: Union[dict, None] = None,
-    ):
-        if model is None:
-            model = list(self.MODEL_INFO.keys())[0]
-        self.model = model
-        if client_kwargs is None:
-            client_kwargs = {}
-        self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1", **client_kwargs)
-        if async_client_kwargs is None:
-            async_client_kwargs = {}
-        self.async_client = AsyncOpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1", **async_client_kwargs)
+    def __post_init__(self):
+        super().__post_init__()
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.deepseek.com/v1",
+        )
+        self.async_client = AsyncOpenAI(
+            api_key=self.api_key,
+            base_url="https://api.deepseek.com/v1",
+        )
 
     @property
     def is_chat_model(self) -> bool:
         return self.MODEL_INFO[self.model]["is_chat"]
 
-    def count_tokens(self, content: Union[str, list[dict]]) -> int:
+    def _count_tokens(self, content: list[dict]) -> int:
         # DeepSeek uses the same tokenizer as OpenAI
-        enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        if isinstance(content, list):
-            formatting_token_count = 4
-            messages = content
-            messages_text = ["".join(message.values()) for message in messages]
-            tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
+        enc = tiktoken.encoding_for_model(self.model)
+        formatting_token_count = 4
+        messages = content
+        messages_text = ["".join(message.values()) for message in messages]
+        tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
 
-            n_tokens_list = []
-            for token, message in zip(tokens, messages):
-                n_tokens = len(token) + formatting_token_count
-                if "name" in message:
-                    n_tokens += -1
-                n_tokens_list.append(n_tokens)
-            return sum(n_tokens_list)
-        return len(enc.encode(content, disallowed_special=()))
+        n_tokens_list = []
+        for token, message in zip(tokens, messages):
+            n_tokens = len(token) + formatting_token_count
+            if "name" in message:
+                n_tokens += -1
+            n_tokens_list.append(n_tokens)
+        return sum(n_tokens_list)
 
-    def _prepare_model_inputs(
+    def _prepare_input(
         self,
         prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
+        history: list[dict] | None = None,
+        system_message: str | list[dict] | None = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
@@ -92,131 +86,20 @@ class DeepSeekProvider(BaseProvider):
             **kwargs,
         }
 
-    def complete(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Optional[list[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-
-        with self.track_latency():
-            response = self.client.chat.completions.create(model=self.model, **model_inputs)
-
-        completion = response.choices[0].message.content.strip()
-        usage = response.usage
-
-        meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
-            "latency": self.latency,
+    def _complete(self, data: dict) -> dict:
+        response = self.client.chat.completions.create(model=self.model, stream=False, **data)
+        assert response.usage
+        return {
+            "completion": response.choices[0].message.content,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta=meta,
-        )
 
-    async def acomplete(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Optional[list[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-
-        with self.track_latency():
-            response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
-
-        completion = response.choices[0].message.content.strip()
-        usage = response.usage
-
-        meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
-            "latency": self.latency,
+    async def _acomplete(self, data: dict) -> dict:
+        response = await self.async_client.chat.completions.create(model=self.model, stream=False, **data)
+        assert response.usage
+        return {
+            "completion": response.choices[0].message.content,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta=meta,
-        )
-
-    def complete_stream(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> StreamResult:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
-
-        response = self.client.chat.completions.create(model=self.model, **model_inputs)
-        stream = self._process_stream(response)
-
-        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    def _process_stream(self, response):
-        for chunk in response:
-            if chunk.choices[0].delta.content is not None:
-                yield chunk.choices[0].delta.content
-
-    async def acomplete_stream(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> AsyncStreamResult:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
-
-        response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
-        stream = self._aprocess_stream(response)
-        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    async def _aprocess_stream(self, response):
-        async for chunk in response:
-            if chunk.choices[0].delta.content is not None:
-                yield chunk.choices[0].delta.content

@@ -1,15 +1,16 @@
-# llms/providers/cohere.py
+from __future__ import annotations
 
 import os
-from collections.abc import Generator
+import typing as t
+from dataclasses import dataclass
 
 import cohere
 
-from ..results.result import Result, StreamResult
-from .base_provider import BaseProvider
+from .base import StreamProvider, msg_as_str
 
 
-class CohereProvider(BaseProvider):
+@dataclass
+class CohereProvider(StreamProvider):
     MODEL_INFO = {
         "command": {"prompt": 15.0, "completion": 15, "token_limit": 2048},
         "command-nightly": {
@@ -19,21 +20,16 @@ class CohereProvider(BaseProvider):
         },
     }
 
-    def __init__(self, api_key=None, model=None):
-        if api_key is None:
-            api_key = os.getenv("COHERE_API_KEY")
+    def __post_init__(self):
+        super().__post_init__()
+        api_key = self.api_key or os.getenv("COHERE_API_KEY")
         self.client = cohere.Client(api_key)
         self.async_client = cohere.AsyncClient(api_key)
 
-        if model is None:
-            model = list(self.MODEL_INFO.keys())[0]
-        self.model = model
+    def _count_tokens(self, content: list[dict]) -> int:
+        return len(self.client.tokenize(text=msg_as_str(content), model=self.model).tokens)
 
-    def count_tokens(self, content: str) -> int:
-        tokens = self.client.tokenize(content)
-        return len(tokens)
-
-    def _prepare_model_inputs(
+    def _prepare_input(
         self,
         prompt: str,
         temperature: float = 0,
@@ -49,87 +45,36 @@ class CohereProvider(BaseProvider):
             **kwargs,
         }
 
-    def complete(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-        with self.track_latency():
-            response = self.client.generate(
+    def _complete(self, data: dict) -> dict:
+        return {
+            "completion": self.client.chat(
                 model=self.model,
-                **model_inputs,
-            )
+                **data,
+            ).text
+        }
 
-        completion = response.generations[0].text.strip()
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta={"latency": self.latency},
-        )
+    async def _acomplete(self, data: dict) -> dict:
+        async with self.async_client as client:
+            return {
+                "completion": (
+                    await client.chat(
+                        model=self.model,
+                        **data,
+                    )
+                ).text
+            }
 
-    async def acomplete(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-        with self.track_latency():
-            async with self.async_client() as client:
-                response = await client.generate(
-                    model=self.model,
-                    **model_inputs,
-                )
-
-        completion = response.generations[0].text.strip()
-
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta={"latency": self.latency},
-        )
-
-    def complete_stream(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ):
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
-        response = self.client.generate(
+    def _complete_stream(self, data: dict) -> t.Iterator[str]:
+        for token in self.client.chat_stream(
             model=self.model,
-            **model_inputs,
-        )
+            **data,
+        ):
+            yield t.cast(cohere.types.streamed_chat_response.TextGenerationStreamedChatResponse, token).text
 
-        stream = self._process_stream(response)
-        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    def _process_stream(self, response: Generator) -> Generator:
-        first_text = next(response).text
-        yield first_text.lstrip()
-
-        for token in response:
-            yield token.text
+    async def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
+        async with self.async_client as client:
+            async for r in client.chat_stream(
+                model=self.model,
+                **data,
+            ):
+                yield t.cast(cohere.types.streamed_chat_response.TextGenerationStreamedChatResponse, r).text

@@ -1,38 +1,42 @@
-from typing import Optional, Union
+from __future__ import annotations
+
+import typing as t
+from dataclasses import dataclass
 
 import tiktoken
-from together import Together
+import together
+from together import AsyncTogether, Together
 
-from ..results.result import Result, StreamResult
-from .base_provider import BaseProvider
+from .base import StreamProvider, msg_as_str
 
 
-class TogetherProvider(BaseProvider):
+@dataclass
+class TogetherProvider(StreamProvider):
     MODEL_INFO = {
-        "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo": {"prompt": 5.0, "completion": 5.0, "token_limit": 4096},
+        "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo": {
+            "prompt": 5.0,
+            "completion": 5.0,
+            "token_limit": 4096,
+        },
     }
 
-    def __init__(self, api_key: Union[str, None] = None, model: Union[str, None] = None, **kwargs):
-        super().__init__(api_key=api_key, model=model)
-        if model is None:
-            model = "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo"
-        self.model = model
-        self.client = Together(api_key=api_key)
+    def __post_init__(self):
+        super().__post_init__()
+        self.client = Together(api_key=self.api_key)
+        self.async_client = AsyncTogether(api_key=self.api_key)
 
-    def count_tokens(self, content: Union[str, list[dict]]) -> int:
+    def _count_tokens(self, content: list[dict]) -> int:
         # Together uses the same tokenizer as OpenAI
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        if isinstance(content, list):
-            return sum([len(enc.encode(str(message))) for message in content])
-        return len(enc.encode(content))
+        return sum([len(enc.encode(msg_as_str([message]))) for message in content])
 
-    def _prepare_model_inputs(
+    def _prepare_input(
         self,
         prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
+        history: list[dict] | None = None,
+        system_message: str | list[dict] | None = None,
         stream: bool = False,
         **kwargs,
     ) -> dict:
@@ -54,69 +58,51 @@ class TogetherProvider(BaseProvider):
             **kwargs,
         }
 
-    def complete(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Optional[list[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
+    def _complete(self, data: dict) -> dict:
+        response = t.cast(
+            together.types.ChatCompletionResponse,
+            self.client.chat.completions.create(model=self.model, stream=False, **data),
         )
-
-        with self.track_latency():
-            response = self.client.chat.completions.create(model=self.model, **model_inputs)
-
-        completion = response.choices[0].message.content.strip()
-        prompt_tokens = self.count_tokens(model_inputs["messages"])
-        completion_tokens = self.count_tokens(completion)
-
-        meta = {
-            "tokens_prompt": prompt_tokens,
-            "tokens_completion": completion_tokens,
-            "latency": self.latency,
+        assert response.choices
+        assert response.choices[0].message
+        assert response.usage
+        return {
+            "completion": response.choices[0].message.content,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
         }
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta=meta,
+
+    async def _acomplete(self, data: dict) -> dict:
+        response = t.cast(
+            together.types.ChatCompletionResponse,
+            await self.async_client.chat.completions.create(model=self.model, **data),
         )
+        assert response.choices
+        assert response.choices[0].message
+        assert response.usage
+        return {
+            "completion": response.choices[0].message.content,
+            "tokens_prompt": response.usage.prompt_tokens,
+            "tokens_completion": response.usage.completion_tokens,
+        }
 
-    def complete_stream(
-        self,
-        prompt: str,
-        history: Optional[list[dict]] = None,
-        system_message: Union[str, list[dict], None] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> StreamResult:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-            **kwargs,
-        )
+    def _complete_stream(self, data: dict) -> t.Iterator[str]:
+        for chunk in self.client.chat.completions.create(model=self.model, stream=True, **data):
+            chunk = t.cast(together.types.ChatCompletionChunk, chunk)
+            assert chunk.choices
+            assert chunk.choices[0].delta
+            s = chunk.choices[0].delta.content
+            assert s
+            yield s
 
-        response = self.client.chat.completions.create(model=self.model, **model_inputs)
-        stream = self._process_stream(response)
-
-        return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
-
-    def _process_stream(self, response):
-        for chunk in response:
-            yield chunk.choices[0].delta.content
-
-    # Note: Async methods are not implemented for Together AI as their Python SDK doesn't support async operations
+    async def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
+        async for chunk in t.cast(
+            t.AsyncGenerator[together.types.ChatCompletionChunk, None],
+            self.async_client.chat.completions.create(model=self.model, stream=True, **data),
+        ):
+            chunk = t.cast(together.types.ChatCompletionChunk, chunk)
+            assert chunk.choices
+            assert chunk.choices[0].delta
+            s = chunk.choices[0].delta.content
+            assert s
+            yield s
