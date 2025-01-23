@@ -1,0 +1,66 @@
+[project]
+name = "pyllms"
+version = "0.7.2"
+description = "Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, Mistral, OpenRouter, Reka, Groq, Together, Ollama, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark."
+readme = "README.md"
+authors = [{ name = "Vladimir Prelovac", email = "vlad@kagi.com" }]
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Human Machine Interfaces",
+    "Topic :: Text Processing",
+]
+keywords = [
+    "llm",
+    "llms",
+    "large language model",
+    "AI",
+    "NLP",
+    "natural language processing",
+    "gpt",
+    "chatgpt",
+    "openai",
+    "anthropic",
+    "ai21",
+    "cohere",
+    "aleph alpha",
+    "huggingface hub",
+    "vertex ai",
+    "palm",
+    "palm2",
+]
+dependencies = [
+    "openai>=1",
+    "tiktoken",
+    "anthropic>=0.18",
+    "ai21",
+    "cohere",
+    "aleph-alpha-client",
+    "huggingface_hub",
+    "google-cloud-aiplatform",
+    "prettytable",
+    "protobuf>=3.20.3",
+    "grpcio>=1.54.2",
+    "google-generativeai",
+    "mistralai",
+    "ollama",
+    "reka-api",
+    "together",
+]
+
+[project.urls]
+homepage = "https://github.com/kagisearch/pyllms"
+
+[project.optional-dependencies]
+# cli = ["sl-cli", "sl-segment", "sl-utils"]
+local = ["einops", "accelerate"]
