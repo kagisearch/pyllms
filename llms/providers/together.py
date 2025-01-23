@@ -1,9 +1,9 @@
-from typing import AsyncGenerator, Dict, List, Optional, Union
-import tiktoken
+from typing import Optional, Union
 
+import tiktoken
 from together import Together
 
-from ..results.result import AsyncStreamResult, Result, StreamResult
+from ..results.result import Result, StreamResult
 from .base_provider import BaseProvider
 
 
@@ -12,36 +12,30 @@ class TogetherProvider(BaseProvider):
         "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo": {"prompt": 5.0, "completion": 5.0, "token_limit": 4096},
     }
 
-    def __init__(
-        self,
-        api_key: Union[str, None] = None,
-        model: Union[str, None] = None,
-        **kwargs
-    ):
+    def __init__(self, api_key: Union[str, None] = None, model: Union[str, None] = None, **kwargs):
         super().__init__(api_key=api_key, model=model)
         if model is None:
             model = "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo"
         self.model = model
         self.client = Together(api_key=api_key)
 
-    def count_tokens(self, content: Union[str, List[dict]]) -> int:
+    def count_tokens(self, content: Union[str, list[dict]]) -> int:
         # Together uses the same tokenizer as OpenAI
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         if isinstance(content, list):
             return sum([len(enc.encode(str(message))) for message in content])
-        else:
-            return len(enc.encode(content))
+        return len(enc.encode(content))
 
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         messages = [{"content": prompt, "role": "user"}]
 
         if history:
@@ -52,20 +46,19 @@ class TogetherProvider(BaseProvider):
         elif isinstance(system_message, list):
             messages = [*system_message, *messages]
 
-        model_inputs = {
+        return {
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": stream,
             **kwargs,
         }
-        return model_inputs
 
     def complete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -101,8 +94,8 @@ class TogetherProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,

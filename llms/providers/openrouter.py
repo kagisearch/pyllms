@@ -1,6 +1,6 @@
-from typing import AsyncGenerator, Dict, List, Optional, Union
-import tiktoken
+from typing import Optional, Union
 
+import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
@@ -9,17 +9,33 @@ from .base_provider import BaseProvider
 
 class OpenRouterProvider(BaseProvider):
     MODEL_INFO = {
-        "nvidia/llama-3.1-nemotron-70b-instruct": {"prompt": 0.35, "completion": 0.4, "token_limit": 131072, "is_chat": True},
+        "nvidia/llama-3.1-nemotron-70b-instruct": {
+            "prompt": 0.35,
+            "completion": 0.4,
+            "token_limit": 131072,
+            "is_chat": True,
+        },
         "x-ai/grok-2": {"prompt": 5.0, "completion": 10.0, "token_limit": 32768, "is_chat": True},
-        "nousresearch/hermes-3-llama-3.1-405b:free": {"prompt": 0.0, "completion": 0.0, "token_limit": 8192, "is_chat": True},
+        "nousresearch/hermes-3-llama-3.1-405b:free": {
+            "prompt": 0.0,
+            "completion": 0.0,
+            "token_limit": 8192,
+            "is_chat": True,
+        },
         "google/gemini-flash-1.5-exp": {"prompt": 0.0, "completion": 0.0, "token_limit": 1000000, "is_chat": True},
         "liquid/lfm-40b": {"prompt": 0.0, "completion": 0.0, "token_limit": 32768, "is_chat": True},
         "mistralai/ministral-8b": {"prompt": 0.1, "completion": 0.1, "token_limit": 128000, "is_chat": True},
         "qwen/qwen-2.5-72b-instruct": {"prompt": 0.35, "completion": 0.4, "token_limit": 131072, "is_chat": True},
         "x-ai/grok-2-1212": {"prompt": 2.0, "completion": 10.0, "token_limit": 131072, "is_chat": True},
-        "amazon/nova-pro-v1": {"prompt": 0.8, "completion": 3.2, "token_limit": 300000, "is_chat": True, "image_input": 1.2},
+        "amazon/nova-pro-v1": {
+            "prompt": 0.8,
+            "completion": 3.2,
+            "token_limit": 300000,
+            "is_chat": True,
+            "image_input": 1.2,
+        },
         "qwen/qwq-32b-preview": {"prompt": 0.12, "completion": 0.18, "token_limit": 32768, "is_chat": True},
-        "mistralai/mistral-large-2411": {"prompt": 2.0, "completion": 6.0, "token_limit": 128000, "is_chat": True}
+        "mistralai/mistral-large-2411": {"prompt": 2.0, "completion": 6.0, "token_limit": 128000, "is_chat": True},
     }
 
     def __init__(
@@ -37,13 +53,15 @@ class OpenRouterProvider(BaseProvider):
         self.client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1", **client_kwargs)
         if async_client_kwargs is None:
             async_client_kwargs = {}
-        self.async_client = AsyncOpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1", **async_client_kwargs)
+        self.async_client = AsyncOpenAI(
+            api_key=api_key, base_url="https://openrouter.ai/api/v1", **async_client_kwargs
+        )
 
     @property
     def is_chat_model(self) -> bool:
-        return self.MODEL_INFO[self.model]['is_chat']
+        return self.MODEL_INFO[self.model]["is_chat"]
 
-    def count_tokens(self, content: Union[str, List[dict]]) -> int:
+    def count_tokens(self, content: Union[str, list[dict]]) -> int:
         # OpenRouter uses the same tokenizer as OpenAI
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         if isinstance(content, list):
@@ -59,19 +77,18 @@ class OpenRouterProvider(BaseProvider):
                     n_tokens += -1
                 n_tokens_list.append(n_tokens)
             return sum(n_tokens_list)
-        else:
-            return len(enc.encode(content, disallowed_special=()))
+        return len(enc.encode(content, disallowed_special=()))
 
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         messages = [{"role": "user", "content": prompt}]
 
         if history:
@@ -82,7 +99,7 @@ class OpenRouterProvider(BaseProvider):
         elif isinstance(system_message, list):
             messages = [*system_message, *messages]
 
-        model_inputs = {
+        return {
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
@@ -93,13 +110,12 @@ class OpenRouterProvider(BaseProvider):
             },
             **kwargs,
         }
-        return model_inputs
 
     def complete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -116,11 +132,12 @@ class OpenRouterProvider(BaseProvider):
         with self.track_latency():
             response = self.client.chat.completions.create(model=self.model, **model_inputs)
 
-        if not response or not hasattr(response, 'choices') or not response.choices:
-            raise ValueError("Unexpected response structure from OpenRouter API")
+        if not response or not hasattr(response, "choices") or not response.choices:
+            msg = "Unexpected response structure from OpenRouter API"
+            raise ValueError(msg)
 
         completion = response.choices[0].message.content.strip() if response.choices[0].message else ""
-        usage = response.usage if hasattr(response, 'usage') else None
+        usage = response.usage if hasattr(response, "usage") else None
 
         meta = {
             "tokens_prompt": usage.prompt_tokens if usage else 0,
@@ -137,8 +154,8 @@ class OpenRouterProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -173,8 +190,8 @@ class OpenRouterProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -202,8 +219,8 @@ class OpenRouterProvider(BaseProvider):
     async def acomplete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -220,9 +237,7 @@ class OpenRouterProvider(BaseProvider):
 
         response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
         stream = self._aprocess_stream(response)
-        return AsyncStreamResult(
-            stream=stream, model_inputs=model_inputs, provider=self
-        )
+        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     async def _aprocess_stream(self, response):
         async for chunk in response:

@@ -1,6 +1,7 @@
 # llms/providers/anthropic.py
 
-from typing import AsyncGenerator, Dict, Generator, List, Optional, Union
+from collections.abc import AsyncGenerator, Generator
+from typing import Optional, Union
 
 import anthropic
 
@@ -28,8 +29,18 @@ class AnthropicProvider(BaseProvider):
         "claude-3-haiku-20240307": {"prompt": 0.25, "completion": 1.25, "token_limit": 200_000, "output_limit": 4_096},
         "claude-3-sonnet-20240229": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
         "claude-3-opus-20240229": {"prompt": 15.00, "completion": 75, "token_limit": 200_000, "output_limit": 4_096},
-        "claude-3-5-sonnet-20240620": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
-        "claude-3-5-sonnet-20241022": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
+        "claude-3-5-sonnet-20240620": {
+            "prompt": 3.00,
+            "completion": 15,
+            "token_limit": 200_000,
+            "output_limit": 4_096,
+        },
+        "claude-3-5-sonnet-20241022": {
+            "prompt": 3.00,
+            "completion": 15,
+            "token_limit": 200_000,
+            "output_limit": 4_096,
+        },
     }
 
     def __init__(
@@ -50,7 +61,7 @@ class AnthropicProvider(BaseProvider):
             async_client_kwargs = {}
         self.async_client = anthropic.AsyncAnthropic(api_key=api_key, **async_client_kwargs)
 
-    def count_tokens(self, content: str | Dict) -> int:
+    def count_tokens(self, content: str | dict) -> int:
         if isinstance(content, str):
             return self.client.count_tokens(content)
 
@@ -70,15 +81,15 @@ class AnthropicProvider(BaseProvider):
     def _prepare_text_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         ai_prompt: str = "",
         system_message: Union[str, None] = None,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         if history is None:
             history_prompt = ""
         else:
@@ -91,9 +102,8 @@ class AnthropicProvider(BaseProvider):
                 elif role == "assistant":
                     role_prompt = anthropic.AI_PROMPT
                 else:
-                    raise ValueError(
-                        f"Invalid role {role}, role must be user or assistant."
-                    )
+                    msg = f"Invalid role {role}, role must be user or assistant."
+                    raise ValueError(msg)
 
                 formatted_message = f"{role_prompt}{content}"
                 history_text_list.append(formatted_message)
@@ -103,8 +113,9 @@ class AnthropicProvider(BaseProvider):
         if system_message is None:
             system_prompts = ""
         else:
-            if not self.model.startswith(( "claude-2", "claude-3")):
-                raise ValueError("System message only available for Claude-2+ model")
+            if not self.model.startswith(("claude-2", "claude-3")):
+                msg = "System message only available for Claude-2+ model"
+                raise ValueError(msg)
             system_prompts = f"{system_message.rstrip()}"
 
         formatted_prompt = (
@@ -115,7 +126,7 @@ class AnthropicProvider(BaseProvider):
 
         if stop_sequences is None:
             stop_sequences = [anthropic.HUMAN_PROMPT]
-        model_inputs = {
+        return {
             "prompt": formatted_prompt,
             "temperature": temperature,
             "max_tokens_to_sample": max_tokens_to_sample,
@@ -123,19 +134,18 @@ class AnthropicProvider(BaseProvider):
             "stream": stream,
             **kwargs,
         }
-        return model_inputs
 
     def _prepare_message_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         ai_prompt: str = "",
         system_message: Union[str, None] = None,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         history = history or []
         system_message = system_message or ""
         max_tokens = kwargs.pop("max_tokens_to_sample", max_tokens)
@@ -144,28 +154,28 @@ class AnthropicProvider(BaseProvider):
             messages.append({"role": "assistant", "content": ai_prompt})
 
         if system_message and self.model.startswith("claude-instant"):
-            raise ValueError("System message is not supported for Claude instant")
-        model_inputs = {
+            msg = "System message is not supported for Claude instant"
+            raise ValueError(msg)
+        return {
             "messages": messages,
             "system": system_message,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stop_sequences": stop_sequences,
         }
-        return model_inputs
 
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         ai_prompt: str = "",
         system_message: Union[str, None] = None,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         if self.support_message_api:
             return self._prepare_message_inputs(
                 prompt=prompt,
@@ -177,26 +187,25 @@ class AnthropicProvider(BaseProvider):
                 system_message=system_message,
                 **kwargs,
             )
-        else:
-            return self._prepare_text_inputs(
-                prompt=prompt,
-                history=history,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                stop_sequences=stop_sequences,
-                ai_prompt=ai_prompt,
-                system_message=system_message,
-                stream=stream,
-                **kwargs,
-            )
+        return self._prepare_text_inputs(
+            prompt=prompt,
+            history=history,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stop_sequences=stop_sequences,
+            ai_prompt=ai_prompt,
+            system_message=system_message,
+            stream=stream,
+            **kwargs,
+        )
 
     def complete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         ai_prompt: str = "",
         system_message: Union[str, None] = None,
         **kwargs,
@@ -241,10 +250,10 @@ class AnthropicProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         ai_prompt: str = "",
         system_message: Union[str, None] = None,
         **kwargs,
@@ -285,10 +294,10 @@ class AnthropicProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         ai_prompt: str = "",
         system_message: Union[str, None] = None,
         **kwargs,
@@ -323,8 +332,7 @@ class AnthropicProvider(BaseProvider):
 
     def _process_message_stream(self, response) -> Generator:
         with response as stream_manager:
-            for text in stream_manager.text_stream:
-                yield text
+            yield from stream_manager.text_stream
 
     def _process_stream(self, response: Generator) -> Generator:
         first_completion = next(response).completion
@@ -336,10 +344,10 @@ class AnthropicProvider(BaseProvider):
     async def acomplete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         ai_prompt: str = "",
         system_message: Union[str, None] = None,
         **kwargs,
@@ -365,14 +373,10 @@ class AnthropicProvider(BaseProvider):
             response = self.async_client.messages.stream(model=self.model, **model_inputs)
             stream = self._aprocess_message_stream(response)
         else:
-            response = await self.async_client.completions.create(
-                model=self.model, **model_inputs
-            )
+            response = await self.async_client.completions.create(model=self.model, **model_inputs)
             stream = self._aprocess_stream(response)
 
-        return AsyncStreamResult(
-            stream=stream, model_inputs=model_inputs, provider=self
-        )
+        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     async def _aprocess_message_stream(self, response) -> AsyncGenerator:
         async with response as stream_manager:

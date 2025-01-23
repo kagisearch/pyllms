@@ -1,7 +1,7 @@
-from typing import AsyncGenerator, Dict, List, Optional, Union
-import tiktoken
+from typing import Optional, Union
 
-from reka.client import Reka, AsyncReka
+import tiktoken
+from reka.client import AsyncReka, Reka
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
@@ -14,12 +14,7 @@ class RekaProvider(BaseProvider):
         "reka-core": {"prompt": 3.0, "completion": 15.0, "token_limit": 128000},
     }
 
-    def __init__(
-        self,
-        api_key: Union[str, None] = None,
-        model: Union[str, None] = None,
-        **kwargs
-    ):
+    def __init__(self, api_key: Union[str, None] = None, model: Union[str, None] = None, **kwargs):
         super().__init__(api_key=api_key, model=model)
         if model is None:
             model = "reka-core"
@@ -27,24 +22,23 @@ class RekaProvider(BaseProvider):
         self.client = Reka(api_key=api_key)
         self.async_client = AsyncReka(api_key=api_key)
 
-    def count_tokens(self, content: Union[str, List[dict]]) -> int:
+    def count_tokens(self, content: Union[str, list[dict]]) -> int:
         # Reka uses the same tokenizer as OpenAI
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         if isinstance(content, list):
             return sum([len(enc.encode(str(message))) for message in content])
-        else:
-            return len(enc.encode(content))
+        return len(enc.encode(content))
 
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         messages = [{"content": prompt, "role": "user"}]
 
         if history:
@@ -55,19 +49,18 @@ class RekaProvider(BaseProvider):
         elif isinstance(system_message, list):
             messages = [*system_message, *messages]
 
-        model_inputs = {
+        return {
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
             **kwargs,
         }
-        return model_inputs
 
     def complete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -103,8 +96,8 @@ class RekaProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -140,8 +133,8 @@ class RekaProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -167,8 +160,8 @@ class RekaProvider(BaseProvider):
     async def acomplete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -184,9 +177,7 @@ class RekaProvider(BaseProvider):
 
         response = await self.async_client.chat.create_stream(model=self.model, **model_inputs)
         stream = self._aprocess_stream(response)
-        return AsyncStreamResult(
-            stream=stream, model_inputs=model_inputs, provider=self
-        )
+        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     async def _aprocess_stream(self, response):
         async for chunk in response:

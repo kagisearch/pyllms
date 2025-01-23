@@ -1,7 +1,7 @@
 # llms/providers/cohere.py
 
 import os
-from typing import Dict, Generator
+from collections.abc import Generator
 
 import cohere
 
@@ -40,15 +40,14 @@ class CohereProvider(BaseProvider):
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
-        model_inputs = {
+    ) -> dict:
+        return {
             "prompt": prompt,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": stream,
             **kwargs,
         }
-        return model_inputs
 
     def complete(
         self,

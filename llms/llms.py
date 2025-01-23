@@ -1,75 +1,68 @@
+import asyncio
+import builtins
+import concurrent.futures
 import os
+import queue
 import re
 import statistics
 import threading
 import time
-import queue
-import concurrent.futures
-import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from logging import getLogger
-from typing import List, Optional, Tuple, Type, Union, Dict, Any, Callable
+from typing import Any, Optional, Union
 
 from prettytable import PrettyTable
 
 from .providers import (
-    OpenAIProvider,
+    AI21Provider,
+    AlephAlphaProvider,
     AnthropicProvider,
     BedrockAnthropicProvider,
-    AI21Provider,
     CohereProvider,
-    AlephAlphaProvider,
-    HuggingfaceHubProvider,
-    GoogleProvider,
+    DeepSeekProvider,
     GoogleGenAIProvider,
+    GoogleProvider,
+    GroqProvider,
+    HuggingfaceHubProvider,
     MistralProvider,
     OllamaProvider,
-    DeepSeekProvider,
-    GroqProvider,
+    OpenAIProvider,
+    OpenRouterProvider,
     RekaProvider,
     TogetherProvider,
-    OpenRouterProvider,
 )
 from .providers.base_provider import BaseProvider
 from .results.result import AsyncStreamResult, Result, Results, StreamResult
-
 
 LOGGER = getLogger(__name__)
 
 
 @dataclass
 class Provider:
-    provider: Type[BaseProvider]
+    provider: type[BaseProvider]
     api_key_name: Optional[str] = None
     api_key: Optional[str] = None
     needs_api_key: bool = True
 
 
 def create_provider(
-    provider_class: Type[BaseProvider],
+    provider_class: type[BaseProvider],
     api_key_name: Optional[str] = None,
     needs_api_key: bool = True,
 ) -> Provider:
-   
-    return Provider(
-        provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key
-    )
+    return Provider(provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key)
 
 
 class LLMS:
-    _provider_map: Dict[str, Provider] = {
+    _provider_map: dict[str, Provider] = {
         "OpenAI": create_provider(OpenAIProvider, "OPENAI_API_KEY"),
         "Anthropic": create_provider(AnthropicProvider, "ANTHROPIC_API_KEY"),
-        "BedrockAnthropic": create_provider(
-            BedrockAnthropicProvider, needs_api_key=False
-        ),
+        "BedrockAnthropic": create_provider(BedrockAnthropicProvider, needs_api_key=False),
         "AI21": create_provider(AI21Provider, "AI21_API_KEY"),
         "Cohere": create_provider(CohereProvider, "COHERE_API_KEY"),
         "AlephAlpha": create_provider(AlephAlphaProvider, "ALEPHALPHA_API_KEY"),
-        "HuggingfaceHub": create_provider(
-            HuggingfaceHubProvider, "HUGGINFACEHUB_API_KEY"
-        ),
+        "HuggingfaceHub": create_provider(HuggingfaceHubProvider, "HUGGINFACEHUB_API_KEY"),
         "GoogleGenAI": create_provider(GoogleGenAIProvider, "GOOGLE_API_KEY"),
         "Mistral": create_provider(MistralProvider, "MISTRAL_API_KEY"),
         "Google": create_provider(GoogleProvider, needs_api_key=False),
@@ -80,12 +73,10 @@ class LLMS:
         "Together": create_provider(TogetherProvider, "TOGETHER_API_KEY"),
         "OpenRouter": create_provider(OpenRouterProvider, "OPENROUTER_API_KEY"),
     }
-    _providers: List[BaseProvider] = []
-    _models: List[str] = []
+    _providers: list[BaseProvider] = []
+    _models: list[str] = []
 
-    def __init__(
-        self, model: Union[str, List[str], None] = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, model: Union[str, list[str], None] = None, **kwargs: Any) -> None:
         """Programmatically load api keys and instantiate providers."""
         self._load_api_keys(kwargs)
         self._set_models(model)
@@ -98,7 +89,7 @@ class LLMS:
     def n_provider(self) -> int:
         return len(self._providers)
 
-    def list(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list(self, query: Optional[str] = None) -> list[dict[str, Any]]:
         return [
             {
                 "provider": provider.__name__,
@@ -107,22 +98,14 @@ class LLMS:
             }
             for provider in [p.provider for p in self._provider_map.values()]
             for model, cost in provider.MODEL_INFO.items()
-            if not query
-            or (
-                query.lower() in model.lower()
-                or query.lower() in provider.__name__.lower()
-            )
+            if not query or (query.lower() in model.lower() or query.lower() in provider.__name__.lower())
         ]
 
-    def count_tokens(
-        self, content: Union[str, List[Dict[str, Any]]]
-    ) -> Union[int, List[int]]:
+    def count_tokens(self, content: Union[str, builtins.list[dict[str, Any]]]) -> Union[int, builtins.list[int]]:
         results = [provider.count_tokens(content) for provider in self._providers]
         return results if self.n_provider > 1 else results[0]
 
-    def _process_completion(
-        self, prompt: str, is_async: bool, **kwargs: Any
-    ) -> Union[Result, Results]:
+    def _process_completion(self, prompt: str, is_async: bool, **kwargs: Any) -> Union[Result, Results]:
         async def _async_generate(provider):
             return await provider.acomplete(prompt, **kwargs)
 
@@ -133,18 +116,15 @@ class LLMS:
             if is_async:
 
                 async def gather_results():
-                    return await asyncio.gather(
-                        *[_async_generate(provider) for provider in self._providers]
-                    )
+                    return await asyncio.gather(*[_async_generate(provider) for provider in self._providers])
 
                 results = asyncio.run(gather_results())
             else:
                 with ThreadPoolExecutor() as executor:
                     results = list(executor.map(_sync_generate, self._providers))
             return Results(results)
-        else:
-            provider = self._providers[0]
-            return _async_generate(provider) if is_async else _sync_generate(provider)
+        provider = self._providers[0]
+        return _async_generate(provider) if is_async else _sync_generate(provider)
 
     def complete(self, prompt: str, **kwargs: Any) -> Union[Result, Results]:
         return self._process_completion(prompt, is_async=False, **kwargs)
@@ -154,17 +134,19 @@ class LLMS:
 
     def complete_stream(self, prompt: str, **kwargs: Any) -> StreamResult:
         if self.n_provider > 1:
-            raise ValueError("Streaming is possible only with a single model")
+            msg = "Streaming is possible only with a single model"
+            raise ValueError(msg)
         return self._providers[0].complete_stream(prompt, **kwargs)
 
     async def acomplete_stream(self, prompt: str, **kwargs: Any) -> AsyncStreamResult:
         if self.n_provider > 1:
-            raise ValueError("Streaming is possible only with a single model")
+            msg = "Streaming is possible only with a single model"
+            raise ValueError(msg)
         return await self._providers[0].acomplete_stream(prompt, **kwargs)
 
     def benchmark(
         self,
-        problems: Optional[List[Tuple[str, str]]] = None,
+        problems: Optional[builtins.list[tuple[str, str]]] = None,
         evaluator: Optional[BaseProvider] = None,
         show_outputs: bool = False,
         html: bool = False,
@@ -198,9 +180,9 @@ class LLMS:
                     "My answer is no.",
                 ),
                 (
-                    """given sentence 'today is a sunny day' and instructions 
+                    """given sentence 'today is a sunny day' and instructions
 
-1. replace words with number of commas equal to the length of the word 
+1. replace words with number of commas equal to the length of the word
 
 2. if there are three or more commas in the new sentence, replace commas with dots
 
@@ -274,14 +256,14 @@ what does this do, in one sentence?""",
                     "Calculate Easter dates within the Gregorian Calendar.",
                 ),
                 (
-                    """#include <stdio.h> 
+                    """#include <stdio.h>
 
 #define N(a)       "%"#a"$hhn"
 #define O(a,b)     "%10$"#a"d"N(b)
 #define U          "%10$.*37$d"
 #define G(a)       "%"#a"$s"
 #define H(a,b)     G(a)G(b)
-#define T(a)       a a 
+#define T(a)       a a
 #define s(a)       T(a)T(a)
 #define A(a)       s(a)T(a)a
 #define n(a)       A(a)a
@@ -553,14 +535,17 @@ Question: Is there a series of flights that goes from city F to city I?",
                     "Abe can paint the room in 15 hours, Bea can paint 50 percent faster than Abe, and Coe can paint twice as fast as Abe. Abe begins to paint the room and works alone for the first hour and a half. Then Bea joins Abe, and they work together until half the room is painted. Then Coe joins Abe and Bea, and they work together until the entire room is painted. Find the number of minutes after Abe begins for the three of them to finish painting the room.",
                     "334",
                 ),
-                ("In the fibonnaci sequence starting with 10, then seven unknown numbers in sequence and then 11, find the number in the sequence after 10. All numbers in this sequence adhere to fibonnaci sequence rules. Output solution as a fraction.", "-17/3"),
-                ("i have three balls next to each other; yellow then to the right blue then to the right red. i take two outmost balls and swap them then take blue and swap with yellow, then take two outmost and swap them, then swap  blue and yellow again. output just final orders of the balls and no other text", "yellow, blue, red"),
-                
+                (
+                    "In the fibonnaci sequence starting with 10, then seven unknown numbers in sequence and then 11, find the number in the sequence after 10. All numbers in this sequence adhere to fibonnaci sequence rules. Output solution as a fraction.",
+                    "-17/3",
+                ),
+                (
+                    "i have three balls next to each other; yellow then to the right blue then to the right red. i take two outmost balls and swap them then take blue and swap with yellow, then take two outmost and swap them, then swap  blue and yellow again. output just final orders of the balls and no other text",
+                    "yellow, blue, red",
+                ),
             ]
 
-        def evaluate_answers(
-            evaluator, query_answer_pairs: List[Tuple[str, str, str]]
-        ) -> List[int]:
+        def evaluate_answers(evaluator, query_answer_pairs: list[tuple[str, str, str]]) -> list[int]:
             system = """You are an evaluator for an AI system. Your task is to determine whether the AI's answer matches the correct answer. You will be given two inputs: the AI's answer and the correct answer. Your job is to compare these and output a binary score: 1 if the AI's answer is correct, and 0 if it is not.
 
         To evaluate the AI's performance:
@@ -579,9 +564,7 @@ Question: Is there a series of flights that goes from city F to city I?",
         Remember, output only 0 (not correct) or 1 (correct) as the final score. Do not include any additional explanation or text outside of the specified tags."""
 
             scores = []
-            for i, (query, correct_answer, ai_answer) in enumerate(
-                query_answer_pairs, start=1
-            ):
+            for i, (_query, correct_answer, ai_answer) in enumerate(query_answer_pairs, start=1):
                 prompt = f"""Here is the AI's answer:
         <ai_answer>
         {ai_answer}
@@ -591,9 +574,7 @@ Question: Is there a series of flights that goes from city F to city I?",
         {correct_answer}
         </correct_answer>"""
 
-                evaluator_result = evaluator.complete(
-                    prompt, system_message=system
-                ).text
+                evaluator_result = evaluator.complete(prompt, system_message=system).text
                 # print(correct_answer, ai_answer, evaluator_result)
 
                 # Extract the score from the evaluator's response
@@ -602,9 +583,8 @@ Question: Is there a series of flights that goes from city F to city I?",
                     score = int(score_match.group(1))
                     scores.append(score)
                 else:
-                    raise ValueError(
-                        f"Could not extract score from evaluator's response for query {i}"
-                    )
+                    msg = f"Could not extract score from evaluator's response for query {i}"
+                    raise ValueError(msg)
 
             return scores
 
@@ -613,9 +593,7 @@ Question: Is there a series of flights that goes from city F to city I?",
         def process_prompt(model, prompt, index, evaluator, evaluation_queue, **kwargs):
             try:
                 print(model, index)  # , prompt[0])
-                result = model.complete(
-                    prompt[0], max_tokens=1000, temperature=0, **kwargs
-                )
+                result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
                 if delay > 0:
                     time.sleep(delay)
                 output_data = {
@@ -634,9 +612,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                     target=lambda: evaluation_queue.put(
                         (
                             index,
-                            evaluate_answers(
-                                evaluator, [(prompt[0], prompt[1], result.text)]
-                            )[0],
+                            evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])[0],
                         )
                     )
                 )
@@ -673,9 +649,7 @@ Question: Is there a series of flights that goes from city F to city I?",
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(
-                    process_prompts_sequentially, model, problems, evaluator, **kwargs
-                )
+                executor.submit(process_prompts_sequentially, model, problems, evaluator, **kwargs)
                 for model in self._providers
             ]
 
@@ -720,9 +694,7 @@ Question: Is there a series of flights that goes from city F to city I?",
 
         for model in model_results:
             outputs = model_results[model]["outputs"]
-            model_results[model]["median_latency"] = statistics.median(
-                [output["latency"] for output in outputs]
-            )
+            model_results[model]["median_latency"] = statistics.median([output["latency"] for output in outputs])
 
             total_tokens = sum([output["tokens"] for output in outputs])
             total_latency = model_results[model]["total_latency"]
@@ -731,8 +703,7 @@ Question: Is there a series of flights that goes from city F to city I?",
         if evaluator:
             sorted_models = sorted(
                 model_results,
-                key=lambda x: model_results[x]["aggregated_speed"]
-                * sum(filter(None, model_results[x]["evaluation"])),
+                key=lambda x: model_results[x]["aggregated_speed"] * sum(filter(None, model_results[x]["evaluation"])),
                 reverse=True,
             )
         else:
@@ -775,9 +746,9 @@ Question: Is there a series of flights that goes from city F to city I?",
                     str(model),
                     output_data["text"],
                     output_data["tokens"],
-                    f'{output_data["cost"]:.5f}',
-                    f'{output_data["latency"]:.2f}',
-                    f'{output_data["tokens"]/output_data["latency"]:.2f}',
+                    f"{output_data['cost']:.5f}",
+                    f"{output_data['latency']:.2f}",
+                    f"{output_data['tokens'] / output_data['latency']:.2f}",
                 ]
                 if not show_outputs:
                     row_data.remove(output_data["text"])
@@ -792,7 +763,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                     f"{total_tokens}",
                     f"{model_data['total_cost']:.5f}",
                     f"{model_data['median_latency']:.2f}",
-                    f"{total_tokens/model_data['total_latency']:.2f}",
+                    f"{total_tokens / model_data['total_latency']:.2f}",
                 ]
 
             else:
@@ -801,7 +772,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                     f"{total_tokens}",
                     f"{model_data['total_cost']:.5f}",
                     f"{model_data['median_latency']:.2f}",
-                    f"{total_tokens/model_data['total_latency']:.2f}",
+                    f"{total_tokens / model_data['total_latency']:.2f}",
                 ]
             if evaluator:
                 if valid_evaluations > 0:
@@ -816,12 +787,8 @@ Question: Is there a series of flights that goes from city F to city I?",
         easiest_questions = []
         hardest_questions = []
         for i, problem in enumerate(problems):
-            all_correct = all(
-                model_results[model]["evaluation"][i] == 1 for model in model_results
-            )
-            all_incorrect = all(
-                model_results[model]["evaluation"][i] == 0 for model in model_results
-            )
+            all_correct = all(model_results[model]["evaluation"][i] == 1 for model in model_results)
+            all_incorrect = all(model_results[model]["evaluation"][i] == 0 for model in model_results)
 
             if all_correct:
                 easiest_questions.append((i, problem[0]))
@@ -855,48 +822,41 @@ Question: Is there a series of flights that goes from city F to city I?",
 
         if not html:
             return table, questions_table
-        else:
-            return table.get_html_string(), questions_table.get_html_string()
+        return table.get_html_string(), questions_table.get_html_string()
 
-    def _load_api_keys(self, kwargs: Dict[str, Any]) -> None:
+    def _load_api_keys(self, kwargs: dict[str, Any]) -> None:
         self._provider_map = {
             name: Provider(
                 provider=provider.provider,
                 api_key_name=provider.api_key_name,
-                api_key=kwargs.pop(provider.api_key_name.lower(), None)
-                or os.getenv(provider.api_key_name) if provider.api_key_name else None,
+                api_key=kwargs.pop(provider.api_key_name.lower(), None) or os.getenv(provider.api_key_name)
+                if provider.api_key_name
+                else None,
                 needs_api_key=provider.needs_api_key,
             )
             for name, provider in self._provider_map.items()
         }
 
-    def _set_models(self, model: Optional[Union[str, List[str]]]) -> None:
+    def _set_models(self, model: Optional[Union[str, builtins.list[str]]]) -> None:
         default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
-        self._models = (
-            [default_model]
-            if model is None
-            else ([model] if isinstance(model, str) else model)
-        )
+        self._models = [default_model] if model is None else ([model] if isinstance(model, str) else model)
 
     def _validate_model(self, single_model: str, provider: Provider) -> bool:
-        return (
-            single_model in provider.provider.MODEL_INFO
-            and (provider.api_key or not provider.needs_api_key)
-        )
+        return single_model in provider.provider.MODEL_INFO and (provider.api_key or not provider.needs_api_key)
 
-    def _initialize_providers(self, kwargs: Dict[str, Any]) -> None:
-      
+    def _initialize_providers(self, kwargs: dict[str, Any]) -> None:
         self._providers = [
-            provider.provider(model=single_model, **({**kwargs, 'api_key': provider.api_key} if provider.needs_api_key else kwargs))
+            provider.provider(
+                model=single_model, **({**kwargs, "api_key": provider.api_key} if provider.needs_api_key else kwargs)
+            )
             for single_model in self._models
             for provider in self._provider_map.values()
             if self._validate_model(single_model, provider)
         ]
 
         if not self._providers:
-            raise ValueError("No valid providers found for the specified models")
+            msg = "No valid providers found for the specified models"
+            raise ValueError(msg)
 
         for provider in self._providers:
-            LOGGER.info(
-                f"Initialized {provider.model} with {provider.__class__.__name__}"
-            )
+            LOGGER.info(f"Initialized {provider.model} with {provider.__class__.__name__}")

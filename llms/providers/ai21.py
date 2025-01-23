@@ -27,13 +27,12 @@ class AI21Provider(BaseProvider):
         **kwargs,
     ):
         maxTokens = kwargs.pop("maxTokens", max_tokens)
-        model_inputs = {
+        return {
             "prompt": prompt,
             "temperature": temperature,
             "maxTokens": maxTokens,
             **kwargs,
         }
-        return model_inputs
 
     def complete(
         self,

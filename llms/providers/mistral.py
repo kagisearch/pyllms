@@ -1,9 +1,10 @@
-import tiktoken
-from typing import Dict, Union, Optional, List, Generator, AsyncGenerator
-from mistralai.client import MistralClient
-from mistralai.async_client import MistralAsyncClient
-from mistralai.models.chat_completion import ChatMessage
+from collections.abc import AsyncGenerator, Generator
+from typing import Optional, Union
 
+import tiktoken
+from mistralai.async_client import MistralAsyncClient
+from mistralai.client import MistralClient
+from mistralai.models.chat_completion import ChatMessage
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
@@ -30,7 +31,6 @@ class MistralProvider(BaseProvider):
         client_kwargs: Union[dict, None] = None,
         async_client_kwargs: Union[dict, None] = None,
     ):
-
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
@@ -43,7 +43,7 @@ class MistralProvider(BaseProvider):
             async_client_kwargs = {}
         self.async_client = MistralAsyncClient(api_key=api_key, **async_client_kwargs)
 
-    def count_tokens(self, content: str | List[ChatMessage]) -> int:
+    def count_tokens(self, content: str | list[ChatMessage]) -> int:
         # TODO: update after Mistarl support count token in their SDK
         # use gpt 3.5 turbo for estimation now
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
@@ -54,27 +54,27 @@ class MistralProvider(BaseProvider):
             tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
 
             n_tokens_list = []
-            for token, message in zip(tokens, messages):
+            for token, _message in zip(tokens, messages):
                 n_tokens = len(token) + formatting_token_count
                 n_tokens_list.append(n_tokens)
             return sum(n_tokens_list)
-        else:
-            return len(enc.encode(content, disallowed_special=()))
+        return len(enc.encode(content, disallowed_special=()))
 
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
+        stop_sequences: Optional[list[str]] = None,
         system_message: Union[str, None] = None,
         safe_prompt: bool = False,
         random_seed: Union[int, None] = None,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         if stop_sequences:
-            raise ValueError("Parameter `stop` is not supported")
+            msg = "Parameter `stop` is not supported"
+            raise ValueError(msg)
 
         messages = [ChatMessage(role="user", content=prompt)]
         if history:
@@ -85,7 +85,7 @@ class MistralProvider(BaseProvider):
         elif isinstance(system_message, str):
             messages = [ChatMessage(role="system", content=system_message), *messages]
 
-        model_inputs = {
+        return {
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
@@ -94,13 +94,11 @@ class MistralProvider(BaseProvider):
             **kwargs,
         }
 
-        return model_inputs
-
     def complete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         safe_prompt: bool = False,
@@ -140,15 +138,14 @@ class MistralProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         safe_prompt: bool = False,
         random_seed: Union[int, None] = None,
         **kwargs,
     ) -> Result:
-
         model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
@@ -181,15 +178,14 @@ class MistralProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         safe_prompt: bool = False,
         random_seed: Union[int, None] = None,
         **kwargs,
     ) -> StreamResult:
-
         model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
@@ -206,9 +202,7 @@ class MistralProvider(BaseProvider):
         return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     def _process_stream(self, response: Generator) -> Generator:
-        chunk_generator = (
-            chunk.choices[0].delta.content for chunk in response
-        )
+        chunk_generator = (chunk.choices[0].delta.content for chunk in response)
 
         while not (first_text := next(chunk_generator)):
             continue
@@ -220,15 +214,14 @@ class MistralProvider(BaseProvider):
     async def acomplete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         safe_prompt: bool = False,
         random_seed: Union[int, None] = None,
         **kwargs,
     ) -> AsyncStreamResult:
-
         model_inputs = self._prepare_model_inputs(
             prompt=prompt,
             history=history,
@@ -243,9 +236,7 @@ class MistralProvider(BaseProvider):
         with self.track_latency():
             response = self.async_client.chat_stream(model=self.model, **model_inputs)
         stream = self._aprocess_stream(response)
-        return AsyncStreamResult(
-            stream=stream, model_inputs=model_inputs, provider=self
-        )
+        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     async def _aprocess_stream(self, response) -> AsyncGenerator:
         while True:

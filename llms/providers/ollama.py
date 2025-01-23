@@ -1,9 +1,9 @@
-import json
-from typing import Any, Dict, Generator, List, Optional, Union, AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
+from typing import Any, Optional, Union
 
-from ollama import Client, AsyncClient
+from ollama import AsyncClient, Client
 
-from ..results.result import Result, StreamResult, AsyncStreamResult
+from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
 
 
@@ -17,23 +17,24 @@ def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
             model_info[name] = {
                 "prompt": 0.0,
                 "completion": 0.0,
-                "token_limit": 4096  # Default token limit
+                "token_limit": 4096,  # Default token limit
             }
 
         if not pulled_models:
-            raise ValueError("Could not retrieve any models from Ollama")
-    except Exception as e:
+            msg = "Could not retrieve any models from Ollama"
+            raise ValueError(msg)
+    except Exception:
         # Log the error but continue with empty model info
         # print(f"Warning: Could not connect to Ollama server: {str(e)}")
         pass
-   
+
     return model_info
 
 
 class OllamaProvider(BaseProvider):
     MODEL_INFO = _get_model_info()
 
-    def count_tokens(self, content: Union[str, List[Dict[str, Any]]]) -> int:
+    def count_tokens(self, content: Union[str, list[dict[str, Any]]]) -> int:
         """Estimate token count using simple word-based heuristic"""
         if isinstance(content, list):
             # For chat messages, concatenate all content
@@ -47,7 +48,7 @@ class OllamaProvider(BaseProvider):
         self,
         model: Optional[str] = None,
         ollama_host: Optional[str] = "http://localhost:11434",
-        ollama_client_options: Optional[dict] = None
+        ollama_client_options: Optional[dict] = None,
     ):
         self.model = model
         if self.model is None:
@@ -63,22 +64,21 @@ class OllamaProvider(BaseProvider):
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         stream: bool = False,
         max_tokens: Optional[int] = None,  # Add but don't use
         temperature: Optional[float] = None,  # Add but don't use
-        **kwargs
-    ) -> Dict:
+        **kwargs,
+    ) -> dict:
         # Remove unsupported parameters
-        kwargs.pop('max_tokens', None)
-        kwargs.pop('temperature', None)
+        kwargs.pop("max_tokens", None)
+        kwargs.pop("temperature", None)
         if self.is_chat_model:
             messages = [{"role": "user", "content": prompt}]
 
             if history:
                 messages = history + messages
-
 
             if isinstance(system_message, str):
                 messages = [{"role": "system", "content": system_message}, *messages]
@@ -92,14 +92,12 @@ class OllamaProvider(BaseProvider):
             }
         else:
             if history:
-                raise ValueError(
-                    f"history argument is not supported for {self.model} model"
-                )
+                msg = f"history argument is not supported for {self.model} model"
+                raise ValueError(msg)
 
             if system_message:
-                raise ValueError(
-                    f"system_message argument is not supported for {self.model} model"
-                )
+                msg = f"system_message argument is not supported for {self.model} model"
+                raise ValueError(msg)
 
             model_inputs = {
                 "prompt": prompt,
@@ -110,18 +108,11 @@ class OllamaProvider(BaseProvider):
         return model_inputs
 
     def complete(
-        self,
-        prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
-        **kwargs
+        self, prompt: str, history: Optional[list[dict]] = None, system_message: Optional[list[dict]] = None, **kwargs
     ) -> Result:
         try:
             model_inputs = self._prepare_model_inputs(
-                prompt=prompt,
-                history=history,
-                system_message=system_message,
-                **kwargs
+                prompt=prompt, history=history, system_message=system_message, **kwargs
             )
 
             with self.track_latency():
@@ -130,7 +121,8 @@ class OllamaProvider(BaseProvider):
                 message = response["message"]
                 completion = message["content"].strip()
         except Exception as e:
-            raise RuntimeError(f"Ollama completion failed: {str(e)}")
+            msg = f"Ollama completion failed: {str(e)}"
+            raise RuntimeError(msg)
 
         meta = {
             "tokens_prompt": response["prompt_eval_count"],
@@ -148,8 +140,8 @@ class OllamaProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         safe_prompt: bool = False,
@@ -157,11 +149,7 @@ class OllamaProvider(BaseProvider):
         **kwargs,
     ) -> StreamResult:
         model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            stream=True,
-            **kwargs
+            prompt=prompt, history=history, system_message=system_message, stream=True, **kwargs
         )
 
         with self.track_latency():
@@ -189,18 +177,11 @@ class OllamaProvider(BaseProvider):
                 break
 
     async def acomplete(
-        self,
-        prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
-        **kwargs
+        self, prompt: str, history: Optional[list[dict]] = None, system_message: Optional[list[dict]] = None, **kwargs
     ) -> Result:
         try:
             model_inputs = self._prepare_model_inputs(
-                prompt=prompt,
-                history=history,
-                system_message=system_message,
-                **kwargs
+                prompt=prompt, history=history, system_message=system_message, **kwargs
             )
 
             with self.track_latency():
@@ -213,10 +194,11 @@ class OllamaProvider(BaseProvider):
             meta = {
                 "tokens_prompt": response["prompt_eval_count"],
                 "tokens_completion": response["eval_count"],
-                "latency":  self.latency,
+                "latency": self.latency,
             }
         except Exception as e:
-            raise RuntimeError(f"Ollama completion failed: {str(e)}")
+            msg = f"Ollama completion failed: {str(e)}"
+            raise RuntimeError(msg)
 
         return Result(
             text=completion,
@@ -228,20 +210,16 @@ class OllamaProvider(BaseProvider):
     async def acomplete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         safe_prompt: bool = False,
         random_seed: Union[int, None] = None,
-        **kwargs
+        **kwargs,
     ):
         model_inputs = self._prepare_model_inputs(
-            prompt=prompt,
-            history=history,
-            system_message=system_message,
-            stream=True,
-            **kwargs
+            prompt=prompt, history=history, system_message=system_message, stream=True, **kwargs
         )
 
         with self.track_latency():

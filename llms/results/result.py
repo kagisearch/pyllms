@@ -1,6 +1,7 @@
 import inspect
 import json
-from typing import AsyncGenerator, Dict, Generator, List, Optional
+from collections.abc import AsyncGenerator, Generator
+from typing import Optional
 from warnings import warn
 
 from llms.providers.base_provider import BaseProvider
@@ -10,10 +11,10 @@ class Result:
     def __init__(
         self,
         text: str,
-        model_inputs: Dict,
+        model_inputs: dict,
         provider: BaseProvider,
-        meta: Optional[Dict] = None,
-        function_call: Optional[Dict] = None,
+        meta: Optional[dict] = None,
+        function_call: Optional[dict] = None,
     ):
         self._meta = meta or {}
         self.text = text
@@ -25,20 +26,18 @@ class Result:
     def tokens_completion(self) -> int:
         if tokens_completion := self._meta.get("tokens_completion"):
             return tokens_completion
-        else:
-            tokens_completion = self.provider.count_tokens(self.text)
-            self._meta["tokens_completion"] = tokens_completion
-            return tokens_completion
+        tokens_completion = self.provider.count_tokens(self.text)
+        self._meta["tokens_completion"] = tokens_completion
+        return tokens_completion
 
     @property
     def tokens_prompt(self) -> int:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
-        else:
-            prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
-            tokens_prompt = self.provider.count_tokens(prompt)
-            self._meta["tokens_prompt"] = tokens_prompt
-            return tokens_prompt
+        prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
+        tokens_prompt = self.provider.count_tokens(prompt)
+        self._meta["tokens_prompt"] = tokens_prompt
+        return tokens_prompt
 
     @property
     def tokens(self) -> int:
@@ -48,15 +47,12 @@ class Result:
     def cost(self) -> float:
         if cost := self._meta.get("cost"):
             return cost
-        else:
-            cost = self.provider.compute_cost(
-                prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
-            )
-            self._meta["cost"] = cost
-            return cost
+        cost = self.provider.compute_cost(prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion)
+        self._meta["cost"] = cost
+        return cost
 
     @property
-    def meta(self) -> Dict:
+    def meta(self) -> dict:
         return {
             "model": self.provider.model,
             "tokens": self.tokens,
@@ -78,13 +74,13 @@ class Result:
                 "meta": self.meta,
                 "model_inputs": model_inputs,
                 "provider": str(self.provider),
-                "function_call": self.function_call
+                "function_call": self.function_call,
             }
         )
 
 
 class Results:
-    def __init__(self, results: List[Result]):
+    def __init__(self, results: list[Result]):
         self._results = results
 
     @property
@@ -103,9 +99,9 @@ class StreamResult:
     def __init__(
         self,
         stream: Generator,
-        model_inputs: Dict,
+        model_inputs: dict,
         provider: BaseProvider,
-        meta: Optional[Dict] = None,
+        meta: Optional[dict] = None,
     ):
         self._stream = stream
         self._meta = meta or {}
@@ -124,7 +120,7 @@ class StreamResult:
 
     @property
     def stream(self):
-        if not inspect.getgeneratorstate(self._stream) == "GEN_CLOSED":
+        if inspect.getgeneratorstate(self._stream) != "GEN_CLOSED":
             for item in self._stream:
                 self._streamed_text.append(item)
                 yield item
@@ -140,20 +136,18 @@ class StreamResult:
     def tokens_completion(self) -> int:
         if tokens_completion := self._meta.get("tokens_completion"):
             return tokens_completion
-        else:
-            tokens_completion = self.provider.count_tokens(self.text)
-            self._meta["tokens_completion"] = tokens_completion
-            return tokens_completion
+        tokens_completion = self.provider.count_tokens(self.text)
+        self._meta["tokens_completion"] = tokens_completion
+        return tokens_completion
 
     @property
     def tokens_prompt(self) -> int:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
-        else:
-            prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
-            tokens_prompt = self.provider.count_tokens(prompt)
-            self._meta["tokens_prompt"] = tokens_prompt
-            return tokens_prompt
+        prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
+        tokens_prompt = self.provider.count_tokens(prompt)
+        self._meta["tokens_prompt"] = tokens_prompt
+        return tokens_prompt
 
     @property
     def tokens(self) -> int:
@@ -163,15 +157,12 @@ class StreamResult:
     def cost(self) -> float:
         if cost := self._meta.get("cost"):
             return cost
-        else:
-            cost = self.provider.compute_cost(
-                prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
-            )
-            self._meta["cost"] = cost
-            return cost
+        cost = self.provider.compute_cost(prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion)
+        self._meta["cost"] = cost
+        return cost
 
     @property
-    def meta(self) -> Dict:
+    def meta(self) -> dict:
         return {
             "model": self.provider.model,
             "tokens": self.tokens,
@@ -214,9 +205,9 @@ class AsyncStreamResult:
     def __init__(
         self,
         stream: AsyncGenerator,
-        model_inputs: Dict,
+        model_inputs: dict,
         provider: BaseProvider,
-        meta: Optional[Dict] = None,
+        meta: Optional[dict] = None,
     ):
         self._stream = stream
         self._meta = meta or {}
@@ -251,27 +242,26 @@ class AsyncStreamResult:
     @property
     def text(self):
         if not self._stream_exhausted:
-            raise RuntimeError("Please finish streaming the result.")
+            msg = "Please finish streaming the result."
+            raise RuntimeError(msg)
         return "".join(self._streamed_text)
 
     @property
     def tokens_completion(self) -> int:
         if tokens_completion := self._meta.get("tokens_completion"):
             return tokens_completion
-        else:
-            tokens_completion = self.provider.count_tokens(self.text)
-            self._meta["tokens_completion"] = tokens_completion
-            return tokens_completion
+        tokens_completion = self.provider.count_tokens(self.text)
+        self._meta["tokens_completion"] = tokens_completion
+        return tokens_completion
 
     @property
     def tokens_prompt(self) -> int:
         if tokens_prompt := self._meta.get("tokens_prompt"):
             return tokens_prompt
-        else:
-            prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
-            tokens_prompt = self.provider.count_tokens(prompt)
-            self._meta["tokens_prompt"] = tokens_prompt
-            return tokens_prompt
+        prompt = self.model_inputs.get("prompt") or self.model_inputs.get("messages")
+        tokens_prompt = self.provider.count_tokens(prompt)
+        self._meta["tokens_prompt"] = tokens_prompt
+        return tokens_prompt
 
     @property
     def tokens(self) -> int:
@@ -281,15 +271,12 @@ class AsyncStreamResult:
     def cost(self) -> float:
         if cost := self._meta.get("cost"):
             return cost
-        else:
-            cost = self.provider.compute_cost(
-                prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion
-            )
-            self._meta["cost"] = cost
-            return cost
+        cost = self.provider.compute_cost(prompt_tokens=self.tokens_prompt, completion_tokens=self.tokens_completion)
+        self._meta["cost"] = cost
+        return cost
 
     @property
-    def meta(self) -> Dict:
+    def meta(self) -> dict:
         return {
             "model": self.provider.model,
             "tokens": self.tokens,

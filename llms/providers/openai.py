@@ -1,8 +1,9 @@
-from typing import AsyncGenerator, Dict, Generator, List, Optional, Union
-import tiktoken
-
-from openai import AsyncOpenAI, OpenAI
 import json
+from collections.abc import AsyncGenerator, Generator
+from typing import Optional, Union
+
+import tiktoken
+from openai import AsyncOpenAI, OpenAI
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
@@ -11,19 +12,82 @@ from .base_provider import BaseProvider
 class OpenAIProvider(BaseProvider):
     # cost is per million tokens
     MODEL_INFO = {
-        "gpt-3.5-turbo": {"prompt": 2.0, "completion": 2.0, "token_limit": 16_385, "is_chat": True, "output_limit": 4_096},
-        "gpt-3.5-turbo-1106": {"prompt": 2.0, "completion": 2.0, "token_limit": 16_385, "is_chat": True, "output_limit": 4_096},
+        "gpt-3.5-turbo": {
+            "prompt": 2.0,
+            "completion": 2.0,
+            "token_limit": 16_385,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
+        "gpt-3.5-turbo-1106": {
+            "prompt": 2.0,
+            "completion": 2.0,
+            "token_limit": 16_385,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
         "gpt-3.5-turbo-instruct": {"prompt": 2.0, "completion": 2.0, "token_limit": 4096, "is_chat": False},
         "gpt-4": {"prompt": 30.0, "completion": 60.0, "token_limit": 8192, "is_chat": True},
-        "gpt-4-1106-preview": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "gpt-4-turbo-preview": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "gpt-4-turbo": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-4-1106-preview": {
+            "prompt": 10.0,
+            "completion": 30.0,
+            "token_limit": 128000,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
+        "gpt-4-turbo-preview": {
+            "prompt": 10.0,
+            "completion": 30.0,
+            "token_limit": 128000,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
+        "gpt-4-turbo": {
+            "prompt": 10.0,
+            "completion": 30.0,
+            "token_limit": 128000,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
         "gpt-4o": {"prompt": 2.5, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "gpt-4o-mini": {"prompt": 0.15, "completion": 0.60, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "gpt-4o-2024-08-06": {"prompt": 2.50, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "o1-preview": {"prompt": 15.0, "completion": 60.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
-        "o1-mini": {"prompt": 3.0, "completion": 12.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
-        "o1": {"prompt": 15.0, "completion": 60.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
+        "gpt-4o-mini": {
+            "prompt": 0.15,
+            "completion": 0.60,
+            "token_limit": 128000,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
+        "gpt-4o-2024-08-06": {
+            "prompt": 2.50,
+            "completion": 10.0,
+            "token_limit": 128000,
+            "is_chat": True,
+            "output_limit": 4_096,
+        },
+        "o1-preview": {
+            "prompt": 15.0,
+            "completion": 60.0,
+            "token_limit": 128000,
+            "is_chat": True,
+            "output_limit": 4_096,
+            "use_max_completion_tokens": True,
+        },
+        "o1-mini": {
+            "prompt": 3.0,
+            "completion": 12.0,
+            "token_limit": 128000,
+            "is_chat": True,
+            "output_limit": 4_096,
+            "use_max_completion_tokens": True,
+        },
+        "o1": {
+            "prompt": 15.0,
+            "completion": 60.0,
+            "token_limit": 200000,
+            "is_chat": True,
+            "output_limit": 100000,
+            "use_max_completion_tokens": True,
+        },
     }
 
     def __init__(
@@ -45,9 +109,9 @@ class OpenAIProvider(BaseProvider):
 
     @property
     def is_chat_model(self) -> bool:
-        return self.MODEL_INFO[self.model]['is_chat']
+        return self.MODEL_INFO[self.model]["is_chat"]
 
-    def count_tokens(self, content: Union[str, List[dict]]) -> int:
+    def count_tokens(self, content: Union[str, list[dict]]) -> int:
         enc = tiktoken.encoding_for_model(self.model)
         if isinstance(content, list):
             # When field name is present, ChatGPT will ignore the role token.
@@ -67,19 +131,18 @@ class OpenAIProvider(BaseProvider):
                     n_tokens += -1
                 n_tokens_list.append(n_tokens)
             return sum(n_tokens_list)
-        else:
-            return len(enc.encode(content, disallowed_special=()))
+        return len(enc.encode(content, disallowed_special=()))
 
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         if self.is_chat_model:
             messages = [{"role": "user", "content": prompt}]
 
@@ -108,14 +171,12 @@ class OpenAIProvider(BaseProvider):
 
         else:
             if history:
-                raise ValueError(
-                    f"history argument is not supported for {self.model} model"
-                )
+                msg = f"history argument is not supported for {self.model} model"
+                raise ValueError(msg)
 
             if system_message:
-                raise ValueError(
-                    f"system_message argument is not supported for {self.model} model"
-                )
+                msg = f"system_message argument is not supported for {self.model} model"
+                raise ValueError(msg)
 
             model_inputs = {
                 "prompt": prompt,
@@ -129,8 +190,8 @@ class OpenAIProvider(BaseProvider):
     def complete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -164,7 +225,7 @@ class OpenAIProvider(BaseProvider):
             if is_func_call:
                 function_call = {
                     "name": response.choices[0].message.function_call.name,
-                    "arguments": json.loads(response.choices[0].message.function_call.arguments)
+                    "arguments": json.loads(response.choices[0].message.function_call.arguments),
                 }
             else:
                 completion = response.choices[0].message.content.strip()
@@ -189,8 +250,8 @@ class OpenAIProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -238,8 +299,8 @@ class OpenAIProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -270,13 +331,9 @@ class OpenAIProvider(BaseProvider):
 
     def _process_stream(self, response: Generator) -> Generator:
         if self.is_chat_model:
-            chunk_generator = (
-                chunk.choices[0].delta.content for chunk in response
-            )
+            chunk_generator = (chunk.choices[0].delta.content for chunk in response)
         else:
-            chunk_generator = (
-                chunk.choices[0].text for chunk in response
-            )
+            chunk_generator = (chunk.choices[0].text for chunk in response)
 
         while not (first_text := next(chunk_generator)):
             continue
@@ -286,13 +343,13 @@ class OpenAIProvider(BaseProvider):
                 yield chunk
 
     async def acomplete_stream(
-            self,
-            prompt: str,
-            history: Optional[List[dict]] = None,
-            system_message: Union[str, List[dict], None] = None,
-            temperature: float = 0,
-            max_tokens: int = 300,
-            **kwargs,
+        self,
+        prompt: str,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
+        temperature: float = 0,
+        max_tokens: int = 300,
+        **kwargs,
     ) -> AsyncStreamResult:
         """
         Args:
@@ -316,9 +373,7 @@ class OpenAIProvider(BaseProvider):
             else:
                 response = await self.async_client.completions.create(model=self.model, **model_inputs)
         stream = self._aprocess_stream(response)
-        return AsyncStreamResult(
-            stream=stream, model_inputs=model_inputs, provider=self
-        )
+        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     async def _aprocess_stream(self, response: AsyncGenerator) -> AsyncGenerator:
         if self.is_chat_model:

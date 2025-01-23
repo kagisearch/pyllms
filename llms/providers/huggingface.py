@@ -16,47 +16,47 @@ class HuggingfaceHubProvider(BaseProvider):
             "completion": 0,
             "token_limit": 2048,
         },
-         "hf_falcon40b": {
+        "hf_falcon40b": {
             "full": "tiiuae/falcon-40b-instruct",
             "prompt": 0,
             "completion": 0,
             "token_limit": 2048,
-            "local": True
+            "local": True,
         },
-        "hf_falcon7b": {         
+        "hf_falcon7b": {
             "full": "tiiuae/falcon-7b-instruct",
             "prompt": 0,
             "completion": 0,
             "token_limit": 2048,
-            "local": True
+            "local": True,
         },
         "hf_mptinstruct": {
             "full": "mosaicml/mpt-7b-instruct",
             "prompt": 0,
             "completion": 0,
             "token_limit": 2048,
-            "local": True
+            "local": True,
         },
         "hf_mptchat": {
             "full": "mosaicml/mpt-7b-chat",
             "prompt": 0,
             "completion": 0,
             "token_limit": 2048,
-           "local": True
+            "local": True,
         },
         "hf_llava": {
             "full": "liuhaotian/LLaVA-Lightning-MPT-7B-preview",
             "prompt": 0,
             "completion": 0,
             "token_limit": 2048,
-            "local": True
+            "local": True,
         },
         "hf_dolly": {
             "full": "databricks/dolly-v2-12b",
             "prompt": 0,
             "completion": 0,
             "token_limit": -1,
-            "local": True
+            "local": True,
         },
         "hf_vicuna": {
             "full": "CarperAI/stable-vicuna-13b-delta",
@@ -75,9 +75,7 @@ class HuggingfaceHubProvider(BaseProvider):
         if api_key is None:
             api_key = os.getenv("HUGGINFACEHUB_API_KEY")
 
-        self.client = InferenceApi(
-            repo_id=self.MODEL_INFO[model]["full"], token=api_key
-        )
+        self.client = InferenceApi(repo_id=self.MODEL_INFO[model]["full"], token=api_key)
 
     def _prepare_model_inputs(
         self,

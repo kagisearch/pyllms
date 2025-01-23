@@ -45,13 +45,12 @@ class AlephAlphaProvider(BaseProvider):
         prompt = Prompt.from_text(prompt)
         maximum_tokens = kwargs.pop("maximum_tokens", max_tokens)
 
-        model_inputs = CompletionRequest(
+        return CompletionRequest(
             prompt=prompt,
             temperature=temperature,
             maximum_tokens=maximum_tokens,
             **kwargs,
         )
-        return model_inputs
 
     def complete(
         self,

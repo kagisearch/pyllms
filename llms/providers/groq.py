@@ -1,6 +1,6 @@
-from typing import AsyncGenerator, Dict, List, Optional, Union
-import tiktoken
+from typing import Optional, Union
 
+import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
@@ -31,13 +31,15 @@ class GroqProvider(BaseProvider):
         self.client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1", **client_kwargs)
         if async_client_kwargs is None:
             async_client_kwargs = {}
-        self.async_client = AsyncOpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1", **async_client_kwargs)
+        self.async_client = AsyncOpenAI(
+            api_key=api_key, base_url="https://api.groq.com/openai/v1", **async_client_kwargs
+        )
 
     @property
     def is_chat_model(self) -> bool:
-        return self.MODEL_INFO[self.model]['is_chat']
+        return self.MODEL_INFO[self.model]["is_chat"]
 
-    def count_tokens(self, content: Union[str, List[dict]]) -> int:
+    def count_tokens(self, content: Union[str, list[dict]]) -> int:
         # Groq uses the same tokenizer as OpenAI
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         if isinstance(content, list):
@@ -53,19 +55,18 @@ class GroqProvider(BaseProvider):
                     n_tokens += -1
                 n_tokens_list.append(n_tokens)
             return sum(n_tokens_list)
-        else:
-            return len(enc.encode(content, disallowed_special=()))
+        return len(enc.encode(content, disallowed_special=()))
 
     def _prepare_model_inputs(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
         **kwargs,
-    ) -> Dict:
+    ) -> dict:
         messages = [{"role": "user", "content": prompt}]
 
         if history:
@@ -76,20 +77,19 @@ class GroqProvider(BaseProvider):
         elif isinstance(system_message, list):
             messages = [*system_message, *messages]
 
-        model_inputs = {
+        return {
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": stream,
             **kwargs,
         }
-        return model_inputs
 
     def complete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -124,8 +124,8 @@ class GroqProvider(BaseProvider):
     async def acomplete(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Optional[List[dict]] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Optional[list[dict]] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -160,8 +160,8 @@ class GroqProvider(BaseProvider):
     def complete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -189,8 +189,8 @@ class GroqProvider(BaseProvider):
     async def acomplete_stream(
         self,
         prompt: str,
-        history: Optional[List[dict]] = None,
-        system_message: Union[str, List[dict], None] = None,
+        history: Optional[list[dict]] = None,
+        system_message: Union[str, list[dict], None] = None,
         temperature: float = 0,
         max_tokens: int = 300,
         **kwargs,
@@ -207,9 +207,7 @@ class GroqProvider(BaseProvider):
 
         response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
         stream = self._aprocess_stream(response)
-        return AsyncStreamResult(
-            stream=stream, model_inputs=model_inputs, provider=self
-        )
+        return AsyncStreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
     async def _aprocess_stream(self, response):
         async for chunk in response:
