@@ -24,29 +24,23 @@ class AI21Provider(SyncProvider):
     def _count_tokens(self, content: list[dict]) -> int:
         return get_tokenizer(self.model + "-tokenizer").count_tokens(msg_as_str(content))
 
-    def _prepare_input(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
+    @staticmethod
+    def prepare_input(
         **kwargs,
     ) -> dict:
-        return {
-            "prompt": prompt,
-            "temperature": temperature,
-            "maxTokens": max_tokens,
-            **kwargs,
-        }
+        if max_tokens := kwargs.pop("max_tokens", None):
+            kwargs["maxTokens"] = max_tokens
+        return kwargs
 
-    def _from_dict(self, data: dict) -> list[ChatMessage]:
-        return [ChatMessage(role="user", content=data.pop("prompt"))]
-
-    def _complete(self, data: dict) -> dict:
-        response = self.client.chat.completions.create(model=self.model, messages=self._from_dict(data), **data)
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        data = self.prepare_input(**kwargs)
+        response = self.client.chat.completions.create(
+            model=self.model, messages=[ChatMessage(**ms) for ms in messages], **data
+        )
         return {
             "completion": response.completions[0].data.text,
-            "tokens_prompt": len(response.prompt.tokens),
-            "tokens_completion": len(response.completions[0].data.tokens),
+            "prompt_tokens": len(response.prompt.tokens),
+            "completion_tokens": len(response.completions[0].data.tokens),
         }
 
     # TODO: async and stream support

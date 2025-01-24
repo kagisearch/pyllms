@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import tiktoken
 from mistralai import Mistral
 
-from .base import StreamProvider, from_raw, msg_as_str
+from .base import StreamProvider, msg_as_str
 
 
 @dataclass
@@ -55,66 +55,41 @@ class MistralProvider(StreamProvider):
             n_tokens_list.append(n_tokens)
         return sum(n_tokens_list)
 
-    def _prepare_input(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        history: list[dict] | None = None,
-        stop_sequences: list[str] | None = None,
-        system_message: str | None = None,
-        safe_prompt: bool = False,
-        random_seed: int | None = None,
-        **kwargs,
-    ) -> dict:
-        if stop_sequences:
-            msg = "Parameter `stop` is not supported"
-            raise ValueError(msg)
-
-        messages = history or []
-        messages.extend(from_raw(prompt))
-        if system_message:
-            messages.extend(from_raw(system_message, "system"))
-
-        return {
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "safe_prompt": safe_prompt,
-            "random_seed": random_seed,
-            **kwargs,
-        }
-
-    def _complete(self, data: dict) -> dict:
+    def complete(self, messages: list[dict], **kwargs) -> dict:
         with self.client as client:
-            response = client.chat.complete(model=self.model, **data)
+            response = client.chat.complete(model=self.model, messages=t.cast(t.Any, messages), **kwargs)
         assert response.choices
         return {
             "completion": response.choices[0].message.content,
-            "tokens_prompt": response.usage.prompt_tokens,
-            "tokens_completion": response.usage.completion_tokens,
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
         }
 
-    async def _acomplete(self, data: dict) -> dict:
+    async def acomplete(self, messages: list[dict], **kwargs) -> dict:
         async with self.client as client:
-            response = await client.chat.complete_async(model=self.model, **data)
+            response = await client.chat.complete_async(model=self.model, messages=t.cast(t.Any, messages), **kwargs)
         assert response.choices
         return {
             "completion": response.choices[0].message.content,
-            "tokens_prompt": response.usage.prompt_tokens,
-            "tokens_completion": response.usage.completion_tokens,
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
         }
 
-    def _complete_stream(self, data: dict) -> t.Iterator[str]:
-        with self.client as client, client.chat.stream(model=self.model, **data) as stream:
+    def complete_stream(self, messages: list[dict], **kwargs) -> t.Iterator[str]:
+        with (
+            self.client as client,
+            client.chat.stream(model=self.model, messages=t.cast(t.Any, messages), **kwargs) as stream,
+        ):
             for chunk in stream:
                 assert chunk.data.choices
                 if c := chunk.data.choices[0].delta.content:
                     yield t.cast(str, c)
 
-    async def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
+    async def acomplete_stream(self, messages: list[dict], **kwargs) -> t.AsyncIterator[str]:
         async with self.client as client:
-            async for chunk in await client.chat.stream_async(model=self.model, **data):
+            async for chunk in await client.chat.stream_async(
+                model=self.model, messages=t.cast(t.Any, messages), **kwargs
+            ):
                 assert chunk.data.choices
                 if c := chunk.data.choices[0].delta.content:
                     yield t.cast(str, c)

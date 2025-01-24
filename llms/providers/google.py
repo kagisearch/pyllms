@@ -106,39 +106,28 @@ class GoogleProvider(SyncProvider):
 
         vertexai.init()
 
-    def _prepare_input(
-        self,
-        prompt: str,
-        temperature: float = 0.01,
-        max_tokens: int = 300,
+    def _count_tokens(self, content: list[dict]) -> int:
+        raise
+
+    @staticmethod
+    def prepare_input(
         **kwargs,
     ) -> dict:
-        temperature = max(temperature, 0.01)
-        if isinstance(self.client, GenerativeModel):
-            return {
-                "prompt": prompt,
-                "temperature": temperature,
-                "max_output_tokens": max_tokens,
-                **kwargs,
-            }
+        if max_tokens := kwargs.pop("max_tokens"):
+            kwargs["max_output_tokens"] = max_tokens
+        return kwargs
 
-        return {
-            self.prompt_key: prompt,
-            "temperature": temperature,
-            "max_output_tokens": max_tokens,
-            **kwargs,
-        }
-
-    def _complete(self, data: dict) -> dict:
-        prompt = data.pop("prompt") or data.pop(self.prompt_key)
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        kwargs = self.prepare_input(**kwargs)
+        prompt = kwargs.pop(self.prompt_key, None) or messages[0]["content"]
         if isinstance(self.client, GenerativeModel):
             chat = self.client.start_chat()
-            response = chat.send_message([prompt], generation_config=data)
+            response = chat.send_message([prompt], generation_config=kwargs)
         elif isinstance(self.client, (ChatModel, CodeChatModel)):
             chat = self.client.start_chat()
-            response = chat.send_message(**data)
+            response = chat.send_message(**kwargs)
         else:  # text / code
-            response = self.client.predict(**data)
+            response = self.client.predict(**kwargs)
 
         completion = response.text or ""
 
@@ -165,7 +154,7 @@ class GoogleProvider(SyncProvider):
             "completion": completion,
             "model": self.model,
             "tokens": total_tokens,
-            "tokens_prompt": prompt_tokens,
-            "tokens_completion": completion_tokens,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
             "cost": cost,
         }

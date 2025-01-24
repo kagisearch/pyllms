@@ -39,76 +39,49 @@ class OllamaProvider(StreamProvider):
     ollama_host: str | None = "http://localhost:11434"
     ollama_client_options: dict = field(default_factory=dict)
 
+    def __post_init__(self):
+        super().__post_init__()
+        self.client = Client(host=self.ollama_host, **self.ollama_client_options)
+        self.async_client = AsyncClient(host=self.ollama_host, **self.ollama_client_options)
+
     def _count_tokens(self, content: list[dict]) -> int:
         """Estimate token count using simple word-based heuristic"""
         # Rough estimation: split on whitespace
         # TODO: also split on punctuation
         return len(msg_as_str(content).split())
 
-    def __post_init__(self):
-        super().__post_init__()
-        self.client = Client(host=self.ollama_host, **self.ollama_client_options)
-        self.async_client = AsyncClient(host=self.ollama_host, **self.ollama_client_options)
-
-    def _prepare_input(
-        self,
-        prompt: str,
-        history: list[dict] | None = None,
-        system_message: str | list[dict] | None = None,
-        stream: bool = False,
-        **kwargs,
-    ) -> dict:
-        # Remove unsupported parameters
-        kwargs.pop("max_tokens", None)
-        kwargs.pop("temperature", None)
-        messages = [{"role": "user", "content": prompt}]
-
-        if history:
-            messages = history + messages
-
-        if isinstance(system_message, str):
-            messages = [{"role": "system", "content": system_message}, *messages]
-        elif isinstance(system_message, list):
-            messages = [*system_message, *messages]
-
-        return {
-            "messages": messages,
-            "stream": stream,
-            **kwargs,
-        }
-
-    def _complete(self, data: dict) -> dict:
+    def complete(self, messages: list[dict], **kwargs) -> dict:
         try:
-            response = self.client.chat(model=self.model, stream=False, **data)
+            response = self.client.chat(model=self.model, messages=messages, stream=False, **kwargs)
         except Exception as e:
             msg = f"Ollama completion failed: {str(e)}"
             raise RuntimeError(msg) from e
 
         return {
             "completion": response.message.content,
-            "tokens_prompt": response.prompt_eval_count,
-            "tokens_completion": response.eval_count,
+            "prompt_tokens": response.prompt_eval_count,
+            "completion_tokens": response.eval_count,
         }
 
-    async def _acomplete(self, data: dict) -> dict:
+    async def acomplete(self, messages: list[dict], **kwargs) -> dict:
         try:
-            response = await self.async_client.chat(model=self.model, stream=False, **data)
+            response = await self.async_client.chat(model=self.model, messages=messages, stream=False, **kwargs)
         except Exception as e:
             msg = f"Ollama completion failed: {str(e)}"
             raise RuntimeError(msg) from e
 
         return {
             "completion": response.message.content,
-            "tokens_prompt": response.prompt_eval_count,
-            "tokens_completion": response.eval_count,
+            "prompt_tokens": response.prompt_eval_count,
+            "completion_tokens": response.eval_count,
         }
 
-    def _complete_stream(self, data: dict) -> t.Iterator[str]:
-        for chunk in self.client.chat(model=self.model, stream=True, **data):
+    def complete_stream(self, messages: list[dict], **kwargs) -> t.Iterator[str]:
+        for chunk in self.client.chat(model=self.model, messages=messages, stream=True, **kwargs):
             if c := chunk["message"]["content"]:
                 yield c
 
-    async def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
-        async for chunk in await self.async_client.chat(model=self.model, stream=True, **data):
+    async def acomplete_stream(self, messages: list[dict], **kwargs) -> t.AsyncIterator[str]:
+        async for chunk in await self.async_client.chat(model=self.model, messages=messages, stream=True, **kwargs):
             if c := chunk["message"]["content"]:
                 yield c

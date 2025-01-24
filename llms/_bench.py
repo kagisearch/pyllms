@@ -57,7 +57,7 @@ def process_prompt(model, prompt, index, evaluator, evaluation_queue, delay, **k
             time.sleep(delay)
         output_data = {
             "text": result.text,
-            "tokens": result.meta["tokens_completion"],
+            "tokens": result.meta["completion_tokens"],
             "latency": result.meta["latency"],
             "cost": result.meta["cost"],
             "prompt_index": index,

@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 
 
-def from_raw(cont: str | dict | list[dict], role: str = "user") -> list[dict]:
+def msg_from_raw(cont: str | dict | list[dict], role: str = "user") -> list[dict]:
     if isinstance(cont, str):
         return [{"content": cont, "role": role}]
     if isinstance(cont, dict):
@@ -17,7 +17,7 @@ def from_raw(cont: str | dict | list[dict], role: str = "user") -> list[dict]:
 
 
 def msg_as_str(cont: list[dict]) -> str:
-    return ";".join([f"{message['role']}{message['content']}" for message in cont])
+    return ";".join([f"{message['role'].capitalize()}: {message['content']}" for message in cont])
 
 
 Provider = t.Union["AsyncProvider", "StreamProvider", "SyncProvider"]
@@ -36,35 +36,33 @@ class ABCResult(ABC):
         self.text = self.text or ""
 
     @property
-    def tokens_completion(self) -> int:
-        if tokens_completion := self._meta.get("tokens_completion"):
-            return tokens_completion
-        tokens_completion = self.provider.count_tokens(self.text)
-        self._meta["tokens_completion"] = tokens_completion
-        return tokens_completion
+    def completion_tokens(self) -> int:
+        if not (completion_tokens := self._meta.get("completion_tokens")):
+            completion_tokens = self.provider.count_tokens(self.text)
+            self._meta["completion_tokens"] = completion_tokens
+        return completion_tokens
 
     @property
-    def tokens_prompt(self) -> int:
-        if tokens_prompt := self._meta.get("tokens_prompt"):
-            return tokens_prompt
-        prompt: str = self.model_inputs.get("prompt") or self.model_inputs.get("messages") or ""
-        tokens_prompt = self.provider.count_tokens(prompt)
-        self._meta["tokens_prompt"] = tokens_prompt
-        return tokens_prompt
+    def prompt_tokens(self) -> int:
+        if not (prompt_tokens := self._meta.get("prompt_tokens")):
+            prompt_tokens = self.provider.count_tokens(
+                self.model_inputs.get("prompt") or self.model_inputs.get("messages") or ""
+            )
+            self._meta["prompt_tokens"] = prompt_tokens
+        return prompt_tokens
 
     @property
     def tokens(self) -> int:
-        return self.tokens_completion + self.tokens_prompt
+        return self.completion_tokens + self.prompt_tokens
 
     @property
     def cost(self) -> float:
-        if cost := self._meta.get("cost"):
-            return cost
-        cost = self.provider.compute_cost(
-            prompt_tokens=self.tokens_prompt,
-            completion_tokens=self.tokens_completion,
-        )
-        self._meta["cost"] = cost
+        if not (cost := self._meta.get("cost")):
+            cost = self.provider.compute_cost(
+                prompt_tokens=self.prompt_tokens,
+                completion_tokens=self.completion_tokens,
+            )
+            self._meta["cost"] = cost
         return cost
 
     @property
@@ -72,10 +70,11 @@ class ABCResult(ABC):
         return {
             "model": self.provider.model,
             "tokens": self.tokens,
-            "tokens_prompt": self.tokens_prompt,
-            "tokens_completion": self.tokens_completion,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
             "cost": self.cost,
             "latency": self._meta.get("latency"),
+            **self._meta,
         }
 
     def to_json(self):
@@ -162,28 +161,6 @@ class SyncProvider(ABC):
     def __post_init__(self):
         self.model = self.model or list(self.MODEL_INFO.keys())[0]
 
-    @abstractmethod
-    def _prepare_input(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        *args,
-        **kwargs,
-    ) -> dict:
-        pass
-
-    @abstractmethod
-    def _complete(self, data: dict) -> dict:
-        pass
-
-    @abstractmethod
-    def _count_tokens(self, content: list[dict]) -> int:
-        pass
-
-    def count_tokens(self, content: str | dict | list[dict]) -> int:
-        return self._count_tokens(from_raw(content))
-
     @contextmanager
     def track_latency(self):
         start = time.perf_counter()
@@ -199,80 +176,31 @@ class SyncProvider(ABC):
         ) / 1_000_000
         return round(cost, 5)
 
-    def complete(
-        self,
-        prompt: str,
-        *args,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_input(prompt, *args, **kwargs)
-        with self.track_latency():
-            response = self._complete(model_inputs)
+    @abstractmethod
+    def _count_tokens(self, content: list[dict]) -> int:
+        pass
 
-        completion = response.pop("completion")
-        function_call = response.pop("function_call", None)
+    def count_tokens(self, content: str | dict | list[dict]) -> int:
+        return self._count_tokens(msg_from_raw(content))
 
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            _meta={"latency": self.latency, **response},
-            function_call=function_call,
-        )
+    @abstractmethod
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        pass
 
 
 @dataclass
 class AsyncProvider(SyncProvider, ABC):
     @abstractmethod
-    async def _acomplete(self, data: dict) -> dict:
+    async def acomplete(self, messages: list[dict], **kwargs) -> dict:
         pass
-
-    async def acomplete(
-        self,
-        *args,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_input(*args, **kwargs)
-
-        with self.track_latency():
-            response = await self._acomplete(model_inputs)
-
-        completion = response.pop("completion")
-        function_call = response.pop("function_call", None)
-
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            _meta={"latency": self.latency, **response},
-            function_call=function_call,
-        )
 
 
 @dataclass
 class StreamProvider(AsyncProvider, ABC):
     @abstractmethod
-    def _complete_stream(self, data: dict) -> t.Iterator[str]:
+    def complete_stream(self, messages: list[dict], **kwargs) -> t.Iterator[str]:
         pass
-
-    def complete_stream(self, *args, **kwargs) -> StreamResult:
-        model_inputs = self._prepare_input(*args, **kwargs)
-
-        return StreamResult(
-            _stream=self._complete_stream(model_inputs),
-            model_inputs=model_inputs,
-            provider=self,
-        )
 
     @abstractmethod
-    def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
+    def acomplete_stream(self, messages: list[dict], **kwargs) -> t.AsyncIterator[str]:
         pass
-
-    def acomplete_stream(self, *args, **kwargs) -> AsyncStreamResult:
-        model_inputs = self._prepare_input(*args, **kwargs)
-
-        return AsyncStreamResult(
-            _stream=self._acomplete_stream(model_inputs),
-            model_inputs=model_inputs,
-            provider=self,
-        )

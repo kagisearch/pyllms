@@ -12,7 +12,15 @@ from logging import getLogger
 from prettytable import PrettyTable
 
 from ._providers import PROVIDER_MAP, Provider
-from .providers.base import AsyncProvider, AsyncStreamResult, Result, StreamProvider, StreamResult, SyncProvider
+from .providers.base import (
+    AsyncProvider,
+    AsyncStreamResult,
+    Result,
+    StreamProvider,
+    StreamResult,
+    SyncProvider,
+    msg_from_raw,
+)
 
 LOGGER = getLogger(__name__)
 
@@ -24,7 +32,7 @@ APIResult = t.Union[SyncAPIResult, AsyncAPIResult]
 
 @dataclass
 class LLMS:
-    _models: dict[str, Provider] = field(default_factory=dict)
+    models: dict[str, Provider] = field(default_factory=dict)
 
     def __post_init__(self):
         default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
@@ -45,17 +53,17 @@ class LLMS:
                 msg = f"{provider.api_key_name} environment variable is required"
                 raise Exception(msg)
 
-        self._models[provider_name] = provider.kind(api_key=api_key or "", model=model, **kwargs)
+        self.models[provider_name] = provider.kind(api_key=api_key or "", model=model, **kwargs)
         return self
 
     def stream_models(self) -> list[StreamProvider]:
-        return [m for m in self._models.values() if isinstance(m, StreamProvider)]
+        return [m for m in self.models.values() if isinstance(m, StreamProvider)]
 
     def async_models(self) -> list[AsyncProvider]:
-        return [m for m in self._models.values() if isinstance(m, AsyncProvider)]
+        return [m for m in self.models.values() if isinstance(m, AsyncProvider)]
 
     def sync_models(self) -> list[SyncProvider]:
-        return list(self._models.values())
+        return list(self.models.values())
 
     def to_list(self, query: str | None = None) -> list[dict[str, t.Any]]:
         return [
@@ -64,41 +72,131 @@ class LLMS:
                 "name": model,
                 "cost": cost,
             }
-            for provider in self._models.values()
+            for provider in self.models.values()
             for model, cost in provider.MODEL_INFO.items()
             if not query or (query.lower() in model.lower() or query.lower() in provider.__name__.lower())
         ]
 
     def count_tokens(self, content: str | list[dict[str, t.Any]]) -> int | list[int]:
-        results = [provider.count_tokens(content) for provider in self._models.values()]
-        return results if len(self._models) > 1 else results[0]
+        results = [provider.count_tokens(content) for provider in self.models.values()]
+        return results if len(self.models) > 1 else results[0]
 
-    def complete(self, prompt: str, **kwargs: t.Any) -> SyncAPIResult:
-        def sync_run(p):
-            return p.complete(prompt, **kwargs)
+    @staticmethod
+    def _prepare_input(
+        prompt: str | dict | list[dict],
+        history: list[dict] | None = None,
+        system_message: str | None = None,
+    ) -> list[dict]:
+        messages = history or []
+        if system_message:
+            messages.extend(msg_from_raw(system_message, "system"))
+        messages.extend(msg_from_raw(prompt))
+        return messages
+
+    def complete(
+        self,
+        prompt: str | dict | list[dict],
+        history: list[dict] | None = None,
+        system_message: str | None = None,
+        **kwargs: t.Any,
+    ) -> SyncAPIResult:
+        def _wrap(
+            model: SyncProvider,
+        ) -> Result:
+            messages = self._prepare_input(prompt, history, system_message)
+            with model.track_latency():
+                response = model.complete(messages, **kwargs)
+
+            completion = response.pop("completion")
+            function_call = response.pop("function_call", None)
+            kwargs["messages"] = messages
+
+            return Result(
+                text=completion,
+                model_inputs=kwargs,
+                provider=model,
+                _meta={"latency": model.latency, **response},
+                function_call=function_call,
+            )
 
         with ThreadPoolExecutor() as executor:
-            return list(executor.map(sync_run, self.sync_models()))
+            return list(executor.map(_wrap, self.sync_models()))
 
-    def acomplete(self, prompt: str, **kwargs: t.Any) -> AsyncAPIResult:
+    def acomplete(
+        self,
+        prompt: str | dict | list[dict],
+        history: list[dict] | None = None,
+        system_message: str | None = None,
+        **kwargs: t.Any,
+    ) -> AsyncAPIResult:
+        async def _wrap(
+            model: AsyncProvider,
+        ) -> Result:
+            messages = self._prepare_input(prompt, history, system_message)
+            with model.track_latency():
+                response = await model.acomplete(messages, **kwargs)
+
+            completion = response.pop("completion")
+            function_call = response.pop("function_call", None)
+            kwargs["messages"] = messages
+
+            return Result(
+                text=completion,
+                model_inputs=kwargs,
+                provider=model,
+                _meta={"latency": model.latency, **response},
+                function_call=function_call,
+            )
+
         async def gather():
-            return await asyncio.gather(*[p.acomplete(prompt, **kwargs) for p in self.async_models()])
+            return await asyncio.gather(*[_wrap(p) for p in self.async_models()])
 
         return gather()
 
-    def complete_stream(self, prompt: str, **kwargs: t.Any) -> StreamResult:
+    def complete_stream(
+        self,
+        prompt: str | dict | list[dict],
+        history: list[dict] | None = None,
+        system_message: str | None = None,
+        **kwargs: t.Any,
+    ) -> StreamResult:
         sm = self.stream_models()
         if len(sm) > 1:
             msg = "Streaming is possible only with a single model"
             raise ValueError(msg)
-        return sm[0].complete_stream(prompt, **kwargs)
 
-    def acomplete_stream(self, prompt: str, **kwargs: t.Any) -> AsyncStreamResult:
+        model = sm[0]
+        messages = self._prepare_input(prompt, history, system_message)
+        kwargs["messages"] = messages
+
+        # TODO: track latency
+        return StreamResult(
+            _stream=model.complete_stream(messages, **kwargs),
+            model_inputs=kwargs,
+            provider=model,
+        )
+
+    def acomplete_stream(
+        self,
+        prompt: str | dict | list[dict],
+        history: list[dict] | None = None,
+        system_message: str | None = None,
+        **kwargs: t.Any,
+    ) -> AsyncStreamResult:
         sm = self.stream_models()
         if len(sm) > 1:
             msg = "Streaming is possible only with a single model"
             raise ValueError(msg)
-        return sm[0].acomplete_stream(prompt, **kwargs)
+
+        model = sm[0]
+        messages = self._prepare_input(prompt, history, system_message)
+
+        # TODO: track latency
+        return AsyncStreamResult(
+            _stream=model.acomplete_stream(messages, **kwargs),
+            model_inputs=kwargs,
+            provider=model,
+        )
 
     def benchmark(
         self,
@@ -118,7 +216,7 @@ class LLMS:
         with ThreadPoolExecutor() as executor:
             futures = [
                 executor.submit(bench.process_prompts_sequentially, model, problems, evaluator, delay, **kwargs)
-                for model in self._models.values()
+                for model in self.models.values()
             ]
 
             for future in as_completed(futures):

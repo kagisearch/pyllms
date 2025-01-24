@@ -27,54 +27,30 @@ class RekaProvider(StreamProvider):
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         return sum([len(enc.encode(msg_as_str([message]))) for message in content])
 
-    def _prepare_input(
-        self,
-        prompt: str,
-        history: list[dict] | None = None,
-        system_message: str | list[dict] | None = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> dict:
-        messages = [{"content": prompt, "role": "user"}]
-
-        if history:
-            messages = [*history, *messages]
-
-        if isinstance(system_message, str):
-            messages = [{"role": "system", "content": system_message}, *messages]
-        elif isinstance(system_message, list):
-            messages = [*system_message, *messages]
-
-        return {
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            **kwargs,
-        }
-
-    def _complete(self, data: dict) -> dict:
-        response = self.client.chat.create(model=self.model, **data)
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        response = self.client.chat.create(model=self.model, messages=t.cast(t.Any, messages), **kwargs)
         return {
             "completion": t.cast(str, response.responses[0].message.content),
-            "tokens_prompt": response.usage.input_tokens,
-            "tokens_completion": response.usage.output_tokens,
+            "prompt_tokens": response.usage.input_tokens,
+            "completion_tokens": response.usage.output_tokens,
             "latency": self.latency,
         }
 
-    async def _acomplete(self, data: dict) -> dict:
-        response = await self.async_client.chat.create(model=self.model, **data)
+    async def acomplete(self, messages: list[dict], **kwargs) -> dict:
+        response = await self.async_client.chat.create(model=self.model, messages=t.cast(t.Any, messages), **kwargs)
         return {
             "completion": t.cast(str, response.responses[0].message.content),
-            "tokens_prompt": response.usage.input_tokens,
-            "tokens_completion": response.usage.output_tokens,
+            "prompt_tokens": response.usage.input_tokens,
+            "completion_tokens": response.usage.output_tokens,
             "latency": self.latency,
         }
 
-    def _complete_stream(self, data: dict) -> t.Iterator[str]:
-        for r in self.client.chat.create_stream(model=self.model, **data):
+    def complete_stream(self, messages: list[dict], **kwargs) -> t.Iterator[str]:
+        for r in self.client.chat.create_stream(model=self.model, messages=t.cast(t.Any, messages), **kwargs):
             yield t.cast(str, r.responses[0].chunk.content)
 
-    async def _acomplete_stream(self, data: dict) -> t.AsyncIterator[str]:
-        async for chunk in self.async_client.chat.create_stream(model=self.model, **data):
+    async def acomplete_stream(self, messages: list[dict], **kwargs) -> t.AsyncIterator[str]:
+        async for chunk in self.async_client.chat.create_stream(
+            model=self.model, messages=t.cast(t.Any, messages), **kwargs
+        ):
             yield t.cast(str, chunk.responses[0].chunk.content)

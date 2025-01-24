@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools as it
 import math
 import os
 from dataclasses import dataclass
@@ -72,44 +73,27 @@ class GoogleGenAIProvider(SyncProvider):
             self.client = genai.GenerativeModel(model)  # type: ignore[private-import]
             self.mode = "chat"
 
-    def _prepare_input(
-        self,
-        prompt: str,
-        temperature: float = 0.01,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> dict:
-        temperature = max(temperature, 0.01)
-        max_output_tokens = kwargs.pop("max_output_tokens", max_tokens)
-        if self.mode == "chat":
-            messages = kwargs.pop("messages", [])
-            messages = messages + [prompt]
-            model_inputs = {
-                # "messages": messages,
-                # "temperature": temperature,
-                **kwargs,
-            }
-        else:
-            model_inputs = {
-                "prompt": prompt,
-                "temperature": temperature,
-                "max_output_tokens": max_output_tokens,
-                **kwargs,
-            }
-        return model_inputs
-
     def _count_tokens(self, content: list[dict]) -> int:
         return self.client.count_tokens(msg_as_str(content)).total_tokens  # type: ignore[private-import]
 
-    def _complete(
-        self,
-        data: dict,
+    @staticmethod
+    def prepare_input(
+        **kwargs,
     ) -> dict:
-        prompt = data.pop("prompt")
-        response = self.client.generate_content(prompt)  # type: ignore[private-import]
+        if max_tokens := kwargs.pop("max_tokens"):
+            kwargs["max_output_tokens"] = max_tokens
+        return kwargs
+
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        prompts = [
+            {"role": parts[0]["role"], "parts": [p["content"] for p in parts]}
+            for parts in (list(ps) for _, ps in it.groupby(messages, key=lambda x: x["role"]))
+        ]
+        kwargs = self.prepare_input(**kwargs)
+        response = self.client.generate_content(prompts, **kwargs)  # type: ignore[private-import]
         completion = response.text if self.mode == "chat" else " ".join([r.text for r in response])
 
-        prompt_tokens = len(prompt)
+        prompt_tokens = len(msg_as_str(messages))
         completion_tokens = len(completion)
         cost_per_token = self.MODEL_INFO[self.model]
         cost = (
@@ -125,7 +109,7 @@ class GoogleGenAIProvider(SyncProvider):
             "completion": completion,
             "model": self.model,
             "tokens": total_tokens,
-            "tokens_prompt": prompt_tokens,
-            "tokens_completion": completion_tokens,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
             "cost": cost,
         }

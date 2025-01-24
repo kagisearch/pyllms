@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from huggingface_hub import InferenceClient
 
-from .base import SyncProvider, from_raw
+from .base import SyncProvider
 
 
 @dataclass
@@ -71,31 +71,13 @@ class HuggingfaceHubProvider(SyncProvider):
         self.model = model
         self.client = InferenceClient(self.MODEL_INFO[model]["full"], token=api_key)
 
-    def _prepare_input(
-        self,
-        prompt: str,
-        temperature: float = 1.0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> dict:
-        if self.model == "hf_pythia":
-            prompt = "<|prompter|" + prompt + "<|endoftext|><|assistant|>"
-        max_new_tokens = kwargs.pop("max_length", max_tokens)
-        return {
-            "prompt": from_raw(prompt),
-            "temperature": temperature,
-            "max_length": max_new_tokens,
-            **kwargs,
-        }
-
     def _count_tokens(self, content: list[dict]) -> int:
         raise
 
-    def _complete(self, data: dict) -> dict:
-        prompt: dict = data.pop("prompt")
-        response = self.client.chat_completion(messages=[prompt], **data)
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        response = self.client.chat_completion(messages=messages, **kwargs)
         return {
             "completion": response.choices[0].message,
-            "tokens_prompt": response.usage.prompt_tokens,
-            "tokens_completion": response.usage.completion_tokens,
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
         }

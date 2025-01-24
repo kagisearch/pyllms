@@ -34,39 +34,33 @@ class AlephAlphaProvider(AsyncProvider):
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         return len(enc.encode(msg_as_str(content)))
 
-    def _from_dict(self, data: dict) -> CompletionRequest:
+    @staticmethod
+    def prepare_input(
+        messages: list[dict],
+        **kwargs,
+    ) -> CompletionRequest:
+        text = str(messages[0]["content"]) if len(messages) == 1 else msg_as_str(messages)
+        if max_tokens := kwargs.pop("max_tokens", None):
+            kwargs["maximum_tokens"] = max_tokens
+
         return CompletionRequest(
-            prompt=Prompt.from_text(data.pop("prompt")),
-            **data,
+            prompt=Prompt.from_text(text),
+            **kwargs,
         )
 
-    def _prepare_input(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> dict:
-        return {
-            "prompt": prompt,
-            "temperature": temperature,
-            "maximum_tokens": kwargs.pop("maximum_tokens", max_tokens),
-            **kwargs,
-        }
-
-    def _complete(self, data: dict) -> dict:
-        response = self.client.complete(request=self._from_dict(data), model=self.model)
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        response = self.client.complete(request=self.prepare_input(messages, **kwargs), model=self.model)
         return {
             "completion": t.cast(str, response.completions[0].completion),
-            "tokens_prompt": response.num_tokens_prompt_total,
-            "tokens_completion": response.num_tokens_generated,
+            "prompt_tokens": response.num_tokens_prompt_total,
+            "completion_tokens": response.num_tokens_generated,
         }
 
-    async def _acomplete(self, data: dict) -> dict:
+    async def acomplete(self, messages: list[dict], **kwargs) -> dict:
         async with self.async_client as client:
-            response = await client.complete(request=self._from_dict(data), model=self.model)
+            response = await client.complete(request=self.prepare_input(messages, **kwargs), model=self.model)
         return {
             "completion": t.cast(str, response.completions[0].completion),
-            "tokens_prompt": response.num_tokens_prompt_total,
-            "tokens_completion": response.num_tokens_generated,
+            "prompt_tokens": response.num_tokens_prompt_total,
+            "completion_tokens": response.num_tokens_generated,
         }
