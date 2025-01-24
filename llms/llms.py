@@ -5,6 +5,7 @@ import os
 import statistics
 import typing as t
 import warnings
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from logging import getLogger
@@ -201,11 +202,11 @@ class LLMS:
     def benchmark(
         self,
         problems: list[tuple[str, str]] | None = None,
-        evaluator: SyncProvider | None = None,
-        show_outputs: bool = False,
         delay: float = 0,
+        evaluator: Provider | None = None,
+        show_outputs: bool = False,
         **kwargs: t.Any,
-    ) -> tuple[PrettyTable, PrettyTable]:
+    ) -> tuple[PrettyTable, PrettyTable | None]:
         from . import _bench as bench
 
         problems = problems or bench.PROBLEMS
@@ -214,172 +215,125 @@ class LLMS:
 
         # Run completion tasks in parallel for each model, but sequentially for each prompt within a model
         with ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(bench.process_prompts_sequentially, model, problems, evaluator, delay, **kwargs)
+            fmap = {
+                executor.submit(bench.process_prompts_sequentially, model, problems, evaluator, delay, **kwargs): model
                 for model in self.models.values()
-            ]
+            }
 
-            for future in as_completed(futures):
+            for future in as_completed(fmap):
                 try:
                     (
-                        model,
                         outputs,
-                        evaluation_queue,
-                        evaluation_threads,
+                        equeue,
+                        threads,
                     ) = future.result()
-                    if not outputs:
-                        continue
-
-                    model_results[model] = {
-                        "outputs": outputs,
-                        "total_latency": 0,
-                        "total_cost": 0,
-                        "evaluation": [None] * len(outputs),
-                    }
-
-                    for output_data in outputs:
-                        if output_data:  # Check if output_data is not None
-                            model_results[model]["total_latency"] += output_data["latency"]
-                            model_results[model]["total_cost"] += output_data["cost"]
-
-                    if evaluator and evaluation_threads:
-                        # Wait for all evaluation threads to complete
-                        for thread in evaluation_threads:
-                            if thread:  # Check if thread exists
-                                thread.join()
-
-                        # Process all evaluation results
-                        while not evaluation_queue.empty():
-                            index, evaluation = evaluation_queue.get()
-                            model_results[model]["evaluation"][index] = evaluation
                 except Exception as e:
-                    print(f"Error processing results: {str(e)}")
+                    warnings.warn(f"Error processing results: {str(e)}", stacklevel=2)
                     # Don't add failed models to results
                     continue
 
-        for model in model_results:
-            outputs = model_results[model]["outputs"]
-            model_results[model]["median_latency"] = statistics.median([output["latency"] for output in outputs])
+                latency = [o["latency"] for o in outputs]
+                total_latency = sum(latency)
+                tokens = sum([o["tokens"] for o in outputs])
+                model = fmap[future]
+                model_results[model] = {
+                    "outputs": outputs,
+                    "total_latency": total_latency,
+                    "total_cost": sum([o["cost"] for o in outputs]),
+                    "total_tokens": tokens,
+                    "evaluation": [None] * len(outputs),
+                    "aggregated_speed": tokens / total_latency,
+                    "median_latency": statistics.median(latency),
+                }
 
-            total_tokens = sum([output["tokens"] for output in outputs])
-            total_latency = model_results[model]["total_latency"]
-            model_results[model]["aggregated_speed"] = total_tokens / total_latency
+                if evaluator:
+                    for t in threads:
+                        t.join()
 
+                    # Process all evaluation results
+                    while not equeue.empty():
+                        i, evaluation = equeue.get()
+                        if evaluation:
+                            model_results[model]["evaluation"][i] = sum(evaluation)
+
+        def eval(x):
+            data = model_results[x]
+            return data["aggregated_speed"] * (sum(data["evaluation"]) if evaluator else 1)
+
+        sorted_models = sorted(
+            model_results,
+            key=eval,
+            reverse=True,
+        )
+
+        pytable = defaultdict(list)
+        for model in sorted_models:
+            data = model_results[model]
+            total_score = 0
+            scores: list[int] = data["evaluation"]
+            for i, out in enumerate(data["outputs"]):
+                latency = out["latency"]
+                tokens = out["tokens"]
+                pytable["model"].append(str(model))
+                pytable["text"].append(out["text"])
+                pytable["tokens"].append(tokens)
+                pytable["cost"].append(f"{out['cost']:.5f}")
+                pytable["latency"].append(f"{latency:.2f}")
+                pytable["speed"].append(f"{(tokens / latency):.2f}")
+                if evaluator:
+                    score = scores[i]
+                    total_score += score
+                    score = str(score)
+                else:
+                    score = "N/A"
+                pytable["score"].append(score)
+
+            pytable["model"].append(str(model))
+            pytable["text"].append("")
+            pytable["tokens"].append(str(data["total_tokens"]))
+            pytable["cost"].append(f"{data['total_cost']:.5f}")
+            pytable["latency"].append(f"{data['median_latency']:.2f}")
+            pytable["speed"].append(f"{data['aggregated_speed']:.2f}")
+            if evaluator and len(scores):
+                acc = 100 * total_score / len(scores)
+                score = f"{acc:.2f}%"
+            else:
+                score = "N/A"
+            pytable["score"].append(score)
+
+        headers = {
+            "model": "Model",
+            "text": "Output",
+            "tokens": "Tokens",
+            "cost": "Cost ($)",
+            "latency": "Latency (s)",
+            "speed": "Speed (tokens/sec)",
+            "score": "Evaluation",
+        }
+        questions_table: PrettyTable | None = None
         if evaluator:
-            sorted_models = sorted(
-                model_results,
-                key=lambda x: model_results[x]["aggregated_speed"] * sum(filter(None, model_results[x]["evaluation"])),
-                reverse=True,
-            )
-        else:
-            sorted_models = sorted(
-                model_results,
-                key=lambda x: model_results[x]["aggregated_speed"],
-                reverse=True,
-            )
+            questions_table = PrettyTable(["Category", "Index", "Question"])
+            questions_table.align["Question"] = "l"
 
-        headers = [
-            "Model",
-            "Output",
-            "Tokens",
-            "Cost ($)",
-            "Latency (s)",
-            "Speed (tokens/sec)",
-            "Evaluation",
-        ]
+            for i, problem in enumerate(problems):
+                scores = [s for vs in (m["evaluation"] for m in model_results.values()) for s in vs]
+
+                if all(scores):
+                    questions_table.add_row(["Easiest", i, self._ellipsize(problem[0])])
+                elif not any(scores):
+                    questions_table.add_row(["Hardest", i, self._ellipsize(problem[0])])
+        else:
+            headers.pop("score")
+            pytable.pop("score")
 
         if not show_outputs:
-            headers.remove("Output")
-
-        if not evaluator:
-            headers.remove("Evaluation")
-
-        table = PrettyTable(headers)
-
-        for model in sorted_models:
-            model_data = model_results[model]
-
-            total_tokens = 0
-            total_score = 0
-            valid_evaluations = 0
-            for index, output_data in enumerate(model_data["outputs"]):
-                total_tokens += output_data["tokens"]
-                if evaluator and model_results[model]["evaluation"][index] is not None:
-                    total_score += model_results[model]["evaluation"][index]
-                    valid_evaluations += 1
-                row_data = [
-                    str(model),
-                    output_data["text"],
-                    output_data["tokens"],
-                    f"{output_data['cost']:.5f}",
-                    f"{output_data['latency']:.2f}",
-                    f"{output_data['tokens'] / output_data['latency']:.2f}",
-                ]
-                if not show_outputs:
-                    row_data.remove(output_data["text"])
-                if evaluator:
-                    row_data.append(model_results[model]["evaluation"][index])
-                table.add_row(row_data)
-
-            if show_outputs:
-                row_data = [
-                    str(model),
-                    "",
-                    f"{total_tokens}",
-                    f"{model_data['total_cost']:.5f}",
-                    f"{model_data['median_latency']:.2f}",
-                    f"{total_tokens / model_data['total_latency']:.2f}",
-                ]
-
-            else:
-                row_data = [
-                    str(model),
-                    f"{total_tokens}",
-                    f"{model_data['total_cost']:.5f}",
-                    f"{model_data['median_latency']:.2f}",
-                    f"{total_tokens / model_data['total_latency']:.2f}",
-                ]
-            if evaluator:
-                if valid_evaluations > 0:
-                    acc = 100 * total_score / valid_evaluations
-                    row_data.append(f"{acc:.2f}%")
-                else:
-                    row_data.append("N/A")
-
-            table.add_row(row_data)
-
-        # Track easiest and hardest questions
-        easiest_questions = []
-        hardest_questions = []
-        for i, problem in enumerate(problems):
-            all_correct = all(model_results[model]["evaluation"][i] == 1 for model in model_results)
-            all_incorrect = all(model_results[model]["evaluation"][i] == 0 for model in model_results)
-
-            if all_correct:
-                easiest_questions.append((i, problem[0]))
-            elif all_incorrect:
-                hardest_questions.append((i, problem[0]))
-
-        # Create a new table for easiest and hardest questions
-        questions_table = PrettyTable(["Category", "Index", "Question"])
-        questions_table.align["Question"] = "l"  # Left-align the Question column
-
-        for index, question in easiest_questions:
-            questions_table.add_row(
-                [
-                    "Easiest",
-                    index,
-                    question[:100] + ("..." if len(question) > 100 else ""),
-                ]
-            )
-
-        for index, question in hardest_questions:
-            questions_table.add_row(
-                [
-                    "Hardest",
-                    index,
-                    question[:100] + ("..." if len(question) > 100 else ""),
-                ]
-            )
+            headers.pop("text")
+            pytable.pop("text")
+        table = PrettyTable(list(headers.values()))
+        table.add_rows(list(zip(*[pytable[k] for k in headers])))
 
         return table, questions_table
+
+    @staticmethod
+    def _ellipsize(text: str, max_len: int = 100) -> str:
+        return text if len(text) <= max_len else text[: max_len - 3] + "..."

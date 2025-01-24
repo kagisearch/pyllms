@@ -1,4 +1,5 @@
-import concurrent.futures
+from __future__ import annotations
+
 import queue
 import re
 import threading
@@ -49,9 +50,10 @@ Here is the correct answer:
     return scores
 
 
-def process_prompt(model, prompt, index, evaluator, evaluation_queue, delay, **kwargs):
+def process_prompt(
+    model, prompt, delay, index, evaluator, evaluation_queue, **kwargs
+) -> tuple[dict | None, threading.Thread | None]:
     try:
-        print(model, index)  # , prompt[0])
         result = model.complete(prompt[0], max_tokens=1000, temperature=0, **kwargs)
         if delay > 0:
             time.sleep(delay)
@@ -60,52 +62,49 @@ def process_prompt(model, prompt, index, evaluator, evaluation_queue, delay, **k
             "tokens": result.meta["completion_tokens"],
             "latency": result.meta["latency"],
             "cost": result.meta["cost"],
-            "prompt_index": index,
         }
     except Exception as e:
         print(f"Error with {model}: {str(e)}")
-        return None
+        return None, None
 
+    thread: threading.Thread | None = None
     if evaluator:
-        evaluation_thread = threading.Thread(
+        thread = threading.Thread(
             target=lambda: evaluation_queue.put(
-                (
-                    index,
-                    evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])[0],
-                )
+                (index, evaluate_answers(evaluator, [(prompt[0], prompt[1], result.text)])),
             )
         )
-        evaluation_thread.start()
-        output_data["evaluation_thread"] = evaluation_thread
+        thread.start()
 
-    return output_data
+    return output_data, thread
 
 
-def process_prompts_sequentially(model, prompts, evaluator, delay, **kwargs):
-    results = []
+def process_prompts_sequentially(
+    model, prompts, evaluator, delay, **kwargs
+) -> tuple[list[dict], queue.Queue[tuple[int, list[int]]], list[threading.Thread]]:
     evaluation_queue = queue.Queue()
-    evaluation_threads = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-        futures = [
-            executor.submit(
-                process_prompt,
-                model,
-                prompt,
-                index,
-                evaluator,
-                evaluation_queue,
-                delay,
-                **kwargs,
-            )
-            for index, prompt in enumerate(prompts)
-        ]
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            if result is not None:
-                results.append(result)
-                if evaluator and "evaluation_thread" in result:
-                    evaluation_threads.append(result.get("evaluation_thread"))
-    return model, results, evaluation_queue, evaluation_threads
+    results, threads = list(
+        zip(
+            *[
+                r
+                for i, prompt in enumerate(prompts)
+                if (
+                    r := process_prompt(
+                        model,
+                        prompt,
+                        delay,
+                        i,
+                        evaluator,
+                        evaluation_queue,
+                        **kwargs,
+                    )[0]
+                )
+            ]
+        )
+    )
+    if not evaluator:
+        threads = []
+    return results, evaluation_queue, threads
 
 
 PROBLEMS = [
