@@ -18,7 +18,6 @@ from .base import SyncProvider
 
 @dataclass
 class GoogleProvider(SyncProvider):
-    api_key = ""
     # cost is per million tokens
     MODEL_INFO = {
         # no support for "textembedding-gecko"

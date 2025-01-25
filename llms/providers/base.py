@@ -27,8 +27,6 @@ Provider = t.Union["AsyncProvider", "StreamProvider", "SyncProvider"]
 class ABCResult(ABC):
     provider: Provider
     model_inputs: dict
-    _meta: dict
-    function_call: dict
 
     def __post_init__(self):
         self._meta = self._meta or {}
