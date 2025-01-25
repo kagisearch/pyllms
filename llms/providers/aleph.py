@@ -1,15 +1,17 @@
-# llms/providers/aleph.py
+from __future__ import annotations
 
 import os
+import typing as t
+from dataclasses import dataclass
 
 import tiktoken
 from aleph_alpha_client import AsyncClient, Client, CompletionRequest, Prompt
 
-from ..results.result import Result
-from .base_provider import BaseProvider
+from .base import AsyncProvider, msg_as_str
 
 
-class AlephAlphaProvider(BaseProvider):
+@dataclass
+class AlephAlphaProvider(AsyncProvider):
     MODEL_INFO = {
         "luminous-base": {"prompt": 6.6, "completion": 7.6, "token_limit": 2048},
         "luminous-extended": {"prompt": 9.9, "completion": 10.9, "token_limit": 2048},
@@ -21,79 +23,44 @@ class AlephAlphaProvider(BaseProvider):
         },
     }
 
-    def __init__(self, api_key=None, model=None):
-        if api_key is None:
-            api_key = os.getenv("ALEPHALPHA_API_KEY")
-        self.client = Client(api_key)
-        self.async_client = AsyncClient(api_key)
+    def __post_init__(self):
+        if not (host := os.getenv("ALEPHALPHA_HOST")):
+            msg = "ALEPHALPHA_HOST environment variable is required"
+            raise Exception(msg)
+        self.client = Client(self.api_key, host)
+        self.async_client = AsyncClient(self.api_key, host)
 
-        if model is None:
-            model = list(self.MODEL_INFO.keys())[0]
-        self.model = model
-
-    def count_tokens(self, content: str):
+    def _count_tokens(self, content: list[dict]) -> int:
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        return len(enc.encode(content))
+        return len(enc.encode(msg_as_str(content)))
 
-    def _prepare_model_inputs(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
+    @staticmethod
+    def prepare_input(
+        messages: list[dict],
         **kwargs,
     ) -> CompletionRequest:
-        prompt = Prompt.from_text(prompt)
-        maximum_tokens = kwargs.pop("maximum_tokens", max_tokens)
+        text = str(messages[0]["content"]) if len(messages) == 1 else msg_as_str(messages)
+        if max_tokens := kwargs.pop("max_tokens", None):
+            kwargs["maximum_tokens"] = max_tokens
 
-        model_inputs = CompletionRequest(
-            prompt=prompt,
-            temperature=temperature,
-            maximum_tokens=maximum_tokens,
+        return CompletionRequest(
+            prompt=Prompt.from_text(text),
             **kwargs,
         )
-        return model_inputs
 
-    def complete(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
-        )
-        with self.track_latency():
-            response = self.client.complete(request=model_inputs, model=self.model)
+    def complete(self, messages: list[dict], **kwargs) -> dict:
+        response = self.client.complete(request=self.prepare_input(messages, **kwargs), model=self.model)
+        return {
+            "completion": t.cast(str, response.completions[0].completion),
+            "prompt_tokens": response.num_tokens_prompt_total,
+            "completion_tokens": response.num_tokens_generated,
+        }
 
-        completion = response.completions[0].completion.strip()
-
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta={"latency": self.latency},
-        )
-
-    async def acomplete(
-        self,
-        prompt: str,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        **kwargs,
-    ) -> Result:
-        model_inputs = self._prepare_model_inputs(
-            prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
-        )
-        with self.track_latency():
-            async with self.async_client as client:
-                response = await client.complete(request=model_inputs, model=self.model)
-
-        completion = response.completions[0].completion.strip()
-
-        return Result(
-            text=completion,
-            model_inputs=model_inputs,
-            provider=self,
-            meta={"latency": self.latency},
-        )
+    async def acomplete(self, messages: list[dict], **kwargs) -> dict:
+        async with self.async_client as client:
+            response = await client.complete(request=self.prepare_input(messages, **kwargs), model=self.model)
+        return {
+            "completion": t.cast(str, response.completions[0].completion),
+            "prompt_tokens": response.num_tokens_prompt_total,
+            "completion_tokens": response.num_tokens_generated,
+        }

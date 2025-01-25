@@ -1,0 +1,160 @@
+[project]
+name = "pyllms"
+version = "0.7.3"
+description = "Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, Mistral, OpenRouter, Reka, Groq, Together, Ollama, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark."
+readme = "README.md"
+authors = [{ name = "Vladimir Prelovac", email = "vlad@kagi.com" }]
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Human Machine Interfaces",
+    "Topic :: Text Processing",
+]
+keywords = [
+    "llm",
+    "llms",
+    "large language model",
+    "AI",
+    "NLP",
+    "natural language processing",
+    "gpt",
+    "chatgpt",
+    "openai",
+    "anthropic",
+    "ai21",
+    "cohere",
+    "aleph alpha",
+    "huggingface hub",
+    "vertex ai",
+    "palm",
+    "palm2",
+]
+dependencies = [
+    "ai21>=3.0.1",
+    "aleph-alpha-client>=9.1.0",
+    "anthropic>=0.45.0",
+    "cohere>=5.13.11",
+    "google-cloud-aiplatform>=1.78.0",
+    "google-generativeai>=0.8.4",
+    "grpcio>=1.70.0",
+    "huggingface-hub>=0.27.1",
+    "mistralai>=1.4.0",
+    "ollama>=0.4.7",
+    "openai>=1.60.0",
+    "prettytable>=3.12.0",
+    "protobuf>=5.29.3",
+    "reka-api>=3.2.0",
+    "tiktoken>=0.8.0",
+    "together>=1.3.11",
+]
+
+[project.urls]
+homepage = "https://github.com/kagisearch/pyllms"
+
+[project.optional-dependencies]
+local = ["einops", "accelerate"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0",
+    "pyright>=1.1.392",
+    # "scalene>=1.5.44.1",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.ruff]
+target-version = "py39"
+line-length = 119
+
+[tool.ruff.lint]
+# per-file-ignores = { "tests/**/*.py" = [
+#     "D", # missing docstring in public module
+# ] }
+
+select = [
+    "F", # pyflakes
+    # pycodestyle
+    "E", # errors
+    "W", # warnings
+
+    "B", # bugbear
+    "C", # mccabe
+    "S", # flake8-bandit
+
+    "C4",  # flake8-comprehensions
+    "EM",  # flake8-errmsg
+    "I",   # isort
+    "PT",  # pytest
+    "Q",   # flake8-quotes
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "UP",  # pyupgrade
+
+    "ASYNC",
+    "DTZ",
+]
+ignore = [
+    "D105", # missing docstring in magic method
+    "E501", # line too long
+    "S101", # use of assert detected
+
+    # see https://github.com/astral-sh/ruff/issues/4045
+    "S602",
+    "S603",
+]
+mccabe.max-complexity = 17
+pydocstyle.convention = "google"
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+line-ending = "auto"
+docstring-code-line-length = "dynamic"
+
+[tool.coverage.run]
+branch = true
+source = ["llms"]
+
+[tool.coverage.paths]
+source = ["llms", "*/site-packages"]
+tests = ["tests", "*/tests"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pyright]
+venv = ".venv"
+pythonVersion = "3.9"
+include = ["src"]
+exclude = [
+    # "**/node_modules",
+    "**/__pycache__",
+    # "src/experimental",
+    # "src/typestubs"
+]
+# ignore = ["tests"]
+defineConstant = { DEBUG = true }
+# stubPath = "src/stubs"
+
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+
+# pythonPlatform = "Linux"
+
+# executionEnvironments = [
+#   { root = "src/web", pythonVersion = "3.5", pythonPlatform = "Windows", extraPaths = [ "src/service_libs" ], reportMissingImports = "warning" },
+#   { root = "src/sdk", pythonVersion = "3.0", extraPaths = [ "src/backend" ] },
+#   { root = "src/tests", extraPaths = ["src/tests/e2e", "src/sdk" ]},
+#   { root = "src" }
+# ]
