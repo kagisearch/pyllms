@@ -1,6 +1,6 @@
 [project]
 name = "pyllms"
-version = "0.7.2"
+version = "0.7.3"
 description = "Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, Mistral, OpenRouter, Reka, Groq, Together, Ollama, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark."
 readme = "README.md"
 authors = [{ name = "Vladimir Prelovac", email = "vlad@kagi.com" }]
@@ -62,7 +62,6 @@ dependencies = [
 homepage = "https://github.com/kagisearch/pyllms"
 
 [project.optional-dependencies]
-# cli = ["sl-cli", "sl-segment", "sl-utils"]
 local = ["einops", "accelerate"]
 
 [dependency-groups]
@@ -71,9 +70,6 @@ dev = [
     "pyright>=1.1.392",
     # "scalene>=1.5.44.1",
 ]
-
-# [tool.hatch.build.hooks.vcs]
-# version-file = "src/sl-core/_version.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -142,7 +138,7 @@ venv = ".venv"
 pythonVersion = "3.9"
 include = ["src"]
 exclude = [
-    "**/node_modules",
+    # "**/node_modules",
     "**/__pycache__",
     # "src/experimental",
     # "src/typestubs"
