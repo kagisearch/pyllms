@@ -316,7 +316,7 @@ class LLMS:
             questions_table.align["Question"] = "l"
 
             for i, problem in enumerate(problems):
-                scores = [s for vs in (m["evaluation"] for m in model_results.values()) for s in vs]
+                scores = [m["evaluation"][i] for m in model_results.values()]
 
                 if all(scores):
                     questions_table.add_row(["Easiest", i, self._ellipsize(problem[0])])
