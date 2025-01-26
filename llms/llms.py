@@ -96,9 +96,8 @@ class LLMS:
             if not query or (query.lower() in model.lower() or query.lower() in provider.__name__.lower())
         ]
 
-    def count_tokens(self, content: str | list[dict[str, t.Any]]) -> int | list[int]:
-        results = [provider.count_tokens(content) for provider in self.models.values()]
-        return results if len(self.models) > 1 else results[0]
+    def count_tokens(self, content: str | list[dict[str, t.Any]]) -> list[int]:
+        return [provider.count_tokens(content) for provider in self.models.values()]
 
     @staticmethod
     def _prepare_input(
