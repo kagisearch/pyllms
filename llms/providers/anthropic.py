@@ -70,9 +70,16 @@ class AnthropicProvider(StreamProvider):
             "token_limit": 200_000,
             "output_limit": 4_096,
         },
+        "claude-3-5-sonnet-latest": {
+            "prompt": 3.00,
+            "completion": 15,
+            "token_limit": 200_000,
+            "output_limit": 4_096,
+        },
     }
 
     def __post_init__(self):
+        super().__post_init__()
         self.client = anthropic.Anthropic(api_key=self.api_key)
         self.async_client = anthropic.AsyncAnthropic(api_key=self.api_key)
 
