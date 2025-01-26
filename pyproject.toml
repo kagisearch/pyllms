@@ -1,6 +1,6 @@
 [project]
 name = "pyllms"
-version = "0.8.0"
+version = "0.8.1"
 description = "Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, Mistral, OpenRouter, Reka, Groq, Together, Ollama, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark."
 readme = "README.md"
 authors = [{ name = "Vladimir Prelovac", email = "vlad@kagi.com" }]
