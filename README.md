@@ -51,7 +51,8 @@ pip install pyllms
 import llms
 
 model = llms.init('gpt-4o')
-result = model.complete("What is 5+5?")
+results = model.complete("What is 5+5?")
+result = results[0]
 
 print(result.text)
 ```
@@ -68,7 +69,7 @@ result = model.complete(
     "What is the capital of the country where Mozart was born?",
     temperature=0.1,
     max_tokens=200
-)
+)[0]
 
 print(result.text)
 print(result.meta)
@@ -78,7 +79,7 @@ print(result.meta)
 
 ```python
 models = llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
-result = models.complete('What is the capital of the country where Mozart was born?')
+result = models.complete('What is the capital of the country where Mozart was born?')[0]
 
 print(result.text)
 print(result.meta)
@@ -94,6 +95,7 @@ result = await model.acomplete("What is the capital of the country where Mozart 
 
 ```python
 model = llms.init('claude-v1')
+# can only work with a single provider, returns a single stream
 result = model.complete_stream("Write an essay on the Civil War")
 for chunk in result.stream:
    if chunk is not None:
@@ -109,7 +111,7 @@ history.append({"role": "assistant", "content": result.text})
 
 model.complete(prompt=prompt, history=history)
 
-# For OpenAI chat models
+# For OpenAI-compatible chat models
 model.complete(prompt=prompt, system_message=system, history=history)
 ```
 
