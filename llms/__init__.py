@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-from .llms import LLMS
+from .llms import LLMS, PROVIDER_MAP, Provider
 
 Spec = dict[str, dict[str, t.Any]]
 SingleSpec = t.Union[str, tuple[str, dict[str, t.Any]]]
@@ -36,4 +36,4 @@ def init(model: SpecType | None = None, provider: SpecType | None = None, **kwar
     return llm
 
 
-__all__ = ["init", "LLMS"]
+__all__ = ["init", "LLMS", "Provider", "PROVIDER_MAP"]
