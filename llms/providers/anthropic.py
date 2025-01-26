@@ -51,8 +51,19 @@ class AnthropicProvider(StreamProvider):
             messages=t.cast(t.Any, content),
         ).input_tokens
 
+    @staticmethod
+    def _prepare_messages(messages: list[dict]) -> tuple[list[dict], str | None]:
+        system = next((m["content"] for m in reversed(messages) if m["role"] == "system"), None)
+        if not system:
+            return messages, None
+        messages = [m for m in messages if m["role"] != "system"]
+        return messages, system
+
     def complete(self, messages: list[dict], **kwargs) -> dict:
-        response = self.client.messages.create(model=self.model, messages=t.cast(t.Any, messages), **kwargs)
+        messages, system = self._prepare_messages(messages)
+        response = self.client.messages.create(
+            model=self.model, messages=t.cast(t.Any, messages), system=system or anthropic.NOT_GIVEN, **kwargs
+        )
         return {
             "completion": response.content[0].text,
             "prompt_tokens": response.usage.input_tokens,
@@ -60,8 +71,9 @@ class AnthropicProvider(StreamProvider):
         }
 
     async def acomplete(self, messages: list[dict], **kwargs) -> dict:
+        messages, system = self._prepare_messages(messages)
         response = await self.async_client.messages.create(
-            model=self.model, messages=t.cast(t.Any, messages), **kwargs
+            model=self.model, messages=t.cast(t.Any, messages), system=system or anthropic.NOT_GIVEN, **kwargs
         )
         return {
             "completion": response.content[0].text,
@@ -70,14 +82,16 @@ class AnthropicProvider(StreamProvider):
         }
 
     def complete_stream(self, messages: list[dict], **kwargs) -> t.Iterator[str]:
+        messages, system = self._prepare_messages(messages)
         with self.client.messages.stream(
-            model=self.model, messages=t.cast(t.Any, messages), **kwargs
+            model=self.model, messages=t.cast(t.Any, messages), system=system or anthropic.NOT_GIVEN, **kwargs
         ) as stream_manager:
             yield from stream_manager.text_stream
 
     async def acomplete_stream(self, messages: list[dict], **kwargs) -> t.AsyncIterator[str]:
+        messages, system = self._prepare_messages(messages)
         async with self.async_client.messages.stream(
-            model=self.model, messages=t.cast(t.Any, messages), **kwargs
+            model=self.model, messages=t.cast(t.Any, messages), system=system or anthropic.NOT_GIVEN, **kwargs
         ) as stream_manager:
             async for text in stream_manager.text_stream:
                 yield text
