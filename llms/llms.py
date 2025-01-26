@@ -33,28 +33,46 @@ APIResult = t.Union[SyncAPIResult, AsyncAPIResult]
 
 @dataclass
 class LLMS:
+    DEFAULT_MODEL = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
     models: dict[str, Provider] = field(default_factory=dict)
 
-    def __post_init__(self):
-        default_model = os.getenv("LLMS_DEFAULT_MODEL") or "gpt-3.5-turbo"
+    @classmethod
+    def default_provider(cls, **kwargs):
         try:
-            self.add_provider(default_model)
-        except ValueError:
-            warnings.warn(f"Default model {default_model} not found in any provider", stacklevel=2)
+            return cls().add_provider(model=cls.DEFAULT_MODEL, **kwargs)
+        except ValueError as e:
+            msg = f"Default model {cls.DEFAULT_MODEL} not found in any provider"
+            raise Exception(msg) from e
 
     @classmethod
-    def single_provider(cls, model: str, api_key: str | None = None, **kwargs):
-        return cls().add_provider(model, api_key, **kwargs)
+    def single_provider(
+        cls, model: str | None = None, provider_name: str | None = None, api_key: str | None = None, **kwargs
+    ):
+        return cls().add_provider(model=model, provider_name=provider_name, api_key=api_key, **kwargs)
 
-    def add_provider(self, provider_name: str, model: str | None = None, api_key: str | None = None, **kwargs):
-        provider = PROVIDER_MAP[provider_name]
+    def add_provider(
+        self, model: str | None = None, provider_name: str | None = None, api_key: str | None = None, **kwargs
+    ):
+        if provider_name:
+            try:
+                provider = PROVIDER_MAP[provider_name]
+            except KeyError as e:
+                msg = f"Provider {provider_name} not found among {list(PROVIDER_MAP.keys())}"
+                raise ValueError(msg) from e
+        else:
+            provider = next((p for p in PROVIDER_MAP.values() if model in p.kind.MODEL_INFO), None)
+            if not provider:
+                msg = "Either model or provider_name must be provided"
+                raise ValueError(msg)
+
         if provider.api_key_name:
             api_key = api_key or os.getenv(provider.api_key_name)
             if not api_key:
                 msg = f"{provider.api_key_name} environment variable is required"
                 raise Exception(msg)
 
-        self.models[provider_name] = provider.kind(api_key=api_key or "", model=model, **kwargs)
+        impl = provider.kind(api_key=api_key or "", model=model, **kwargs)
+        self.models[impl.model] = impl
         return self
 
     def stream_models(self) -> list[StreamProvider]:
@@ -203,7 +221,7 @@ class LLMS:
         self,
         problems: list[tuple[str, str]] | None = None,
         delay: float = 0,
-        evaluator: Provider | None = None,
+        evaluator: LLMS | None = None,
         show_outputs: bool = False,
         **kwargs: t.Any,
     ) -> tuple[PrettyTable, PrettyTable | None]:

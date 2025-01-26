@@ -35,7 +35,7 @@ PyLLMs is a minimal Python library to connect to various Language Models (LLMs) 
 - Response meta includes tokens processed, cost, and latency standardized across models
 - Multi-model support: Get completions from different models simultaneously
 - LLM benchmark: Evaluate models on quality, speed, and cost
--  Async and streaming support for compatible models
+- Async and streaming support for compatible models
 
 ## Installation
 
@@ -74,7 +74,7 @@ print(result.text)
 print(result.meta)
 ```
 
-### Multi-model Usage
+### Multimodel Usage
 
 ```python
 models = llms.init(model=['gpt-3.5-turbo', 'claude-instant-v1'])
@@ -140,10 +140,24 @@ export DEEPSEEK_API_KEY="your_api_key_here"
 export LLMS_DEFAULT_MODEL="gpt-3.5-turbo"
 ```
 
-Alternatively, you can pass initialization values to the `init()` method:
+Alternatively, you can pass initialization values to the `init()` method, either as a dict:
 
 ```python
-model = llms.init(openai_api_key='your_api_key_here', model='gpt-4')
+model = llms.init(model={'gpt-4': {'api_key': 'your_api_key_here'}})
+```
+
+Or, as a tuple:
+
+```python
+model = llms.init(model=('gpt-4', {'api_key': 'your_api_key_here'}))
+```
+
+If you want multiple models, simply add other dict keys, or use a list of tuples:
+
+```python
+model = llms.init(model={'gpt-4': {'api_key': 'your_api_key_here'}, 'deepseek-chat': {'api_key': 'your_api_key_here'}})
+# or
+model = llms.init(model=[('gpt-4', {'api_key': 'your_api_key_here'}), ('deepseek-chat', {'api_key': 'your_api_key_here'})])
 ```
 
 ## Model Benchmarks
@@ -176,6 +190,7 @@ model.list() # list all models
 
 model.list("gpt")  # lists only models with 'gpt' in name/provider name
 ```
+
 Currently supported models (may be outdated):
 
 | **Provider**              | **Models**                                                                                               |
@@ -196,8 +211,6 @@ Currently supported models (may be outdated):
 | TogetherProvider          | meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo |
 | OpenRouterProvider        | nvidia/llama-3.1-nemotron-70b-instruct, x-ai/grok-2, nousresearch/hermes-3-llama-3.1-405b:free, google/gemini-flash-1.5-exp, liquid/lfm-40b, mistralai/ministral-8b, qwen/qwen-2.5-72b-instruct |
 | MistralProvider           | mistral-tiny, open-mistral-7b, mistral-small, open-mixtral-8x7b, mistral-small-latest, mistral-medium-latest, mistral-large-latest, open-mistral-nemo |
-
-
 
 ## Advanced Usage
 
