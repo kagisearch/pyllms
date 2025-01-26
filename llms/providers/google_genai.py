@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import google.generativeai as genai
 
-from .base import SyncProvider, msg_as_str
+from .base import ModelInfo, SyncProvider, msg_as_str
 
 
 @dataclass
@@ -15,48 +15,13 @@ class GoogleGenAIProvider(SyncProvider):
     # cost is per million tokens
     MODEL_INFO = {
         # no support for "textembedding-gecko"
-        "chat-bison-genai": {
-            "prompt": 0.5,
-            "completion": 0.5,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "text-bison-genai": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "gemini-1.5-pro": {
-            "prompt": 3.5,
-            "completion": 10.5,
-            "token_limit": 128000,
-            "uses_characters": True,
-        },
-        "gemini-1.5-pro-latest": {
-            "prompt": 3.5,
-            "completion": 10.5,
-            "token_limit": 128000,
-            "uses_characters": True,
-        },
-        "gemini-1.5-flash": {
-            "prompt": 0.075,
-            "completion": 0.3,
-            "token_limit": 128000,
-            "uses_characters": True,
-        },
-        "gemini-1.5-flash-latest": {
-            "prompt": 0.075,
-            "completion": 0.3,
-            "token_limit": 128000,
-            "uses_characters": True,
-        },
-        "gemini-1.5-pro-exp-0801": {
-            "prompt": 3.5,
-            "completion": 10.5,
-            "token_limit": 128000,
-            "uses_characters": True,
-        },
+        "chat-bison-genai": ModelInfo(prompt_cost=0.5, completion_cost=0.5, context_limit=0),
+        "text-bison-genai": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "gemini-1.5-pro": ModelInfo(prompt_cost=3.5, completion_cost=10.5, context_limit=128000),
+        "gemini-1.5-pro-latest": ModelInfo(prompt_cost=3.5, completion_cost=10.5, context_limit=128000),
+        "gemini-1.5-flash": ModelInfo(prompt_cost=0.075, completion_cost=0.3, context_limit=128000),
+        "gemini-1.5-flash-latest": ModelInfo(prompt_cost=0.075, completion_cost=0.3, context_limit=128000),
+        "gemini-1.5-pro-exp-0801": ModelInfo(prompt_cost=3.5, completion_cost=10.5, context_limit=128000),
     }
 
     def __post_init__(self):
@@ -95,10 +60,7 @@ class GoogleGenAIProvider(SyncProvider):
 
         prompt_tokens = len(msg_as_str(messages))
         completion_tokens = len(completion)
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (
-            (prompt_tokens * cost_per_token["prompt"]) + (completion_tokens * cost_per_token["completion"])
-        ) / 1_000_000
+        cost = ((prompt_tokens * self.info.prompt_cost) + (completion_tokens * self.info.completion_cost)) / 1_000_000
 
         # fast approximation. We could call count_message_tokens() but this will add latency
         prompt_tokens = math.ceil((prompt_tokens + 1) / 4)

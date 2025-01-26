@@ -6,34 +6,22 @@ from dataclasses import dataclass
 import tiktoken
 from mistralai import Mistral
 
-from .base import StreamProvider, msg_as_str
+from .base import ModelInfo, StreamProvider, msg_as_str
 
 
 @dataclass
 class MistralProvider(StreamProvider):
     MODEL_INFO = {
-        "mistral-tiny": {"prompt": 0.25, "completion": 0.25, "token_limit": 32_000},
+        "mistral-tiny": ModelInfo(prompt_cost=0.25, completion_cost=0.25, context_limit=32_000),
         # new endpoint for mistral-tiny, mistral-tiny will be deprecated in ~June 2024
-        "open-mistral-7b": {"prompt": 0.25, "completion": 0.25, "token_limit": 32_000},
-        "mistral-small": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
+        "open-mistral-7b": ModelInfo(prompt_cost=0.25, completion_cost=0.25, context_limit=32_000),
+        "mistral-small": ModelInfo(prompt_cost=0.7, completion_cost=0.7, context_limit=32_000),
         # new endpoint for mistral-small, mistral-small will be deprecated in ~June 2024
-        "open-mixtral-8x7b": {"prompt": 0.7, "completion": 0.7, "token_limit": 32_000},
-        "mistral-small-latest": {
-            "prompt": 2.0,
-            "completion": 6.0,
-            "token_limit": 32_000,
-        },
-        "mistral-medium-latest": {
-            "prompt": 2.7,
-            "completion": 8.1,
-            "token_limit": 32_000,
-        },
-        "mistral-large-latest": {
-            "prompt": 3.0,
-            "completion": 9.0,
-            "token_limit": 32_000,
-        },
-        "open-mistral-nemo": {"prompt": 0.3, "completion": 0.3, "token_limit": 32_000},
+        "open-mixtral-8x7b": ModelInfo(prompt_cost=0.7, completion_cost=0.7, context_limit=32_000),
+        "mistral-small-latest": ModelInfo(prompt_cost=2.0, completion_cost=6.0, context_limit=32_000),
+        "mistral-medium-latest": ModelInfo(prompt_cost=2.7, completion_cost=8.1, context_limit=32_000),
+        "mistral-large-latest": ModelInfo(prompt_cost=3.0, completion_cost=9.0, context_limit=32_000),
+        "open-mistral-nemo": ModelInfo(prompt_cost=0.3, completion_cost=0.3, context_limit=32_000),
     }
 
     def __post_init__(self):

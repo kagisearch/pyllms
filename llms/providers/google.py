@@ -13,7 +13,7 @@ from vertexai.language_models import (
     TextGenerationModel,
 )
 
-from .base import SyncProvider
+from .base import ModelInfo, SyncProvider
 
 
 @dataclass
@@ -21,66 +21,30 @@ class GoogleProvider(SyncProvider):
     # cost is per million tokens
     MODEL_INFO = {
         # no support for "textembedding-gecko"
-        "chat-bison": {
-            "prompt": 0.5,
-            "completion": 0.5,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "text-bison": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "text-bison-32k": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "code-bison": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "code-bison-32k": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "codechat-bison": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "codechat-bison-32k": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "gemini-pro": {
-            "prompt": 1.0,
-            "completion": 1.0,
-            "token_limit": 0,
-            "uses_characters": True,
-        },
-        "gemini-1.5-pro-preview-0514": {
-            "prompt": 0.35,
-            "completion": 0.53,
-            "token_limit": 0,
-            "uses_characters": False,
-        },
-        "gemini-1.5-flash-preview-0514": {
-            "prompt": 0.35,
-            "completion": 0.53,
-            "token_limit": 0,
-            "uses_characters": False,
-        },
+        "chat-bison": ModelInfo(prompt_cost=0.5, completion_cost=0.5, context_limit=0),
+        "text-bison": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "text-bison-32k": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "code-bison": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "code-bison-32k": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "codechat-bison": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "codechat-bison-32k": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "gemini-pro": ModelInfo(prompt_cost=1.0, completion_cost=1.0, context_limit=0),
+        "gemini-1.5-pro-preview-0514": ModelInfo(
+            prompt_cost=0.35,
+            completion_cost=0.53,
+            context_limit=0,
+            quirks={
+                "uses_characters": False,
+            },
+        ),
+        "gemini-1.5-flash-preview-0514": ModelInfo(
+            prompt_cost=0.35,
+            completion_cost=0.53,
+            context_limit=0,
+            quirks={
+                "uses_characters": False,
+            },
+        ),
     }
 
     def __post_init__(self):
@@ -130,21 +94,17 @@ class GoogleProvider(SyncProvider):
 
         completion = response.text or ""
 
-        cost_per_token = self.MODEL_INFO[self.model]
-
         # Calculate tokens and cost
-        if cost_per_token["uses_characters"]:
+        if self.info.quirks.get("uses_characters", True):
             prompt_tokens = len(prompt)
             completion_tokens = len(completion)
         else:
             prompt_tokens = len(prompt) / 4
             completion_tokens = len(completion) / 4
 
-        cost = (
-            (prompt_tokens * cost_per_token["prompt"]) + (completion_tokens * cost_per_token["completion"])
-        ) / 1_000_000
+        cost = ((prompt_tokens * self.info.prompt_cost) + (completion_tokens * self.info.completion_cost)) / 1_000_000
 
-        if not cost_per_token["uses_characters"]:
+        if not self.info.quirks.get("uses_characters", True):
             prompt_tokens = math.ceil((prompt_tokens + 1) / 4)
             completion_tokens = math.ceil((completion_tokens + 1) / 4)
         total_tokens = prompt_tokens + completion_tokens

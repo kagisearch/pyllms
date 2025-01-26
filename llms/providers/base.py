@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import time
 import typing as t
+import warnings
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -146,6 +147,23 @@ class AsyncStreamResult(ABCResult):
 
 
 @dataclass
+class ModelInfo:
+    prompt_cost: float
+    completion_cost: float
+    context_limit: int
+    output_limit: int | None = None
+    image_input_cost: float | None = None
+    hf_repo: str | None = None
+    chat: bool = True
+    local: bool = False
+    quirks: dict[str, t.Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if self.output_limit is None:
+            self.output_limit = self.context_limit // 2
+
+
+@dataclass
 class SyncProvider(ABC):
     """Base class for all providers.
     Methods will raise NotImplementedError if they are not overwritten.
@@ -154,10 +172,19 @@ class SyncProvider(ABC):
     api_key: str
     model: t.Any = None
     latency: float | None = None
-    MODEL_INFO: t.ClassVar[dict] = {}
+    MODEL_INFO: t.ClassVar[dict[str, ModelInfo]] = {}
 
     def __post_init__(self):
         self.model = self.model or list(self.MODEL_INFO.keys())[0]
+        if info := self.MODEL_INFO.get(self.model):
+            self.info = info
+        else:
+            warnings.warn(f"no information about cost of the model: {self.model}", UserWarning, stacklevel=2)
+            self.info = ModelInfo(
+                prompt_cost=1,
+                completion_cost=1,
+                context_limit=4096,
+            )
 
     @contextmanager
     def track_latency(self):
@@ -168,10 +195,7 @@ class SyncProvider(ABC):
             self.latency = round(time.perf_counter() - start, 2)
 
     def compute_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
-        cost_per_token = self.MODEL_INFO[self.model]
-        cost = (
-            (prompt_tokens * cost_per_token["prompt"]) + (completion_tokens * cost_per_token["completion"])
-        ) / 1_000_000
+        cost = ((prompt_tokens * self.info.prompt_cost) + (completion_tokens * self.info.completion_cost)) / 1_000_000
         return round(cost, 5)
 
     @abstractmethod

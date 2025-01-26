@@ -6,18 +6,14 @@ from dataclasses import dataclass
 
 import cohere
 
-from .base import StreamProvider, msg_as_str
+from .base import ModelInfo, StreamProvider, msg_as_str
 
 
 @dataclass
 class CohereProvider(StreamProvider):
     MODEL_INFO = {
-        "command": {"prompt": 15.0, "completion": 15, "token_limit": 2048},
-        "command-nightly": {
-            "prompt": 15.0,
-            "completion": 15,
-            "token_limit": 4096,
-        },
+        "command": ModelInfo(prompt_cost=15.0, completion_cost=15, context_limit=2048),
+        "command-nightly": ModelInfo(prompt_cost=15.0, completion_cost=15, context_limit=4096),
     }
 
     def __post_init__(self):

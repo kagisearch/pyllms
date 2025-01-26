@@ -7,77 +7,75 @@ from dataclasses import dataclass
 import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
-from .base import StreamProvider, msg_as_str
+from .base import ModelInfo, StreamProvider, msg_as_str
 
 
 @dataclass
 class OpenAIProvider(StreamProvider):
     # cost is per million tokens
     MODEL_INFO = {
-        "gpt-3.5-turbo": {
-            "prompt": 2.0,
-            "completion": 2.0,
-            "token_limit": 16_385,
-            "is_chat": True,
-            "output_limit": 4_096,
-        },
-        "gpt-3.5-turbo-instruct": {
-            "prompt": 2.0,
-            "completion": 2.0,
-            "token_limit": 4096,
-            "is_chat": False,
-        },
-        "gpt-4": {
-            "prompt": 30.0,
-            "completion": 60.0,
-            "token_limit": 8192,
-            "is_chat": True,
-        },
-        "gpt-4-turbo": {
-            "prompt": 10.0,
-            "completion": 30.0,
-            "token_limit": 128_000,
-            "is_chat": True,
-            "output_limit": 4_096,
-        },
-        "gpt-4o": {
-            "prompt": 2.5,
-            "completion": 10.0,
-            "token_limit": 128_000,
-            "is_chat": True,
-            "output_limit": 4_096,
-        },
-        "gpt-4o-mini": {
-            "prompt": 0.15,
-            "completion": 0.60,
-            "token_limit": 128_000,
-            "is_chat": True,
-            "output_limit": 4_096,
-        },
-        "o1-preview": {
-            "prompt": 15.0,
-            "completion": 60.0,
-            "token_limit": 128_000,
-            "is_chat": True,
-            "output_limit": 4_096,
-            "use_max_completion_tokens": True,
-        },
-        "o1-mini": {
-            "prompt": 3.0,
-            "completion": 12.0,
-            "token_limit": 128_000,
-            "is_chat": True,
-            "output_limit": 4_096,
-            "use_max_completion_tokens": True,
-        },
-        "o1": {
-            "prompt": 15.0,
-            "completion": 60.0,
-            "token_limit": 200_000,
-            "is_chat": True,
-            "output_limit": 100_000,
-            "use_max_completion_tokens": True,
-        },
+        "gpt-3.5-turbo": ModelInfo(
+            prompt_cost=2.0,
+            completion_cost=2.0,
+            context_limit=16_385,
+            output_limit=4_096,
+        ),
+        "gpt-3.5-turbo-instruct": ModelInfo(
+            prompt_cost=2.0,
+            completion_cost=2.0,
+            context_limit=4096,
+            chat=False,
+        ),
+        "gpt-4": ModelInfo(
+            prompt_cost=30.0,
+            completion_cost=60.0,
+            context_limit=8192,
+        ),
+        "gpt-4-turbo": ModelInfo(
+            prompt_cost=10.0,
+            completion_cost=30.0,
+            context_limit=128_000,
+            output_limit=4_096,
+        ),
+        "gpt-4o": ModelInfo(
+            prompt_cost=2.5,
+            completion_cost=10.0,
+            context_limit=128_000,
+            output_limit=4_096,
+        ),
+        "gpt-4o-mini": ModelInfo(
+            prompt_cost=0.15,
+            completion_cost=0.60,
+            context_limit=128_000,
+            output_limit=4_096,
+        ),
+        "o1-preview": ModelInfo(
+            prompt_cost=15.0,
+            completion_cost=60.0,
+            context_limit=128_000,
+            output_limit=4_096,
+            quirks={
+                "use_max_completion_tokens": True,
+            },
+        ),
+        "o1-mini": ModelInfo(
+            prompt_cost=3.0,
+            completion_cost=12.0,
+            context_limit=128_000,
+            output_limit=4_096,
+            quirks={
+                "use_max_completion_tokens": True,
+            },
+        ),
+        "o1": ModelInfo(
+            prompt_cost=15.0,
+            completion_cost=60.0,
+            context_limit=200_000,
+            output_limit=100_000,
+            quirks={
+                "use_max_completion_tokens": True,
+            },
+        ),
     }
 
     def __post_init__(self):
@@ -109,9 +107,7 @@ class OpenAIProvider(StreamProvider):
         self,
         **kwargs,
     ) -> dict:
-        if not kwargs.get("max_completion_tokens") and self.MODEL_INFO[self.model].get(
-            "use_max_completion_tokens", False
-        ):
+        if not kwargs.get("max_completion_tokens") and self.info.quirks.get("use_max_completion_tokens", False):
             kwargs["max_completion_tokens"] = kwargs.pop("max_tokens", 300)
         return kwargs
 

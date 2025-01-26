@@ -6,26 +6,14 @@ from dataclasses import dataclass
 import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
-from .base import AsyncProvider
+from .base import AsyncProvider, ModelInfo
 
 
 @dataclass
 class DeepSeekProvider(AsyncProvider):
     MODEL_INFO = {
-        "deepseek-chat": {
-            "prompt": 0.14,
-            "completion": 0.28,
-            "token_limit": 128000,
-            "is_chat": True,
-            "output_limit": 8192,
-        },
-        "deepseek-coder": {
-            "prompt": 0.14,
-            "completion": 0.28,
-            "token_limit": 128000,
-            "is_chat": True,
-            "output_limit": 8192,
-        },
+        "deepseek-chat": ModelInfo(prompt_cost=0.14, completion_cost=0.28, context_limit=128000, output_limit=8192),
+        "deepseek-coder": ModelInfo(prompt_cost=0.14, completion_cost=0.28, context_limit=128000, output_limit=8192),
     }
 
     def __post_init__(self):

@@ -7,20 +7,16 @@ from dataclasses import dataclass
 import tiktoken
 from aleph_alpha_client import AsyncClient, Client, CompletionRequest, Prompt
 
-from .base import AsyncProvider, msg_as_str
+from .base import AsyncProvider, ModelInfo, msg_as_str
 
 
 @dataclass
 class AlephAlphaProvider(AsyncProvider):
     MODEL_INFO = {
-        "luminous-base": {"prompt": 6.6, "completion": 7.6, "token_limit": 2048},
-        "luminous-extended": {"prompt": 9.9, "completion": 10.9, "token_limit": 2048},
-        "luminous-supreme": {"prompt": 38.5, "completion": 42.5, "token_limit": 2048},
-        "luminous-supreme-control": {
-            "prompt": 48.5,
-            "completion": 53.6,
-            "token_limit": 2048,
-        },
+        "luminous-base": ModelInfo(prompt_cost=6.6, completion_cost=7.6, context_limit=2048),
+        "luminous-extended": ModelInfo(prompt_cost=9.9, completion_cost=10.9, context_limit=2048),
+        "luminous-supreme": ModelInfo(prompt_cost=38.5, completion_cost=42.5, context_limit=2048),
+        "luminous-supreme-control": ModelInfo(prompt_cost=48.5, completion_cost=53.6, context_limit=2048),
     }
 
     def __post_init__(self):

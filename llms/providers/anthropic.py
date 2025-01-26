@@ -5,77 +5,39 @@ from dataclasses import dataclass
 
 import anthropic
 
-from .base import StreamProvider
+from .base import ModelInfo, StreamProvider
 
 
 @dataclass
 class AnthropicProvider(StreamProvider):
     MODEL_INFO = {
-        "claude-instant-v1.1": {
-            "prompt": 1.63,
-            "completion": 5.51,
-            "token_limit": 9000,
-        },
-        "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
-        "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
-        "claude-v1-100k": {
-            "prompt": 11.02,
-            "completion": 32.68,
-            "token_limit": 100_000,
-        },
-        "claude-instant-1": {
-            "prompt": 1.63,
-            "completion": 5.51,
-            "token_limit": 100_000,
-        },
-        "claude-instant-1.2": {
-            "prompt": 1.63,
-            "completion": 5.51,
-            "token_limit": 100_000,
-            "output_limit": 4_096,
-        },
-        "claude-2.1": {
-            "prompt": 8.00,
-            "completion": 24.00,
-            "token_limit": 200_000,
-            "output_limit": 4_096,
-        },
-        "claude-3-haiku-20240307": {
-            "prompt": 0.25,
-            "completion": 1.25,
-            "token_limit": 200_000,
-            "output_limit": 4_096,
-        },
-        "claude-3-sonnet-20240229": {
-            "prompt": 3.00,
-            "completion": 15,
-            "token_limit": 200_000,
-            "output_limit": 4_096,
-        },
-        "claude-3-opus-20240229": {
-            "prompt": 15.00,
-            "completion": 75,
-            "token_limit": 200_000,
-            "output_limit": 4_096,
-        },
-        "claude-3-5-sonnet-20240620": {
-            "prompt": 3.00,
-            "completion": 15,
-            "token_limit": 200_000,
-            "output_limit": 4_096,
-        },
-        "claude-3-5-sonnet-20241022": {
-            "prompt": 3.00,
-            "completion": 15,
-            "token_limit": 200_000,
-            "output_limit": 4_096,
-        },
-        "claude-3-5-sonnet-latest": {
-            "prompt": 3.00,
-            "completion": 15,
-            "token_limit": 200_000,
-            "output_limit": 4_096,
-        },
+        "claude-instant-v1.1": ModelInfo(prompt_cost=1.63, completion_cost=5.51, context_limit=9000),
+        "claude-instant-v1": ModelInfo(prompt_cost=1.63, completion_cost=5.51, context_limit=9000),
+        "claude-v1": ModelInfo(prompt_cost=11.02, completion_cost=32.68, context_limit=9000),
+        "claude-v1-100k": ModelInfo(prompt_cost=11.02, completion_cost=32.68, context_limit=100_000),
+        "claude-instant-1": ModelInfo(prompt_cost=1.63, completion_cost=5.51, context_limit=100_000),
+        "claude-instant-1.2": ModelInfo(
+            prompt_cost=1.63, completion_cost=5.51, context_limit=100_000, output_limit=4_096
+        ),
+        "claude-2.1": ModelInfo(prompt_cost=8.00, completion_cost=24.00, context_limit=200_000, output_limit=4_096),
+        "claude-3-haiku-20240307": ModelInfo(
+            prompt_cost=0.25, completion_cost=1.25, context_limit=200_000, output_limit=4_096
+        ),
+        "claude-3-sonnet-20240229": ModelInfo(
+            prompt_cost=3.00, completion_cost=15, context_limit=200_000, output_limit=4_096
+        ),
+        "claude-3-opus-20240229": ModelInfo(
+            prompt_cost=15.00, completion_cost=75, context_limit=200_000, output_limit=4_096
+        ),
+        "claude-3-5-sonnet-20240620": ModelInfo(
+            prompt_cost=3.00, completion_cost=15, context_limit=200_000, output_limit=4_096
+        ),
+        "claude-3-5-sonnet-20241022": ModelInfo(
+            prompt_cost=3.00, completion_cost=15, context_limit=200_000, output_limit=4_096
+        ),
+        "claude-3-5-sonnet-latest": ModelInfo(
+            prompt_cost=3.00, completion_cost=15, context_limit=200_000, output_limit=4_096
+        ),
     }
 
     def __post_init__(self):

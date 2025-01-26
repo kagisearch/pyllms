@@ -6,42 +6,17 @@ from dataclasses import dataclass
 import tiktoken
 from openai import AsyncOpenAI, OpenAI
 
-from .base import StreamProvider
+from .base import ModelInfo, StreamProvider
 
 
 @dataclass
 class GroqProvider(StreamProvider):
     MODEL_INFO = {
-        "llama-3.1-405b-reasoning": {
-            "prompt": 0.59,
-            "completion": 0.79,
-            "token_limit": 131072,
-            "is_chat": True,
-        },
-        "llama-3.1-70b-versatile": {
-            "prompt": 0.59,
-            "completion": 0.79,
-            "token_limit": 131072,
-            "is_chat": True,
-        },
-        "llama-3.1-8b-instant": {
-            "prompt": 0.05,
-            "completion": 0.08,
-            "token_limit": 131072,
-            "is_chat": True,
-        },
-        "gemma2-9b-it": {
-            "prompt": 0.20,
-            "completion": 0.20,
-            "token_limit": 131072,
-            "is_chat": True,
-        },
-        "llama-3.3-70b-versatile": {
-            "prompt": 0.59,
-            "completion": 0.79,
-            "token_limit": 131072,
-            "is_chat": True,
-        },
+        "llama-3.1-405b-reasoning": ModelInfo(prompt_cost=0.59, completion_cost=0.79, context_limit=131072),
+        "llama-3.1-70b-versatile": ModelInfo(prompt_cost=0.59, completion_cost=0.79, context_limit=131072),
+        "llama-3.1-8b-instant": ModelInfo(prompt_cost=0.05, completion_cost=0.08, context_limit=131072),
+        "gemma2-9b-it": ModelInfo(prompt_cost=0.20, completion_cost=0.20, context_limit=131072),
+        "llama-3.3-70b-versatile": ModelInfo(prompt_cost=0.59, completion_cost=0.79, context_limit=131072),
     }
 
     def __post_init__(self):

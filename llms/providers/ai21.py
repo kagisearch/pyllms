@@ -6,15 +6,15 @@ import ai21
 from ai21.models.chat import ChatMessage
 from ai21.tokenizers import get_tokenizer
 
-from .base import SyncProvider, msg_as_str
+from .base import ModelInfo, SyncProvider, msg_as_str
 
 
 @dataclass
 class AI21Provider(SyncProvider):
     # per million tokens
     MODEL_INFO = {
-        "j2-grande-instruct": {"prompt": 10.0, "completion": 10.0, "token_limit": 8192},
-        "j2-jumbo-instruct": {"prompt": 15.0, "completion": 15.0, "token_limit": 8192},
+        "j2-grande-instruct": ModelInfo(prompt_cost=10.0, completion_cost=10.0, context_limit=8192),
+        "j2-jumbo-instruct": ModelInfo(prompt_cost=15.0, completion_cost=15.0, context_limit=8192),
     }
 
     def __post_init__(self):

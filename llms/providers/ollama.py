@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from ollama import AsyncClient, Client
 
-from .base import StreamProvider, msg_as_str
+from .base import ModelInfo, StreamProvider, msg_as_str
 
 
 def _get_model_info(ollama_host: str | None = "http://localhost:11434"):
@@ -16,11 +16,11 @@ def _get_model_info(ollama_host: str | None = "http://localhost:11434"):
         for model in pulled_models:
             name = model["model"]
             # Ollama models are free to use locally
-            model_info[name] = {
-                "prompt": 0.0,
-                "completion": 0.0,
-                "token_limit": 4096,  # Default token limit
-            }
+            model_info[name] = ModelInfo(
+                prompt_cost=0.0,
+                completion_cost=0.0,
+                context_limit=4096,  # Default token limit
+            )
 
         if not pulled_models:
             msg = "Could not retrieve any models from Ollama"

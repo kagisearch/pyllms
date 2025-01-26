@@ -6,15 +6,15 @@ from dataclasses import dataclass
 import tiktoken
 from reka.client import AsyncReka, Reka
 
-from .base import StreamProvider, msg_as_str
+from .base import ModelInfo, StreamProvider, msg_as_str
 
 
 @dataclass
 class RekaProvider(StreamProvider):
     MODEL_INFO = {
-        "reka-edge": {"prompt": 0.4, "completion": 1.0, "token_limit": 128000},
-        "reka-flash": {"prompt": 0.8, "completion": 2.0, "token_limit": 128000},
-        "reka-core": {"prompt": 3.0, "completion": 15.0, "token_limit": 128000},
+        "reka-edge": ModelInfo(prompt_cost=0.4, completion_cost=1.0, context_limit=128000),
+        "reka-flash": ModelInfo(prompt_cost=0.8, completion_cost=2.0, context_limit=128000),
+        "reka-core": ModelInfo(prompt_cost=3.0, completion_cost=15.0, context_limit=128000),
     }
 
     def __post_init__(self):

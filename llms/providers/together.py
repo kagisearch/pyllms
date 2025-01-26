@@ -7,17 +7,17 @@ import tiktoken
 import together
 from together import AsyncTogether, Together
 
-from .base import StreamProvider, msg_as_str
+from .base import ModelInfo, StreamProvider, msg_as_str
 
 
 @dataclass
 class TogetherProvider(StreamProvider):
     MODEL_INFO = {
-        "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo": {
-            "prompt": 5.0,
-            "completion": 5.0,
-            "token_limit": 4096,
-        },
+        "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo": ModelInfo(
+            prompt_cost=5.0,
+            completion_cost=5.0,
+            context_limit=4096,
+        ),
     }
 
     def __post_init__(self):
