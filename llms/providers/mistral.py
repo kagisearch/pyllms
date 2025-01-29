@@ -40,14 +40,14 @@ class MistralProvider(BaseProvider):
             async_client_kwargs = {}
         self.async_client = AsyncMistral(api_key=api_key, **async_client_kwargs)
 
-    def count_tokens(self, content: str | List[ChatMessage]) -> int:
+    def count_tokens(self, content: Union[str, List[Dict[str, str]]] -> int:
         # TODO: update after Mistarl support count token in their SDK
         # use gpt 3.5 turbo for estimation now
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
         if isinstance(content, list):
             formatting_token_count = 4
             messages = content
-            messages_text = [f"{message.role}{message.content}" for message in messages]
+            messages_text = [f"{message['role']}{message['content']}" for message in messages]
             tokens = [enc.encode(t, disallowed_special=()) for t in messages_text]
 
             n_tokens_list = []
