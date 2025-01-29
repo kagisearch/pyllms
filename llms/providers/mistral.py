@@ -1,9 +1,6 @@
 import tiktoken
 from typing import Dict, Union, Optional, List, Generator, AsyncGenerator
-from mistralai.client import MistralClient
-from mistralai.async_client import MistralAsyncClient
-from mistralai.models.chat_completion import ChatMessage
-
+from mistralai import Mistral, AsyncMistral
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
@@ -37,11 +34,11 @@ class MistralProvider(BaseProvider):
 
         if client_kwargs is None:
             client_kwargs = {}
-        self.client = MistralClient(api_key=api_key, **client_kwargs)
+        self.client = Mistral(api_key=api_key, **client_kwargs)
 
         if async_client_kwargs is None:
             async_client_kwargs = {}
-        self.async_client = MistralAsyncClient(api_key=api_key, **async_client_kwargs)
+        self.async_client = AsyncMistral(api_key=api_key, **async_client_kwargs)
 
     def count_tokens(self, content: str | List[ChatMessage]) -> int:
         # TODO: update after Mistarl support count token in their SDK
@@ -76,14 +73,14 @@ class MistralProvider(BaseProvider):
         if stop_sequences:
             raise ValueError("Parameter `stop` is not supported")
 
-        messages = [ChatMessage(role="user", content=prompt)]
+        messages = [{"role": "user", "content": prompt}]
         if history:
-            messages = [ChatMessage(**utterance) for utterance in history] + messages
+            messages = [{"role": msg["role"], "content": msg["content"]} for msg in history] + messages
 
         if system_message is None:
             pass
         elif isinstance(system_message, str):
-            messages = [ChatMessage(role="system", content=system_message), *messages]
+            messages = [{"role": "system", "content": system_message}, *messages]
 
         model_inputs = {
             "messages": messages,
@@ -119,7 +116,7 @@ class MistralProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = self.client.chat(model=self.model, **model_inputs)
+            response = self.client.chat.complete(model=self.model, **model_inputs)
 
         completion = response.choices[0].message.content
         usage = response.usage
@@ -160,7 +157,7 @@ class MistralProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            response = await self.async_client.chat(model=self.model, **model_inputs)
+            response = await self.async_client.chat.complete_async(model=self.model, **model_inputs)
 
         completion = response.choices[0].message.content
         usage = response.usage
@@ -201,7 +198,8 @@ class MistralProvider(BaseProvider):
             **kwargs,
         )
 
-        response = self.client.chat_stream(model=self.model, **model_inputs)
+        model_inputs["stream"] = True
+        response = self.client.chat.complete(model=self.model, **model_inputs)
         stream = self._process_stream(response)
         return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
@@ -241,7 +239,8 @@ class MistralProvider(BaseProvider):
         )
 
         with self.track_latency():
-            response = self.async_client.chat_stream(model=self.model, **model_inputs)
+            model_inputs["stream"] = True
+            response = self.async_client.chat.complete_async(model=self.model, **model_inputs)
         stream = self._aprocess_stream(response)
         return AsyncStreamResult(
             stream=stream, model_inputs=model_inputs, provider=self
