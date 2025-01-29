@@ -1,6 +1,6 @@
 import tiktoken
 from typing import Dict, Union, Optional, List, Generator, AsyncGenerator
-from mistralai import Mistral, AsyncMistral
+from mistralai import Mistral
 
 from ..results.result import AsyncStreamResult, Result, StreamResult
 from .base_provider import BaseProvider
@@ -36,9 +36,8 @@ class MistralProvider(BaseProvider):
             client_kwargs = {}
         self.client = Mistral(api_key=api_key, **client_kwargs)
 
-        if async_client_kwargs is None:
-            async_client_kwargs = {}
-        self.async_client = AsyncMistral(api_key=api_key, **async_client_kwargs)
+        # Use same client for both sync and async
+        self.async_client = self.client
 
     def count_tokens(self, content: Union[str, List[Dict[str, str]]]) -> int:
         # TODO: update after Mistarl support count token in their SDK
@@ -157,7 +156,7 @@ class MistralProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            response = await self.async_client.chat.complete_async(model=self.model, **model_inputs)
+            response = await self.async_client.chat.complete(model=self.model, **model_inputs)
 
         completion = response.choices[0].message.content
         usage = response.usage
@@ -240,7 +239,7 @@ class MistralProvider(BaseProvider):
 
         with self.track_latency():
             model_inputs["stream"] = True
-            response = self.async_client.chat.complete_async(model=self.model, **model_inputs)
+            response = self.async_client.chat.complete(model=self.model, **model_inputs)
         stream = self._aprocess_stream(response)
         return AsyncStreamResult(
             stream=stream, model_inputs=model_inputs, provider=self
