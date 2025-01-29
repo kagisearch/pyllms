@@ -11,6 +11,7 @@ class DeepSeekProvider(BaseProvider):
     MODEL_INFO = {
         "deepseek-chat": {"prompt": 0.14, "completion": 0.28, "token_limit": 128000, "is_chat": True, "output_limit": 8192},
         "deepseek-coder": {"prompt": 0.14, "completion": 0.28, "token_limit": 128000, "is_chat": True, "output_limit": 8192},
+        "deepseek-reasoner": {"prompt": 0.55, "completion": 2.19, "token_limit": 32768, "is_chat": True, "output_limit": 8192},
     }
 
     def __init__(

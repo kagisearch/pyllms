@@ -9,7 +9,7 @@ _project_homepage = "https://github.com/kagisearch/pyllms"
 
 setup(
     name="pyllms",
-    version="0.7.0",
+    version="0.7.1",
     description="Minimal Python library to connect to LLMs (OpenAI, Anthropic, Google, Mistral, OpenRouter, Reka, Groq, Together, Ollama, AI21, Cohere, Aleph-Alpha, HuggingfaceHub), with a built-in model performance benchmark.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -52,7 +52,7 @@ setup(
         "Topic :: Text Processing",
     ],
     python_requires=">=3.7",
-    keywords="llm, llms, large language model, AI, NLP, natural language processing, gpt, chatgpt, openai, anthropic, ai21, cohere, aleph alpha, huggingface hub, vertex ai, palm, palm2",
+    keywords="llm, llms, large language model, AI, NLP, natural language processing, gpt, chatgpt, openai, anthropic, ai21, cohere, aleph alpha, huggingface hub, vertex ai, palm, palm2, deepseek",
     project_urls={
         "Documentation": _project_homepage,
         "Source Code": _project_homepage,

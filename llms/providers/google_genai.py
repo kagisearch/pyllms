@@ -21,6 +21,10 @@ class GoogleGenAIProvider(BaseProvider):
         "gemini-1.5-flash": {"prompt": 0.075, "completion": 0.3, "token_limit": 128000, "uses_characters": True},
         "gemini-1.5-flash-latest": {"prompt": 0.075, "completion": 0.3, "token_limit": 128000, "uses_characters": True},
         "gemini-1.5-pro-exp-0801" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
+        "gemini-2.0-flash-exp" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
+        "gemini-2.0-flash-thinking-exp-1219" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
+        "gemini-exp-1206" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
+        
     }
     
     def __init__(self, api_key=None, model=None, **kwargs):
