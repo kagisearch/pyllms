@@ -170,6 +170,7 @@ class LLMS:
         html: bool = False,
         delay: float = 0,
         reasoning_effort: Optional[str] = None,
+        max_tokens: int = 1000,
         **kwargs: Any,
     ) -> Union[PrettyTable, str]:
         if not problems:
@@ -616,7 +617,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                 print(model, index)  # , prompt[0])
                 result = model.complete(
                     prompt[0], 
-                    max_tokens=1000, 
+                    max_tokens=max_tokens,
                     temperature=0,
                     reasoning_effort=reasoning_effort,
                     **kwargs
