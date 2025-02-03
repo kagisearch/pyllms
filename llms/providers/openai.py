@@ -80,6 +80,7 @@ class OpenAIProvider(BaseProvider):
         temperature: float = 0,
         max_tokens: int = 300,
         stream: bool = False,
+        reasoning_effort: Optional[str] = None,
         **kwargs,
     ) -> Dict:
         if self.is_chat_model:
@@ -98,6 +99,7 @@ class OpenAIProvider(BaseProvider):
             model_inputs = {
                 "messages": messages,
                 "stream": stream,
+                **({'reasoning_effort': reasoning_effort} if reasoning_effort else {}),
                 **kwargs,
             }
 
