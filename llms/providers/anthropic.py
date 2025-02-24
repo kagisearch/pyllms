@@ -155,6 +155,14 @@ class AnthropicProvider(BaseProvider):
             "max_tokens": max_tokens,
             "stop_sequences": stop_sequences,
         }
+        
+        # Add thinking mode if specified
+        thinking = kwargs.pop('thinking', None)
+        if thinking is not None:
+            model_inputs["thinking"] = {
+                "type": "enabled",
+                "budget_tokens": thinking if isinstance(thinking, int) else 32000
+            }
         return model_inputs
 
     def _prepare_model_inputs(
