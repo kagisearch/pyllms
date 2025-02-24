@@ -234,7 +234,13 @@ class AnthropicProvider(BaseProvider):
         with self.track_latency():
             if self.support_message_api:
                 response = self.client.messages.create(model=self.model, **model_inputs)
-                completion = response.content[0].text
+                # Handle thinking mode response format
+                if "thinking" in model_inputs:
+                    # Find the TextBlock in the content
+                    text_block = next((block for block in response.content if block.type == 'text'), None)
+                    completion = text_block.text if text_block else ""
+                else:
+                    completion = response.content[0].text
                 meta["tokens_prompt"] = response.usage.input_tokens
                 meta["tokens_completion"] = response.usage.output_tokens
             else:
@@ -281,7 +287,13 @@ class AnthropicProvider(BaseProvider):
         with self.track_latency():
             if self.support_message_api:
                 response = await self.async_client.messages.create(model=self.model, **model_inputs)
-                completion = response.content[0].text
+                # Handle thinking mode response format
+                if "thinking" in model_inputs:
+                    # Find the TextBlock in the content
+                    text_block = next((block for block in response.content if block.type == 'text'), None)
+                    completion = text_block.text if text_block else ""
+                else:
+                    completion = response.content[0].text
             else:
                 response = await self.async_client.completions.create(model=self.model, **model_inputs)
                 completion = response.completion.strip()
