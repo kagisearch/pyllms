@@ -617,14 +617,20 @@ Question: Is there a series of flights that goes from city F to city I?",
         def process_prompt(model, prompt, index, evaluator, evaluation_queue, **kwargs):
             try:
                 print(model, index)  # , prompt[0])
-                result = model.complete(
-                    prompt[0], 
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    reasoning_effort=reasoning_effort,
-                    thinking=thinking,
+                # Prepare kwargs for complete call
+                complete_kwargs = {
+                    'max_tokens': max_tokens,
+                    'temperature': temperature,
                     **kwargs
-                )
+                }
+                
+                # Only add optional parameters if they have values
+                if reasoning_effort is not None:
+                    complete_kwargs['reasoning_effort'] = reasoning_effort
+                if thinking is not None:
+                    complete_kwargs['thinking'] = thinking
+                    
+                result = model.complete(prompt[0], **complete_kwargs)
                 if delay > 0:
                     time.sleep(delay)
                 output_data = {
