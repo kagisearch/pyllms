@@ -19,7 +19,7 @@ class OpenAIProvider(BaseProvider):
         "gpt-4-turbo-preview": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4-turbo": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o": {"prompt": 2.5, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "gpt-4.5-preview": {"prompt": 15, "completion": 75.0, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
+        "gpt-4.5-preview": {"prompt": 75, "completion": 150.0, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
         "chatgpt-4o-latest": {"prompt": 5, "completion": 15.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-mini": {"prompt": 0.15, "completion": 0.60, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-2024-08-06": {"prompt": 2.50, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
