@@ -170,17 +170,30 @@ class OpenAIProvider(BaseProvider):
                 if "reasoning_effort" in model_inputs:
                     reasoning["effort"] = model_inputs.pop("reasoning_effort")
                 
-                # Remove parameters not supported by Responses API
-                if "temperature" in model_inputs:
-                    model_inputs["temperature"] = temperature
-                if "max_completion_tokens" in model_inputs:
-                    model_inputs["max_tokens"] = model_inputs.pop("max_completion_tokens")
+                # Prepare parameters for Responses API
+                responses_params = {}
+                
+                # Handle temperature if present
+                if temperature is not None:
+                    responses_params["temperature"] = temperature
+                
+                # Handle max_tokens - in Responses API this is part of a config object
+                if max_tokens is not None:
+                    responses_params["output"] = {"max_tokens": max_tokens}
+                
+                # Add any other supported parameters
+                for key, value in model_inputs.items():
+                    if key not in ["messages", "max_completion_tokens", "max_tokens", "temperature", "reasoning_effort"]:
+                        responses_params[key] = value
+                
+                # Add reasoning if present
+                if reasoning:
+                    responses_params["reasoning"] = reasoning
                 
                 response = self.client.responses.create(
                     model=self.model,
                     input=input_messages,
-                    **({"reasoning": reasoning} if reasoning else {}),
-                    **model_inputs
+                    **responses_params
                 )
             elif self.is_chat_model:
                 response = self.client.chat.completions.create(model=self.model, **model_inputs)
@@ -260,17 +273,30 @@ class OpenAIProvider(BaseProvider):
                 if "reasoning_effort" in model_inputs:
                     reasoning["effort"] = model_inputs.pop("reasoning_effort")
                 
-                # Remove parameters not supported by Responses API
-                if "temperature" in model_inputs:
-                    model_inputs["temperature"] = temperature
-                if "max_completion_tokens" in model_inputs:
-                    model_inputs["max_tokens"] = model_inputs.pop("max_completion_tokens")
+                # Prepare parameters for Responses API
+                responses_params = {}
+                
+                # Handle temperature if present
+                if temperature is not None:
+                    responses_params["temperature"] = temperature
+                
+                # Handle max_tokens - in Responses API this is part of a config object
+                if max_tokens is not None:
+                    responses_params["output"] = {"max_tokens": max_tokens}
+                
+                # Add any other supported parameters
+                for key, value in model_inputs.items():
+                    if key not in ["messages", "max_completion_tokens", "max_tokens", "temperature", "reasoning_effort"]:
+                        responses_params[key] = value
+                
+                # Add reasoning if present
+                if reasoning:
+                    responses_params["reasoning"] = reasoning
                 
                 response = await self.async_client.responses.create(
                     model=self.model,
                     input=input_messages,
-                    **({"reasoning": reasoning} if reasoning else {}),
-                    **model_inputs
+                    **responses_params
                 )
                 completion = response.output_text.strip()
             elif self.is_chat_model:
