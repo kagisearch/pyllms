@@ -180,9 +180,9 @@ class OpenAIProvider(BaseProvider):
                 if temperature is not None:
                     responses_params["temperature"] = temperature
                 
-                # For Responses API, max_tokens is a top-level parameter
+                # For Responses API, max_tokens should be converted to max_output_tokens
                 if max_tokens is not None:
-                    responses_params["max_tokens"] = max_tokens
+                    responses_params["max_output_tokens"] = max_tokens
                 
                 # Add any other supported parameters
                 for key, value in model_inputs.items():
@@ -282,9 +282,9 @@ class OpenAIProvider(BaseProvider):
                 if temperature is not None:
                     responses_params["temperature"] = temperature
                 
-                # For Responses API, max_tokens is a top-level parameter
+                # For Responses API, max_tokens should be converted to max_output_tokens
                 if max_tokens is not None:
-                    responses_params["max_tokens"] = max_tokens
+                    responses_params["max_output_tokens"] = max_tokens
                 
                 # Add any other supported parameters
                 for key, value in model_inputs.items():
