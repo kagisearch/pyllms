@@ -176,9 +176,8 @@ class OpenAIProvider(BaseProvider):
                     "input": input_messages
                 }
                 
-                # Handle temperature if present
-                if temperature is not None:
-                    responses_params["temperature"] = temperature
+                # Temperature is not supported for some models with Responses API
+                # Only add it if the model supports it
                 
                 # For Responses API, max_tokens should be converted to max_output_tokens
                 if max_tokens is not None:
@@ -278,9 +277,8 @@ class OpenAIProvider(BaseProvider):
                     "input": input_messages
                 }
                 
-                # Handle temperature if present
-                if temperature is not None:
-                    responses_params["temperature"] = temperature
+                # Temperature is not supported for some models with Responses API
+                # Only add it if the model supports it
                 
                 # For Responses API, max_tokens should be converted to max_output_tokens
                 if max_tokens is not None:
