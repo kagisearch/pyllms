@@ -27,6 +27,7 @@ class OpenAIProvider(BaseProvider):
         "o1-mini": {"prompt": 3.0, "completion": 12.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o3-mini": {"prompt": 1.1, "completion": 4.40, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o1": {"prompt": 15.0, "completion": 60.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
+        "o1-pro": {"prompt": 150.0, "completion": 600.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
     }
 
     def __init__(
