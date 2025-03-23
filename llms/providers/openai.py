@@ -203,14 +203,27 @@ class OpenAIProvider(BaseProvider):
         
         if self.uses_responses_api:
             # Extract text from Responses API
-            completion = response.output_text.strip()
+            # Find the output_text in the response
+            for item in response.output:
+                if item.type == "message" and hasattr(item, "content"):
+                    for content_item in item.content:
+                        if content_item.type == "output_text":
+                            completion = content_item.text.strip()
+                            break
+            
             # Handle function calls if present
             if hasattr(response, 'output') and hasattr(response.output, 'function_calls'):
                 function_call = {
                     "name": response.output.function_calls[0].name,
                     "arguments": response.output.function_calls[0].arguments
                 }
-            usage = response.usage
+            
+            # Usage has different field names in Responses API
+            usage = {
+                "prompt_tokens": response.usage.input_tokens,
+                "completion_tokens": response.usage.output_tokens,
+                "total_tokens": response.usage.total_tokens
+            }
         else:
             is_func_call = response.choices[0].finish_reason == "function_call"
             if self.is_chat_model:
@@ -226,8 +239,8 @@ class OpenAIProvider(BaseProvider):
             usage = response.usage
 
         meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
+            "tokens_prompt": usage["prompt_tokens"] if isinstance(usage, dict) else usage.prompt_tokens,
+            "tokens_completion": usage["completion_tokens"] if isinstance(usage, dict) else usage.completion_tokens,
             "latency": self.latency,
         }
         return Result(
@@ -294,7 +307,21 @@ class OpenAIProvider(BaseProvider):
                     responses_params["reasoning"] = reasoning
                 
                 response = await self.async_client.responses.create(**responses_params)
-                completion = response.output_text.strip()
+                # Find the output_text in the response
+                completion = ""
+                for item in response.output:
+                    if item.type == "message" and hasattr(item, "content"):
+                        for content_item in item.content:
+                            if content_item.type == "output_text":
+                                completion = content_item.text.strip()
+                                break
+                
+                # Usage has different field names in Responses API
+                usage = {
+                    "prompt_tokens": response.usage.input_tokens,
+                    "completion_tokens": response.usage.output_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
             elif self.is_chat_model:
                 response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
                 completion = response.choices[0].message.content.strip()
@@ -302,13 +329,19 @@ class OpenAIProvider(BaseProvider):
                 response = await self.async_client.completions.create(model=self.model, **model_inputs)
                 completion = response.choices[0].text.strip()
 
-        usage = response.usage
-
-        meta = {
-            "tokens_prompt": usage.prompt_tokens,
-            "tokens_completion": usage.completion_tokens,
-            "latency": self.latency,
-        }
+        if isinstance(usage, dict):
+            meta = {
+                "tokens_prompt": usage["prompt_tokens"],
+                "tokens_completion": usage["completion_tokens"],
+                "latency": self.latency,
+            }
+        else:
+            usage = response.usage
+            meta = {
+                "tokens_prompt": usage.prompt_tokens,
+                "tokens_completion": usage.completion_tokens,
+                "latency": self.latency,
+            }
         return Result(
             text=completion,
             model_inputs=model_inputs,
