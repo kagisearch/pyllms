@@ -27,7 +27,7 @@ class OpenAIProvider(BaseProvider):
         "o1-mini": {"prompt": 3.0, "completion": 12.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o3-mini": {"prompt": 1.1, "completion": 4.40, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o1": {"prompt": 15.0, "completion": 60.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
-        "o1-pro": {"prompt": 150.0, "completion": 600.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
+        "o1-pro": {"prompt": 150.0, "completion": 600.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True, "use_responses_api": True},
     }
 
     def __init__(
@@ -50,6 +50,10 @@ class OpenAIProvider(BaseProvider):
     @property
     def is_chat_model(self) -> bool:
         return self.MODEL_INFO[self.model]['is_chat']
+        
+    @property
+    def uses_responses_api(self) -> bool:
+        return self.MODEL_INFO[self.model].get('use_responses_api', False)
 
     def count_tokens(self, content: Union[str, List[dict]]) -> int:
         enc = tiktoken.encoding_for_model(self.model)
@@ -158,26 +162,57 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency():
-            if self.is_chat_model:
+            if self.uses_responses_api:
+                # Convert messages format for Responses API
+                input_messages = model_inputs.pop("messages")
+                # Handle any reasoning_effort parameter
+                reasoning = {}
+                if "reasoning_effort" in model_inputs:
+                    reasoning["effort"] = model_inputs.pop("reasoning_effort")
+                
+                # Remove parameters not supported by Responses API
+                if "temperature" in model_inputs:
+                    model_inputs["temperature"] = temperature
+                if "max_completion_tokens" in model_inputs:
+                    model_inputs["max_tokens"] = model_inputs.pop("max_completion_tokens")
+                
+                response = self.client.responses.create(
+                    model=self.model,
+                    input=input_messages,
+                    **({"reasoning": reasoning} if reasoning else {}),
+                    **model_inputs
+                )
+            elif self.is_chat_model:
                 response = self.client.chat.completions.create(model=self.model, **model_inputs)
             else:
                 response = self.client.completions.create(model=self.model, **model_inputs)
 
-        is_func_call = response.choices[0].finish_reason == "function_call"
         function_call = {}
         completion = ""
-        if self.is_chat_model:
-            if is_func_call:
+        
+        if self.uses_responses_api:
+            # Extract text from Responses API
+            completion = response.output_text.strip()
+            # Handle function calls if present
+            if hasattr(response, 'output') and hasattr(response.output, 'function_calls'):
                 function_call = {
-                    "name": response.choices[0].message.function_call.name,
-                    "arguments": json.loads(response.choices[0].message.function_call.arguments)
+                    "name": response.output.function_calls[0].name,
+                    "arguments": response.output.function_calls[0].arguments
                 }
-            else:
-                completion = response.choices[0].message.content.strip()
+            usage = response.usage
         else:
-            completion = response.choices[0].text.strip()
-
-        usage = response.usage
+            is_func_call = response.choices[0].finish_reason == "function_call"
+            if self.is_chat_model:
+                if is_func_call:
+                    function_call = {
+                        "name": response.choices[0].message.function_call.name,
+                        "arguments": json.loads(response.choices[0].message.function_call.arguments)
+                    }
+                else:
+                    completion = response.choices[0].message.content.strip()
+            else:
+                completion = response.choices[0].text.strip()
+            usage = response.usage
 
         meta = {
             "tokens_prompt": usage.prompt_tokens,
@@ -217,15 +252,33 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency():
-            if self.is_chat_model:
+            if self.uses_responses_api:
+                # Convert messages format for Responses API
+                input_messages = model_inputs.pop("messages")
+                # Handle any reasoning_effort parameter
+                reasoning = {}
+                if "reasoning_effort" in model_inputs:
+                    reasoning["effort"] = model_inputs.pop("reasoning_effort")
+                
+                # Remove parameters not supported by Responses API
+                if "temperature" in model_inputs:
+                    model_inputs["temperature"] = temperature
+                if "max_completion_tokens" in model_inputs:
+                    model_inputs["max_tokens"] = model_inputs.pop("max_completion_tokens")
+                
+                response = await self.async_client.responses.create(
+                    model=self.model,
+                    input=input_messages,
+                    **({"reasoning": reasoning} if reasoning else {}),
+                    **model_inputs
+                )
+                completion = response.output_text.strip()
+            elif self.is_chat_model:
                 response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
+                completion = response.choices[0].message.content.strip()
             else:
                 response = await self.async_client.completions.create(model=self.model, **model_inputs)
-
-        if self.is_chat_model:
-            completion = response.choices[0].message.content.strip()
-        else:
-            completion = response.choices[0].text.strip()
+                completion = response.choices[0].text.strip()
 
         usage = response.usage
 
@@ -266,7 +319,11 @@ class OpenAIProvider(BaseProvider):
             **kwargs,
         )
 
-        if self.is_chat_model:
+        if self.uses_responses_api:
+            # Responses API doesn't support streaming in the same way
+            # For now, we'll use the chat completions API for streaming
+            response = self.client.chat.completions.create(model=self.model, **model_inputs)
+        elif self.is_chat_model:
             response = self.client.chat.completions.create(model=self.model, **model_inputs)
         else:
             response = self.client.completions.create(model=self.model, **model_inputs)
@@ -317,7 +374,11 @@ class OpenAIProvider(BaseProvider):
         )
 
         with self.track_latency():
-            if self.is_chat_model:
+            if self.uses_responses_api:
+                # Responses API doesn't support streaming in the same way
+                # For now, we'll use the chat completions API for streaming
+                response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
+            elif self.is_chat_model:
                 response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
             else:
                 response = await self.async_client.completions.create(model=self.model, **model_inputs)
