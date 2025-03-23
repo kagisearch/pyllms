@@ -171,15 +171,18 @@ class OpenAIProvider(BaseProvider):
                     reasoning["effort"] = model_inputs.pop("reasoning_effort")
                 
                 # Prepare parameters for Responses API
-                responses_params = {}
+                responses_params = {
+                    "model": self.model,
+                    "input": input_messages
+                }
                 
                 # Handle temperature if present
                 if temperature is not None:
                     responses_params["temperature"] = temperature
                 
-                # Handle max_tokens - in Responses API this is part of a config object
+                # Handle max_tokens - in Responses API this needs to be passed directly
                 if max_tokens is not None:
-                    responses_params["output"] = {"max_tokens": max_tokens}
+                    responses_params["max_tokens"] = max_tokens
                 
                 # Add any other supported parameters
                 for key, value in model_inputs.items():
@@ -190,11 +193,7 @@ class OpenAIProvider(BaseProvider):
                 if reasoning:
                     responses_params["reasoning"] = reasoning
                 
-                response = self.client.responses.create(
-                    model=self.model,
-                    input=input_messages,
-                    **responses_params
-                )
+                response = self.client.responses.create(**responses_params)
             elif self.is_chat_model:
                 response = self.client.chat.completions.create(model=self.model, **model_inputs)
             else:
@@ -274,15 +273,18 @@ class OpenAIProvider(BaseProvider):
                     reasoning["effort"] = model_inputs.pop("reasoning_effort")
                 
                 # Prepare parameters for Responses API
-                responses_params = {}
+                responses_params = {
+                    "model": self.model,
+                    "input": input_messages
+                }
                 
                 # Handle temperature if present
                 if temperature is not None:
                     responses_params["temperature"] = temperature
                 
-                # Handle max_tokens - in Responses API this is part of a config object
+                # Handle max_tokens - in Responses API this needs to be passed directly
                 if max_tokens is not None:
-                    responses_params["output"] = {"max_tokens": max_tokens}
+                    responses_params["max_tokens"] = max_tokens
                 
                 # Add any other supported parameters
                 for key, value in model_inputs.items():
@@ -293,11 +295,7 @@ class OpenAIProvider(BaseProvider):
                 if reasoning:
                     responses_params["reasoning"] = reasoning
                 
-                response = await self.async_client.responses.create(
-                    model=self.model,
-                    input=input_messages,
-                    **responses_params
-                )
+                response = await self.async_client.responses.create(**responses_params)
                 completion = response.output_text.strip()
             elif self.is_chat_model:
                 response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
