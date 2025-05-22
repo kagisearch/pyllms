@@ -595,20 +595,25 @@ Question: Is there a series of flights that goes from city F to city I?",
         {correct_answer}
         </correct_answer>"""
 
-                evaluator_result = evaluator.complete(
-                    prompt, system_message=system
-                ).text
-                # print(correct_answer, ai_answer, evaluator_result)
+                try:
+                    evaluator_result = evaluator.complete(
+                        prompt, system_message=system
+                    ).text
+                except Exception as e:
+                    LOGGER.error(f"Evaluation call failed for query {i}: {e}")
+                    scores.append(0)          # fall-back score
+                    continue
 
-                # Extract the score from the evaluator's response
-                score_match = re.search(r"<score>(\d)</score>", evaluator_result)
+                # Extract score (allow whitespace) – expect 0 or 1, else default to 0
+                score_match = re.search(r"<score>\s*([01])\s*</score>", evaluator_result)
                 if score_match:
-                    score = int(score_match.group(1))
-                    scores.append(score)
+                    scores.append(int(score_match.group(1)))
                 else:
-                    raise ValueError(
-                        f"Could not extract score from evaluator's response for query {i}"
+                    LOGGER.warning(
+                        f"Could not extract score for query {i}. "
+                        f"Raw evaluator output: {evaluator_result[:200]}..."
                     )
+                    scores.append(0)
 
             return scores
 
