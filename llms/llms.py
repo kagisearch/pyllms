@@ -606,6 +606,10 @@ Question: Is there a series of flights that goes from city F to city I?",
 
                 # Extract score (allow whitespace) – expect 0 or 1, else default to 0
                 score_match = re.search(r"<score>\s*([01])\s*</score>", evaluator_result)
+                # NEW fallback – look for a bare 0/1 anywhere if the tag-based search failed
+                if not score_match:
+                    score_match = re.search(r"\b([01])\b", evaluator_result.strip())
+
                 if score_match:
                     scores.append(int(score_match.group(1)))
                 else:
@@ -650,16 +654,17 @@ Question: Is there a series of flights that goes from city F to city I?",
                 return None
 
             if evaluator:
-                evaluation_thread = threading.Thread(
-                    target=lambda: evaluation_queue.put(
-                        (
-                            index,
-                            evaluate_answers(
-                                evaluator, [(prompt[0], prompt[1], result.text)]
-                            )[0],
-                        )
-                    )
-                )
+                def _eval_target():
+                    try:
+                        score = evaluate_answers(
+                            evaluator, [(prompt[0], prompt[1], result.text)]
+                        )[0]
+                    except Exception as e:
+                        LOGGER.error(f"Evaluation error for prompt index {index}: {e}")
+                        score = 0
+                    evaluation_queue.put((index, score))
+
+                evaluation_thread = threading.Thread(target=_eval_target)
                 evaluation_thread.start()
                 output_data["evaluation_thread"] = evaluation_thread
 
