@@ -68,67 +68,7 @@ class AnthropicProvider(BaseProvider):
             total += self.client.count_tokens(message["content"]) + formatting_token_count
         return total
 
-    @property
-    def support_message_api(self):
-        return self.model.startswith(("claude-instant-1", "claude-2", "claude-3"))
 
-    def _prepare_text_inputs(
-        self,
-        prompt: str,
-        history: Optional[List[dict]] = None,
-        temperature: float = 0,
-        max_tokens: int = 300,
-        stop_sequences: Optional[List[str]] = None,
-        ai_prompt: str = "",
-        system_message: Union[str, None] = None,
-        stream: bool = False,
-        **kwargs,
-    ) -> Dict:
-        if history is None:
-            history_prompt = ""
-        else:
-            history_text_list = []
-            for message in history:
-                role = message["role"]
-                content = message["content"]
-                if role == "user":
-                    role_prompt = anthropic.HUMAN_PROMPT
-                elif role == "assistant":
-                    role_prompt = anthropic.AI_PROMPT
-                else:
-                    raise ValueError(
-                        f"Invalid role {role}, role must be user or assistant."
-                    )
-
-                formatted_message = f"{role_prompt}{content}"
-                history_text_list.append(formatted_message)
-
-            history_prompt = "".join(history_text_list)
-
-        if system_message is None:
-            system_prompts = ""
-        else:
-            if not self.model.startswith(( "claude-2", "claude-3")):
-                raise ValueError("System message only available for Claude-2+ model")
-            system_prompts = f"{system_message.rstrip()}"
-
-        formatted_prompt = (
-            f"{system_prompts}{history_prompt}{anthropic.HUMAN_PROMPT}{prompt}{anthropic.AI_PROMPT}{ai_prompt}"
-        )
-
-        max_tokens_to_sample = kwargs.pop("max_tokens_to_sample", max_tokens)
-
-        if stop_sequences is None:
-            stop_sequences = [anthropic.HUMAN_PROMPT]
-        model_inputs = {
-            "prompt": formatted_prompt,
-            "temperature": temperature,
-            "max_tokens_to_sample": max_tokens_to_sample,
-            "stop_sequences": stop_sequences,
-            "stream": stream,
-            **kwargs,
-        }
-        return model_inputs
 
     def _prepare_message_inputs(
         self,
@@ -179,29 +119,17 @@ class AnthropicProvider(BaseProvider):
         stream: bool = False,
         **kwargs,
     ) -> Dict:
-        if self.support_message_api:
-            return self._prepare_message_inputs(
-                prompt=prompt,
-                history=history,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                stop_sequences=stop_sequences,
-                ai_prompt=ai_prompt,
-                system_message=system_message,
-                **kwargs,
-            )
-        else:
-            return self._prepare_text_inputs(
-                prompt=prompt,
-                history=history,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                stop_sequences=stop_sequences,
-                ai_prompt=ai_prompt,
-                system_message=system_message,
-                stream=stream,
-                **kwargs,
-            )
+        return self._prepare_message_inputs(
+            prompt=prompt,
+            history=history,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stop_sequences=stop_sequences,
+            ai_prompt=ai_prompt,
+            system_message=system_message,
+            stream=stream,
+            **kwargs,
+        )
 
     def complete(
         self,
@@ -234,20 +162,14 @@ class AnthropicProvider(BaseProvider):
 
         meta = {}
         with self.track_latency():
-            if self.support_message_api:
-                response = self.client.messages.create(model=self.model, **model_inputs)
-                # Handle thinking mode response format
-                if "thinking" in model_inputs:
-                    # Find the TextBlock in the content
-                    text_block = next((block for block in response.content if block.type == 'text'), None)
-                    completion = text_block.text if text_block else ""
-                else:
-                    completion = response.content[0].text
-                meta["tokens_prompt"] = response.usage.input_tokens
-                meta["tokens_completion"] = response.usage.output_tokens
+            response = self.client.messages.create(model=self.model, **model_inputs)
+            if "thinking" in model_inputs:
+                text_block = next((b for b in response.content if b.type == "text"), None)
+                completion = text_block.text if text_block else ""
             else:
-                response = self.client.completions.create(model=self.model, **model_inputs)
-                completion = response.completion.strip()
+                completion = response.content[0].text
+            meta["tokens_prompt"] = response.usage.input_tokens
+            meta["tokens_completion"] = response.usage.output_tokens
 
         meta["latency"] = self.latency
         return Result(
@@ -287,18 +209,12 @@ class AnthropicProvider(BaseProvider):
         )
 
         with self.track_latency():
-            if self.support_message_api:
-                response = await self.async_client.messages.create(model=self.model, **model_inputs)
-                # Handle thinking mode response format
-                if "thinking" in model_inputs:
-                    # Find the TextBlock in the content
-                    text_block = next((block for block in response.content if block.type == 'text'), None)
-                    completion = text_block.text if text_block else ""
-                else:
-                    completion = response.content[0].text
+            response = await self.async_client.messages.create(model=self.model, **model_inputs)
+            if "thinking" in model_inputs:
+                text_block = next((b for b in response.content if b.type == "text"), None)
+                completion = text_block.text if text_block else ""
             else:
-                response = await self.async_client.completions.create(model=self.model, **model_inputs)
-                completion = response.completion.strip()
+                completion = response.content[0].text
 
         return Result(
             text=completion,
@@ -337,12 +253,8 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            if self.support_message_api:
-                response = self.client.messages.stream(model=self.model, **model_inputs)
-                stream = self._process_message_stream(response)
-            else:
-                response = self.client.completions.create(model=self.model, **model_inputs)
-                stream = self._process_stream(response)
+            response = self.client.messages.stream(model=self.model, **model_inputs)
+            stream = self._process_message_stream(response)
 
         return StreamResult(stream=stream, model_inputs=model_inputs, provider=self)
 
@@ -386,14 +298,8 @@ class AnthropicProvider(BaseProvider):
             stream=True,
             **kwargs,
         )
-        if self.support_message_api:
-            response = self.async_client.messages.stream(model=self.model, **model_inputs)
-            stream = self._aprocess_message_stream(response)
-        else:
-            response = await self.async_client.completions.create(
-                model=self.model, **model_inputs
-            )
-            stream = self._aprocess_stream(response)
+        response = self.async_client.messages.stream(model=self.model, **model_inputs)
+        stream = self._aprocess_message_stream(response)
 
         return AsyncStreamResult(
             stream=stream, model_inputs=model_inputs, provider=self
