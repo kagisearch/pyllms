@@ -21,7 +21,6 @@ from .providers import (
     CohereProvider,
     AlephAlphaProvider,
     HuggingfaceHubProvider,
-    GoogleProvider,
     GoogleGenAIProvider,
     MistralProvider,
     OllamaProvider,
@@ -44,16 +43,21 @@ class Provider:
     api_key_name: Optional[str] = None
     api_key: Optional[str] = None
     needs_api_key: bool = True
+    custom_credential_check: Optional[Callable[[], bool]] = None
 
 
 def create_provider(
     provider_class: Type[BaseProvider],
     api_key_name: Optional[str] = None,
     needs_api_key: bool = True,
+    custom_credential_check: Optional[Callable[[], bool]] = None,
 ) -> Provider:
    
     return Provider(
-        provider_class, api_key_name=api_key_name, needs_api_key=needs_api_key
+        provider_class, 
+        api_key_name=api_key_name, 
+        needs_api_key=needs_api_key,
+        custom_credential_check=custom_credential_check
     )
 
 
@@ -62,7 +66,12 @@ class LLMS:
         "OpenAI": create_provider(OpenAIProvider, "OPENAI_API_KEY"),
         "Anthropic": create_provider(AnthropicProvider, "ANTHROPIC_API_KEY"),
         "BedrockAnthropic": create_provider(
-            BedrockAnthropicProvider, needs_api_key=False
+            BedrockAnthropicProvider, 
+            needs_api_key=True,
+            custom_credential_check=lambda: all([
+                os.getenv("AWS_ACCESS_KEY_ID"),
+                os.getenv("AWS_SECRET_ACCESS_KEY")
+            ])
         ),
         "AI21": create_provider(AI21Provider, "AI21_API_KEY"),
         "Cohere": create_provider(CohereProvider, "COHERE_API_KEY"),
@@ -72,7 +81,6 @@ class LLMS:
         ),
         "GoogleGenAI": create_provider(GoogleGenAIProvider, "GOOGLE_API_KEY"),
         "Mistral": create_provider(MistralProvider, "MISTRAL_API_KEY"),
-        "Google": create_provider(GoogleProvider, needs_api_key=False),
         "Ollama": create_provider(OllamaProvider, needs_api_key=False),
         "DeepSeek": create_provider(DeepSeekProvider, "DEEPSEEK_API_KEY"),
         "Groq": create_provider(GroqProvider, "GROQ_API_KEY"),
@@ -546,7 +554,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                     "38",
                 ),
                 (
-                    "Jenny and Kenny are walking in the same direction, Kenny at 3 feet per second and Jenny at 1 foot per second, on parallel paths that are 200 feet apart. A tall circular building 100 feet in diameter is centered midway between the paths. At the instant when the building first blocks the line of sight between Jenny and Kenny, they are 200 feet apart. Let $t\,$ be the amount of time, in seconds, before Jenny and Kenny can see each other again. If $t\,$ is written as a fraction in lowest terms, what is the sum of the numerator and denominator?",
+                    "Jenny and Kenny are walking in the same direction, Kenny at 3 feet per second and Jenny at 1 foot per second, on parallel paths that are 200 feet apart. A tall circular building 100 feet in diameter is centered midway between the paths. At the instant when the building first blocks the line of sight between Jenny and Kenny, they are 200 feet apart. Let $t\\,$ be the amount of time, in seconds, before Jenny and Kenny can see each other again. If $t\\,$ is written as a fraction in lowest terms, what is the sum of the numerator and denominator?",
                     "163",
                 ),
                 (
