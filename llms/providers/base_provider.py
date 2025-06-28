@@ -46,7 +46,7 @@ class BaseProvider:
 
     def count_tokens(self, content):
         raise NotImplementedError(
-            f"Count tokens is currently not supported with {self.__name__}"
+            f"Count tokens is currently not supported with {self.__class__.__name__}"
         )
 
     def complete(self, *args, **kwargs):
@@ -54,15 +54,15 @@ class BaseProvider:
 
     async def acomplete(self):
         raise NotImplementedError(
-            f"Async complete is not yet supported with {self.__name__}"
+            f"Async complete is not yet supported with {self.__class__.__name__}"
         )
 
     def complete_stream(self):
         raise NotImplementedError(
-            f"Streaming is not yet supported with {self.__name__}"
+            f"Streaming is not yet supported with {self.__class__.__name__}"
         )
 
     async def acomplete_stream(self):
         raise NotImplementedError(
-            f"Async streaming is not yet supported with {self.__name__}"
+            f"Async streaming is not yet supported with {self.__class__.__name__}"
         )

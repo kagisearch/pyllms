@@ -19,15 +19,21 @@ class OpenAIProvider(BaseProvider):
         "gpt-4-turbo-preview": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4-turbo": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o": {"prompt": 2.5, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
-        "gpt-4.5-preview": {"prompt": 75, "completion": 150.0, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
-        "chatgpt-4o-latest": {"prompt": 5, "completion": 15.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-mini": {"prompt": 0.15, "completion": 0.60, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-2024-08-06": {"prompt": 2.50, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-4.1": {"prompt": 10.0, "completion": 30.0, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
+        "gpt-4.1-mini": {"prompt": 2.0, "completion": 8.0, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
+        "gpt-4.1-nano": {"prompt": 0.5, "completion": 2.0, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
+        "gpt-4.5-preview": {"prompt": 75, "completion": 150.0, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
+        "chatgpt-4o-latest": {"prompt": 5, "completion": 15.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "o1-preview": {"prompt": 15.0, "completion": 60.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o1-mini": {"prompt": 3.0, "completion": 12.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
-        "o3-mini": {"prompt": 1.1, "completion": 4.40, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o1": {"prompt": 15.0, "completion": 60.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
         "o1-pro": {"prompt": 150.0, "completion": 600.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True, "use_responses_api": True},
+        "o3-mini": {"prompt": 1.1, "completion": 4.40, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
+        "o3": {"prompt": 20.0, "completion": 80.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
+        "o3-pro": {"prompt": 200.0, "completion": 800.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True, "use_responses_api": True},
+        "o4-mini": {"prompt": 0.8, "completion": 3.2, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
     }
 
     def __init__(
@@ -56,7 +62,12 @@ class OpenAIProvider(BaseProvider):
         return self.MODEL_INFO[self.model].get('use_responses_api', False)
 
     def count_tokens(self, content: Union[str, List[dict]]) -> int:
-        enc = tiktoken.encoding_for_model(self.model)
+        try:
+            enc = tiktoken.encoding_for_model(self.model)
+        except KeyError:
+            # For new models not yet in tiktoken, use gpt-4 as fallback
+            enc = tiktoken.encoding_for_model("gpt-4")
+        
         if isinstance(content, list):
             # When field name is present, ChatGPT will ignore the role token.
             # Adopted from OpenAI cookbook
@@ -325,10 +336,13 @@ class OpenAIProvider(BaseProvider):
             elif self.is_chat_model:
                 response = await self.async_client.chat.completions.create(model=self.model, **model_inputs)
                 completion = response.choices[0].message.content.strip()
+                usage = response.usage
             else:
                 response = await self.async_client.completions.create(model=self.model, **model_inputs)
                 completion = response.choices[0].text.strip()
+                usage = response.usage
 
+        # Handle usage consistently
         if isinstance(usage, dict):
             meta = {
                 "tokens_prompt": usage["prompt_tokens"],
@@ -336,7 +350,6 @@ class OpenAIProvider(BaseProvider):
                 "latency": self.latency,
             }
         else:
-            usage = response.usage
             meta = {
                 "tokens_prompt": usage.prompt_tokens,
                 "tokens_completion": usage.completion_tokens,
