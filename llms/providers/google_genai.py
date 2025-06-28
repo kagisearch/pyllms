@@ -28,15 +28,71 @@ class GoogleGenAIProvider(BaseProvider):
         "gemini-1.5-flash-8b": {"prompt": 0.0375, "completion": 0.15, "token_limit": 1000000, "uses_characters": True},
     }
     
-    def __init__(self, api_key=None, model=None, **kwargs):
+    def __init__(self, api_key=None, model=None, use_vertexai=False, project=None, location="us-central1", **kwargs):
+        """
+        Initialize Google GenAI Provider with support for both Gemini API and Vertex AI.
+        
+        Args:
+            api_key: API key for Gemini API (not needed for Vertex AI)
+            model: Model name to use
+            use_vertexai: Whether to use Vertex AI instead of Gemini API
+            project: Google Cloud project ID (required for Vertex AI)
+            location: Google Cloud location (default: us-central1)
+            **kwargs: Additional arguments
+        """
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
 
-        if api_key is None:
-            api_key = os.getenv("GOOGLE_API_KEY")
-
-        self.client = genai.Client(api_key=api_key)
         self.model = model
+        self.use_vertexai = use_vertexai
+        self.project = project
+        self.location = location
+
+        # Initialize the appropriate client
+        if use_vertexai:
+            # For Vertex AI, try to get project from parameter, environment, or let SDK auto-detect
+            if not project:
+                project = os.getenv("GOOGLE_CLOUD_PROJECT")
+                # If still no project, let the SDK try to auto-detect from gcloud config
+                # The SDK should be able to detect it from Application Default Credentials
+            
+            if project:
+                self.client = genai.Client(
+                    vertexai=True,
+                    project=project,
+                    location=location
+                )
+            else:
+                # Try without explicit project - let SDK auto-detect from gcloud config
+                try:
+                    self.client = genai.Client(
+                        vertexai=True,
+                        location=location
+                    )
+                    # If successful, try to get the project from gcloud config for display
+                    try:
+                        import subprocess
+                        result = subprocess.run(['gcloud', 'config', 'get-value', 'project'], 
+                                              capture_output=True, text=True, timeout=5)
+                        if result.returncode == 0:
+                            project = result.stdout.strip()
+                    except:
+                        project = "auto-detected"
+                except Exception as e:
+                    raise ValueError(
+                        f"Could not initialize Vertex AI client. Please either:\n"
+                        f"1. Set GOOGLE_CLOUD_PROJECT environment variable, or\n"
+                        f"2. Pass project parameter, or\n"
+                        f"3. Configure gcloud with: gcloud config set project YOUR_PROJECT_ID\n"
+                        f"Error: {e}"
+                    )
+        else:
+            if api_key is None:
+                api_key = os.getenv("GOOGLE_API_KEY")
+                if not api_key:
+                    raise ValueError("api_key parameter is required for Gemini API. Set GOOGLE_API_KEY environment variable or pass api_key parameter.")
+            
+            self.client = genai.Client(api_key=api_key)
 
     def count_tokens(self, content):
         """
@@ -232,3 +288,30 @@ class GoogleGenAIProvider(BaseProvider):
         async for chunk in response:
             if chunk.text:
                 yield chunk.text
+
+
+class GoogleVertexAIProvider(GoogleGenAIProvider):
+    """
+    Dedicated Google Vertex AI provider that always uses Vertex AI.
+    This is a convenience class for users who prefer explicit separation.
+    """
+    
+    def __init__(self, project=None, location="us-central1", model=None, **kwargs):
+        """
+        Initialize Google Vertex AI Provider.
+        
+        Args:
+            project: Google Cloud project ID (auto-detected from gcloud if not provided)
+            location: Google Cloud location (default: us-central1)
+            model: Model name to use
+            **kwargs: Additional arguments
+        """
+        # Always use Vertex AI, ignore any api_key parameter
+        super().__init__(
+            api_key=None, 
+            model=model, 
+            use_vertexai=True, 
+            project=project, 
+            location=location, 
+            **kwargs
+        )
