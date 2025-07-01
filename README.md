@@ -35,7 +35,7 @@ PyLLMs is a minimal Python library to connect to various Language Models (LLMs) 
 - Response meta includes tokens processed, cost, and latency standardized across models
 - Multi-model support: Get completions from different models simultaneously
 - LLM benchmark: Evaluate models on quality, speed, and cost
--  Async and streaming support for compatible models
+- Async and streaming support for compatible models
 
 ## Installation
 
@@ -176,28 +176,27 @@ model.list() # list all models
 
 model.list("gpt")  # lists only models with 'gpt' in name/provider name
 ```
+
 Currently supported models (may be outdated):
 
-| **Provider**              | **Models**                                                                                               |
-|---------------------------|---------------------------------------------------------------------------------------------------------|
-| OpenAIProvider            | gpt-3.5-turbo, gpt-3.5-turbo-1106, gpt-3.5-turbo-instruct, gpt-4, gpt-4-1106-preview, gpt-4-turbo-preview, gpt-4-turbo, gpt-4o, gpt-4o-mini, gpt-4o-2024-08-06, o1-preview, o1-mini, o1 |
-| AnthropicProvider         | claude-instant-v1.1, claude-instant-v1, claude-v1, claude-v1-100k, claude-instant-1, claude-instant-1.2, claude-2.1, claude-3-haiku-20240307, claude-3-sonnet-20240229, claude-3-opus-20240229, claude-3-5-sonnet-20240620, claude-3-5-sonnet-20241022 |
-| BedrockAnthropicProvider  | anthropic.claude-instant-v1, anthropic.claude-v1, anthropic.claude-v2, anthropic.claude-3-haiku-20240307-v1:0, anthropic.claude-3-sonnet-20240229-v1:0, anthropic.claude-3-5-sonnet-20240620-v1:0 |
-| AI21Provider              | j2-grande-instruct, j2-jumbo-instruct |
-| CohereProvider            | command, command-nightly |
-| AlephAlphaProvider        | luminous-base, luminous-extended, luminous-supreme, luminous-supreme-control |
-| HuggingfaceHubProvider    | hf_pythia, hf_falcon40b, hf_falcon7b, hf_mptinstruct, hf_mptchat, hf_llava, hf_dolly, hf_vicuna |
-| GoogleGenAIProvider       | chat-bison-genai, text-bison-genai, gemini-1.5-pro, gemini-1.5-pro-latest, gemini-1.5-flash, gemini-1.5-flash-latest, gemini-1.5-pro-exp-0801 |
-| GoogleProvider            | chat-bison, text-bison, text-bison-32k, code-bison, code-bison-32k, codechat-bison, codechat-bison-32k, gemini-pro, gemini-1.5-pro-preview-0514, gemini-1.5-flash-preview-0514 |
-| OllamaProvider            | vanilj/Phi-4:latest, falcon3:10b, smollm2:latest, llama3.2:3b-instruct-q8_0, qwen2:1.5b, mistral:7b-instruct-v0.2-q4_K_S, phi3:latest, phi3:3.8b, phi:latest, tinyllama:latest, magicoder:latest, deepseek-coder:6.7b, deepseek-coder:latest, dolphin-phi:latest, stablelm-zephyr:latest |
-| DeepSeekProvider          | deepseek-chat, deepseek-coder |
-| GroqProvider              | llama-3.1-405b-reasoning, llama-3.1-70b-versatile, llama-3.1-8b-instant, gemma2-9b-it |
-| RekaProvider              | reka-edge, reka-flash, reka-core |
-| TogetherProvider          | meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo |
-| OpenRouterProvider        | nvidia/llama-3.1-nemotron-70b-instruct, x-ai/grok-2, nousresearch/hermes-3-llama-3.1-405b:free, google/gemini-flash-1.5-exp, liquid/lfm-40b, mistralai/ministral-8b, qwen/qwen-2.5-72b-instruct |
-| MistralProvider           | mistral-tiny, open-mistral-7b, mistral-small, open-mixtral-8x7b, mistral-small-latest, mistral-medium-latest, mistral-large-latest, open-mistral-nemo |
-
-
+| **Provider**             | **Models**                                                                                                                                                                                                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| OpenAIProvider           | gpt-3.5-turbo, gpt-3.5-turbo-1106, gpt-3.5-turbo-instruct, gpt-4, gpt-4-1106-preview, gpt-4-turbo-preview, gpt-4-turbo, gpt-4o, gpt-4o-mini, gpt-4o-2024-08-06, gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, gpt-4.5-preview, chatgpt-4o-latest, o1-preview, o1-mini, o1, o1-pro, o3-mini, o3, o3-pro, o4-mini |
+| AnthropicProvider        | claude-2.1, claude-3-5-sonnet-20240620, claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, claude-3-7-sonnet-20250219, claude-sonnet-4-20250514, claude-opus-4-20250514                                                                                                                            |
+| BedrockAnthropicProvider | anthropic.claude-instant-v1, anthropic.claude-v1, anthropic.claude-v2, anthropic.claude-3-haiku-20240307-v1:0, anthropic.claude-3-sonnet-20240229-v1:0, anthropic.claude-3-5-sonnet-20240620-v1:0                                                                                                      |
+| AI21Provider             | j2-grande-instruct, j2-jumbo-instruct                                                                                                                                                                                                                                                                  |
+| CohereProvider           | command, command-nightly                                                                                                                                                                                                                                                                               |
+| AlephAlphaProvider       | luminous-base, luminous-extended, luminous-supreme, luminous-supreme-control                                                                                                                                                                                                                           |
+| HuggingfaceHubProvider   | hf_pythia, hf_falcon40b, hf_falcon7b, hf_mptinstruct, hf_mptchat, hf_llava, hf_dolly, hf_vicuna                                                                                                                                                                                                        |
+| GoogleGenAIProvider      | gemini-2.5-pro, gemini-2.5-flash, gemini-2.5-flash-lite-preview-06-17, gemini-2.0-flash, gemini-2.0-flash-lite, gemini-1.5-pro, gemini-1.5-flash, gemini-1.5-flash-8b                                                                                                                                  |
+| GoogleVertexAIProvider   | gemini-2.5-pro, gemini-2.5-flash, gemini-2.5-flash-lite-preview-06-17, gemini-2.0-flash, gemini-2.0-flash-lite, gemini-1.5-pro, gemini-1.5-flash, gemini-1.5-flash-8b                                                                                                                                  |
+| OllamaProvider           | vanilj/Phi-4:latest, falcon3:10b, smollm2:latest, llama3.2:3b-instruct-q8_0, qwen2:1.5b, mistral:7b-instruct-v0.2-q4_K_S, phi3:latest, phi3:3.8b, phi:latest, tinyllama:latest, magicoder:latest, deepseek-coder:6.7b, deepseek-coder:latest, dolphin-phi:latest, stablelm-zephyr:latest               |
+| DeepSeekProvider         | deepseek-chat, deepseek-coder                                                                                                                                                                                                                                                                          |
+| GroqProvider             | llama-3.1-405b-reasoning, llama-3.1-70b-versatile, llama-3.1-8b-instant, gemma2-9b-it                                                                                                                                                                                                                  |
+| RekaProvider             | reka-edge, reka-flash, reka-core                                                                                                                                                                                                                                                                       |
+| TogetherProvider         | meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo                                                                                                                                                                                                                                                          |
+| OpenRouterProvider       | nvidia/llama-3.1-nemotron-70b-instruct, x-ai/grok-2, nousresearch/hermes-3-llama-3.1-405b:free, google/gemini-flash-1.5-exp, liquid/lfm-40b, mistralai/ministral-8b, qwen/qwen-2.5-72b-instruct                                                                                                        |
+| MistralProvider          | mistral-tiny, open-mistral-7b, mistral-small, open-mixtral-8x7b, mistral-small-latest, mistral-medium-latest, mistral-large-latest, open-mistral-nemo                                                                                                                                                  |
 
 ## Advanced Usage
 
@@ -221,19 +220,51 @@ azure_args = {
 azure_result = model.complete("What is 5+5?", **azure_args)
 ```
 
-### Using Google Vertex LLM models
+### Using Google AI Models
+
+PyLLMs supports Google's AI models through two providers:
+
+#### Option 1: Gemini API (GoogleGenAI)
+
+Uses direct Gemini API with API key authentication:
+
+```python
+# Set your API key
+export GOOGLE_API_KEY="your_api_key_here"
+
+# Use any Gemini model
+model = llms.init('gemini-2.5-flash')
+result = model.complete("Hello!")
+```
+
+#### Option 2: Vertex AI (GoogleVertexAI)
+
+Uses Google Cloud Vertex AI with Application Default Credentials:
 
 1. Set up a GCP account and create a project
 2. Enable Vertex AI APIs in your GCP project
 3. Install gcloud CLI tool
-4. Set up Application Default Credentials
+4. Set up Application Default Credentials:
+   ```bash
+   gcloud auth application-default login
+   gcloud config set project YOUR_PROJECT_ID
+   ```
 
-Then:
+Then use models through Vertex AI:
 
 ```python
-model = llms.init('chat-bison')
-result = model.complete("Hello!")
+# Option A: Direct provider usage for Vertex AI
+from llms.providers.google_genai import GoogleVertexAIProvider
+provider = GoogleVertexAIProvider()
+result = provider.complete("Hello!")
+
+# Option B: Unified provider with Vertex AI flag
+from llms.providers.google_genai import GoogleGenAIProvider
+provider = GoogleGenAIProvider(use_vertexai=True)
+result = provider.complete("Hello!")
 ```
+
+**Note:** Both providers support the same model names. If both `GOOGLE_API_KEY` and gcloud credentials are configured, `llms.init('gemini-2.5-flash')` will use both providers simultaneously.
 
 ### Using Local Ollama LLM models
 
