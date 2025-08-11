@@ -15,6 +15,8 @@ class GroqProvider(BaseProvider):
         "gemma2-9b-it": {"prompt": 0.20, "completion": 0.20, "token_limit": 131072, "is_chat": True},
         "llama-3.3-70b-versatile": {"prompt": 0.59, "completion": 0.79, "token_limit": 131072, "is_chat": True},
         "deepseek-r1-distill-llama-70b": {"prompt": 0.59, "completion": 0.99, "token_limit": 131072, "is_chat": True},
+        "meta-llama/llama-4-maverick-17b-128e-instruct": {"prompt": 0.20, "completion": 0.60, "token_limit": 131072, "is_chat": True},
+        "meta-llama/llama-4-scout-17b-16e-instruct": {"prompt": 0.11, "completion": 0.34, "token_limit": 131072, "is_chat": True},
     }
 
     def __init__(

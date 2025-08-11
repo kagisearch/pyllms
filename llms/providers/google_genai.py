@@ -25,7 +25,9 @@ class GoogleGenAIProvider(BaseProvider):
         "gemini-2.0-flash" : {"prompt": 0.1, "completion": 0.4, "token_limit": 128000, "uses_characters": True},
         "gemini-2.0-flash-lite-preview-02-05" : {"prompt": 0.075, "completion": 0.30, "token_limit": 128000, "uses_characters": True},
         "gemini-2.0-pro-exp-02-05" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
+        "gemini-2.5-pro-exp-03-25" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
         "gemini-2.0-flash-thinking-exp-01-21" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
+        "gemini-2.5-flash-preview-04-17" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
         "gemini-exp-1206" : {"prompt": 3.5, "completion": 10.5, "token_limit": 128000, "uses_characters": True},
         
     }

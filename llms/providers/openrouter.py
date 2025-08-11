@@ -22,6 +22,12 @@ class OpenRouterProvider(BaseProvider):
         "google/gemini-exp-1206:free": {"prompt": 0.0, "completion": 0.0, "token_limit": 2100000, "is_chat": True},
         "google/gemini-2.0-flash-exp:free": {"prompt": 0.0, "completion": 0.0, "token_limit": 1050000, "is_chat": True},
         "deepseek/deepseek-r1-distill-llama-70b": {"prompt": 0.23, "completion": 0.69, "token_limit": 131000, "is_chat": True},
+        "moonshotai/kimi-k2": {
+            "prompt": 0.14,
+            "completion": 2.49,
+            "token_limit": 131072,
+            "is_chat": True
+        },
     }
 
     def __init__(

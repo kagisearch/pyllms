@@ -34,6 +34,12 @@ class AnthropicProvider(BaseProvider):
         "claude-3-7-sonnet-20250219": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
         "claude-sonnet-4-20250514": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
         "claude-3-5-haiku-20241022": {"prompt": 0.80, "completion": 4, "token_limit": 200_000, "output_limit": 4_096},
+        "claude-opus-4-1-20250805": {
+            "prompt": 15.00,
+            "completion": 75.00,
+            "token_limit": 200_000,
+            "output_limit": 4_096,
+        },
 
     }
 

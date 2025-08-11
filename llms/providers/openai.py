@@ -23,11 +23,20 @@ class OpenAIProvider(BaseProvider):
         "chatgpt-4o-latest": {"prompt": 5, "completion": 15.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-mini": {"prompt": 0.15, "completion": 0.60, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "gpt-4o-2024-08-06": {"prompt": 2.50, "completion": 10.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-4.1": {"prompt": 2.0, "completion": 8.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-4.1-mini": {"prompt": 0.4, "completion": 1.6, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-4.1-nano": {"prompt": 0.1, "completion": 0.4, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
         "o1-preview": {"prompt": 15.0, "completion": 60.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o1-mini": {"prompt": 3.0, "completion": 12.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o3-mini": {"prompt": 1.1, "completion": 4.40, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o1": {"prompt": 15.0, "completion": 60.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
+        "o3": {"prompt": 10.0, "completion": 40.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
+        "o4-mini": {"prompt": 1.1, "completion": 4.40, "token_limit": 128000, "is_chat": True, "output_limit": 4_096, "use_max_completion_tokens": True},
         "o1-pro": {"prompt": 150.0, "completion": 600.0, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True, "use_responses_api": True},
+        "gpt-5": {"prompt": 1250.0, "completion": 10000.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-5-mini": {"prompt": 250.0, "completion": 2000.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-5-nano": {"prompt": 50.0, "completion": 400.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
+        "gpt-5-chat-latest": {"prompt": 1250.0, "completion": 10000.0, "token_limit": 128000, "is_chat": True, "output_limit": 4_096},
     }
 
     def __init__(
