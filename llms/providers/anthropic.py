@@ -10,28 +10,18 @@ from .base_provider import BaseProvider
 
 class AnthropicProvider(BaseProvider):
     MODEL_INFO = {
-        "claude-instant-v1.1": {
-            "prompt": 1.63,
-            "completion": 5.51,
-            "token_limit": 9000,
-        },
-        "claude-instant-v1": {"prompt": 1.63, "completion": 5.51, "token_limit": 9000},
-        "claude-v1": {"prompt": 11.02, "completion": 32.68, "token_limit": 9000},
-        "claude-v1-100k": {"prompt": 11.02, "completion": 32.68, "token_limit": 100_000},
-        "claude-instant-1": {
-            "prompt": 1.63,
-            "completion": 5.51,
-            "token_limit": 100_000,
-        },
-        "claude-instant-1.2": {"prompt": 1.63, "completion": 5.51, "token_limit": 100_000, "output_limit": 4_096},
+        # Legacy model
         "claude-2.1": {"prompt": 8.00, "completion": 24.00, "token_limit": 200_000, "output_limit": 4_096},
-        "claude-3-haiku-20240307": {"prompt": 0.25, "completion": 1.25, "token_limit": 200_000, "output_limit": 4_096},
-        "claude-3-sonnet-20240229": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
-        "claude-3-opus-20240229": {"prompt": 15.00, "completion": 75, "token_limit": 200_000, "output_limit": 4_096},
-        "claude-opus-4-20250514": {"prompt": 15.00, "completion": 75, "token_limit": 200_000, "output_limit": 4_096},
+        
+        # Claude 3 family
         "claude-3-5-sonnet-20240620": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
         "claude-3-5-sonnet-20241022": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
+        "claude-3-5-haiku-20241022": {"prompt": 0.80, "completion": 4, "token_limit": 200_000, "output_limit": 4_096},
+        
+        # Claude 3.7 family
         "claude-3-7-sonnet-20250219": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
+        
+        # Claude 4 family (latest)
         "claude-sonnet-4-20250514": {"prompt": 3.00, "completion": 15, "token_limit": 200_000, "output_limit": 4_096},
         "claude-3-5-haiku-20241022": {"prompt": 0.80, "completion": 4, "token_limit": 200_000, "output_limit": 4_096},
         "claude-opus-4-1-20250805": {
@@ -41,6 +31,7 @@ class AnthropicProvider(BaseProvider):
             "output_limit": 4_096,
         },
 
+        "claude-opus-4-20250514": {"prompt": 15.00, "completion": 75, "token_limit": 200_000, "output_limit": 4_096},
     }
 
     def __init__(
@@ -62,17 +53,41 @@ class AnthropicProvider(BaseProvider):
         self.async_client = anthropic.AsyncAnthropic(api_key=api_key, **async_client_kwargs)
 
     def count_tokens(self, content: str | Dict) -> int:
+        """Count tokens using Anthropic's native token counting API."""
+        
         if isinstance(content, str):
-            return self.client.count_tokens(content)
-
-        # NOTE:
-        # Not sure how Anthropic count message, adopted from OpenAI cookbook
-        # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-        formatting_token_count = 4
-        total = 0
-        for message in content:
-            total += self.client.count_tokens(message["content"]) + formatting_token_count
-        return total
+            # For string content, format as a single user message
+            messages = [{"role": "user", "content": content}]
+        elif isinstance(content, list):
+            # If it's already a list of messages, use directly
+            messages = content
+        elif isinstance(content, dict):
+            # If it's a single message dict, wrap in list
+            messages = [content]
+        else:
+            raise ValueError(f"Unsupported content type: {type(content)}")
+        
+        try:
+            response = self.client.messages.count_tokens(
+                model=self.model,
+                messages=messages
+            )
+            return response.input_tokens
+        except Exception as e:
+            # Fallback to tiktoken approximation if API fails
+            import tiktoken
+            enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
+            
+            if isinstance(content, str):
+                return len(enc.encode(content, disallowed_special=()))
+            
+            # Handle message format
+            formatting_token_count = 4
+            total = 0
+            for message in messages:
+                if isinstance(message.get("content"), str):
+                    total += len(enc.encode(message["content"], disallowed_special=())) + formatting_token_count
+            return total
 
 
 
