@@ -23,7 +23,7 @@ class OpenAIProvider(BaseProvider):
         "gpt-4.1": {"prompt": 2.00, "completion": 8.00, "token_limit": 128000, "is_chat": True, "output_limit": 16384},
         "o3": {"prompt": 2.00, "completion": 8.00, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
         "o4-mini-deep-research": {"prompt": 2.00, "completion": 8.00, "token_limit": 128000, "is_chat": True, "output_limit": 4096},
-        "gpt-5": {"prompt": 1.25, "completion": 10.00, "token_limit": 128000, "is_chat": True, "output_limit": 4096},
+        "gpt-5": {"prompt": 1.25, "completion": 10.00, "token_limit": 128000, "is_chat": True, "output_limit": 4096, "use_responses_api": True},
         "gpt-5-chat-latest": {"prompt": 1.25, "completion": 10.00, "token_limit": 128000, "is_chat": True, "output_limit": 4096},
         "gpt-4o": {"prompt": 2.50, "completion": 10.00, "token_limit": 128000, "is_chat": True, "output_limit": 4096},
         "o3-deep-research": {"prompt": 10.00, "completion": 40.00, "token_limit": 200000, "is_chat": True, "output_limit": 100000, "use_max_completion_tokens": True},
