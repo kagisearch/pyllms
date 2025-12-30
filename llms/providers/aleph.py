@@ -24,12 +24,21 @@ class AlephAlphaProvider(BaseProvider):
     def __init__(self, api_key=None, model=None):
         if api_key is None:
             api_key = os.getenv("ALEPHALPHA_API_KEY")
+        self._api_key = api_key
         self.client = Client(api_key)
-        self.async_client = AsyncClient(api_key)
+        # Defer AsyncClient creation to avoid event loop issues in sync context
+        self._async_client = None
 
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
+
+    @property
+    def async_client(self):
+        """Lazily create AsyncClient only when needed in async context."""
+        if self._async_client is None:
+            self._async_client = AsyncClient(self._api_key)
+        return self._async_client
 
     def count_tokens(self, content: str):
         enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
