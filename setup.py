@@ -29,7 +29,7 @@ setup(
         "protobuf>=3.20.3",
         "grpcio>=1.54.2",
         "google-generativeai",
-        "mistralai",
+        "mistralai>=1.0.0",
         "ollama",
         "reka-api",
         "together",
