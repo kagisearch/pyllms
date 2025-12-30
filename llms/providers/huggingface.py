@@ -2,7 +2,7 @@
 
 import os
 
-from huggingface_hub.inference_api import InferenceApi
+from huggingface_hub import InferenceClient
 
 from ..results.result import Result
 from .base_provider import BaseProvider
@@ -23,7 +23,7 @@ class HuggingfaceHubProvider(BaseProvider):
             "token_limit": 2048,
             "local": True
         },
-        "hf_falcon7b": {         
+        "hf_falcon7b": {
             "full": "tiiuae/falcon-7b-instruct",
             "prompt": 0,
             "completion": 0,
@@ -71,13 +71,12 @@ class HuggingfaceHubProvider(BaseProvider):
             model = list(self.MODEL_INFO.keys())[0]
 
         self.model = model
+        self._model_full_name = self.MODEL_INFO[model]["full"]
 
         if api_key is None:
             api_key = os.getenv("HUGGINFACEHUB_API_KEY")
 
-        self.client = InferenceApi(
-            repo_id=self.MODEL_INFO[model]["full"], token=api_key
-        )
+        self.client = InferenceClient(token=api_key)
 
     def _prepare_model_inputs(
         self,
@@ -110,9 +109,15 @@ class HuggingfaceHubProvider(BaseProvider):
             **kwargs,
         )
         with self.track_latency():
-            response = self.client(inputs=prompt, params=params)
+            response = self.client.text_generation(
+                prompt,
+                model=self._model_full_name,
+                temperature=params.get("temperature", 0.01),
+                max_new_tokens=params.get("max_length", 300),
+                return_full_text=True,
+            )
 
-        completion = response[0]["generated_text"][len(prompt) :]
+        completion = response[len(prompt):] if response.startswith(prompt) else response
         meta = {
             "tokens_prompt": -1,
             "tokens_completion": -1,
