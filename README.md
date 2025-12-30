@@ -26,6 +26,8 @@ PyLLMs is a minimal Python library to connect to various Language Models (LLMs) 
   - [Using OpenAI API on Azure](#using-openai-api-on-azure)
   - [Using Google Vertex LLM models](#using-google-vertex-llm-models)
   - [Using Local Ollama LLM models](#using-local-ollama-llm-models)
+  - [Mixing Local and Cloud Models](#mixing-local-and-cloud-models)
+  - [Using Different Ollama Servers](#using-different-ollama-servers)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -275,6 +277,65 @@ result = provider.complete("Hello!")
 ```python
 model = llms.init("tinyllama:latest")
 result = model.complete("Hello!")
+```
+
+### Mixing Local and Cloud Models
+
+You can combine local Ollama models with cloud-based models in the same session:
+
+```python
+import llms
+
+# Mix cloud and local models
+models = llms.init(model=[
+    "claude-3-5-sonnet-20241022",  # Anthropic cloud
+    "gpt-4o",                       # OpenAI cloud
+    "tinyllama:latest",             # Local Ollama
+    "mistral:latest",               # Local Ollama
+])
+
+result = models.complete("What is the meaning of life?")
+for r in result:
+    print(f"{r.meta['model']}: {r.text[:100]}...")
+```
+
+### Using Different Ollama Servers
+
+To connect to Ollama running on a different host or port, set the `OLLAMA_HOST` environment variable:
+
+```bash
+# Connect to Ollama on a remote server
+export OLLAMA_HOST="http://192.168.1.100:11434"
+
+# Or use a custom port on localhost
+export OLLAMA_HOST="http://localhost:11435"
+```
+
+```python
+import os
+import llms
+
+# Programmatically set the Ollama host
+os.environ["OLLAMA_HOST"] = "http://remote-server:11434"
+
+model = llms.init("llama3:latest")
+result = model.complete("Hello from remote Ollama!")
+```
+
+For scenarios requiring multiple Ollama servers simultaneously, you can dynamically switch between hosts:
+
+```python
+import os
+import llms
+
+def query_ollama_server(host, model_name, prompt):
+    os.environ["OLLAMA_HOST"] = host
+    model = llms.init(model_name)
+    return model.complete(prompt)
+
+# Query different servers
+result1 = query_ollama_server("http://server1:11434", "llama3:latest", "Hello!")
+result2 = query_ollama_server("http://server2:11434", "mistral:latest", "Hello!")
 ```
 
 ## Contributing
