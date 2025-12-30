@@ -97,7 +97,7 @@ class GoogleGenAIProvider(BaseProvider):
     def count_tokens(self, content):
         """
         Count tokens in the given content.
-        For Google GenAI, we'll use a simple approximation since the exact 
+        For Google GenAI, we'll use a simple approximation since the exact
         token counting API might not be readily available in streaming context.
         """
         if isinstance(content, str):
@@ -111,6 +111,61 @@ class GoogleGenAIProvider(BaseProvider):
         else:
             return max(1, len(str(content)) // 4)
 
+    def create_cache(
+        self,
+        contents: str,
+        system_instruction: str = None,
+        ttl: str = "3600s",
+        display_name: str = None,
+    ) -> str:
+        """
+        Create a context cache for reusing large content across multiple requests.
+
+        Args:
+            contents: The content to cache (e.g., a long document)
+            system_instruction: Optional system instruction to cache with the content
+            ttl: Time-to-live for the cache (default: 1 hour). Format: "Xs" for seconds
+            display_name: Optional display name for the cache
+
+        Returns:
+            str: The cache name to use in subsequent requests with cached_content parameter
+
+        Example:
+            cache_name = provider.create_cache(
+                contents="Very long document text...",
+                system_instruction="You are an expert analyst.",
+                ttl="7200s"
+            )
+            result = provider.complete(
+                prompt="Summarize the document",
+                cached_content=cache_name
+            )
+        """
+        cache_config = {
+            "model": self.model,
+            "contents": [{"role": "user", "parts": [{"text": contents}]}],
+        }
+
+        if system_instruction:
+            cache_config["system_instruction"] = system_instruction
+
+        if display_name:
+            cache_config["display_name"] = display_name
+
+        cache_config["ttl"] = ttl
+
+        cached_content = self.client.caches.create(config=cache_config)
+        return cached_content.name
+
+    def delete_cache(self, cache_name: str) -> None:
+        """
+        Delete a context cache.
+
+        Args:
+            cache_name: The name of the cache to delete
+        """
+        self.client.caches.delete(name=cache_name)
+
     def _prepare_model_inputs(
         self,
         prompt: str,
@@ -121,14 +176,18 @@ class GoogleGenAIProvider(BaseProvider):
     ) -> Dict:
         temperature = max(temperature, 0.01)
         max_output_tokens = kwargs.pop("max_output_tokens", max_tokens)
-        
+
+        # Handle cached content for context caching
+        cached_content = kwargs.pop("cached_content", None)
+
         # Create config using the modern API
         config = types.GenerateContentConfig(
             temperature=temperature,
             max_output_tokens=max_output_tokens,
+            cached_content=cached_content,
             **kwargs,
         )
-        return {"config": config, "contents": prompt}
+        return {"config": config, "contents": prompt, "cached_content": cached_content}
 
     def complete(
         self,

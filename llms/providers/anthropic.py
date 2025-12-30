@@ -105,20 +105,53 @@ class AnthropicProvider(BaseProvider):
         history = history or []
         system_message = system_message or ""
         max_tokens = kwargs.pop("max_tokens_to_sample", max_tokens)
+
+        # Handle prompt caching
+        cache_system = kwargs.pop("cache_system", False)
+        cache_messages = kwargs.pop("cache_messages", False)
+
         messages = [*history, {"role": "user", "content": prompt}]
         if ai_prompt:
             messages.append({"role": "assistant", "content": ai_prompt})
 
         if system_message and self.model.startswith("claude-instant"):
             raise ValueError("System message is not supported for Claude instant")
+
+        # Format system message with cache control if enabled
+        if cache_system and system_message:
+            system_content = [
+                {
+                    "type": "text",
+                    "text": system_message,
+                    "cache_control": {"type": "ephemeral"}
+                }
+            ]
+        else:
+            system_content = system_message
+
+        # Apply cache control to last message if cache_messages is enabled
+        if cache_messages and messages:
+            last_msg = messages[-1]
+            if isinstance(last_msg.get("content"), str):
+                messages[-1] = {
+                    "role": last_msg["role"],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": last_msg["content"],
+                            "cache_control": {"type": "ephemeral"}
+                        }
+                    ]
+                }
+
         model_inputs = {
             "messages": messages,
-            "system": system_message,
+            "system": system_content,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stop_sequences": stop_sequences,
         }
-        
+
         # Add thinking mode if specified
         thinking = kwargs.pop('thinking', None)
         if thinking is not None:
@@ -192,6 +225,12 @@ class AnthropicProvider(BaseProvider):
             meta["tokens_prompt"] = response.usage.input_tokens
             meta["tokens_completion"] = response.usage.output_tokens
 
+            # Add cache-related metadata if available
+            if hasattr(response.usage, "cache_creation_input_tokens"):
+                meta["cache_creation_input_tokens"] = response.usage.cache_creation_input_tokens
+            if hasattr(response.usage, "cache_read_input_tokens"):
+                meta["cache_read_input_tokens"] = response.usage.cache_read_input_tokens
+
         meta["latency"] = self.latency
         return Result(
             text=completion,
@@ -229,6 +268,7 @@ class AnthropicProvider(BaseProvider):
             **kwargs,
         )
 
+        meta = {}
         with self.track_latency():
             response = await self.async_client.messages.create(model=self.model, **model_inputs)
             if "thinking" in model_inputs:
@@ -236,12 +276,21 @@ class AnthropicProvider(BaseProvider):
                 completion = text_block.text if text_block else ""
             else:
                 completion = response.content[0].text
+            meta["tokens_prompt"] = response.usage.input_tokens
+            meta["tokens_completion"] = response.usage.output_tokens
 
+            # Add cache-related metadata if available
+            if hasattr(response.usage, "cache_creation_input_tokens"):
+                meta["cache_creation_input_tokens"] = response.usage.cache_creation_input_tokens
+            if hasattr(response.usage, "cache_read_input_tokens"):
+                meta["cache_read_input_tokens"] = response.usage.cache_read_input_tokens
+
+        meta["latency"] = self.latency
         return Result(
             text=completion,
             model_inputs=model_inputs,
             provider=self,
-            meta={"latency": self.latency},
+            meta=meta,
         )
 
     def complete_stream(
