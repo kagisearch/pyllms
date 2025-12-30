@@ -14,22 +14,26 @@ class DeepSeekProvider(BaseProvider):
         "deepseek-reasoner": {"prompt": 0.55, "completion": 2.19, "token_limit": 32768, "is_chat": True, "output_limit": 8192},
     }
 
+    DEFAULT_BASE_URL = "https://api.deepseek.com/v1"
+
     def __init__(
         self,
         api_key: Union[str, None] = None,
         model: Union[str, None] = None,
+        api_base: Union[str, None] = None,
         client_kwargs: Union[dict, None] = None,
         async_client_kwargs: Union[dict, None] = None,
     ):
         if model is None:
             model = list(self.MODEL_INFO.keys())[0]
         self.model = model
+        base_url = api_base or self.DEFAULT_BASE_URL
         if client_kwargs is None:
             client_kwargs = {}
-        self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1", **client_kwargs)
+        self.client = OpenAI(api_key=api_key, base_url=base_url, **client_kwargs)
         if async_client_kwargs is None:
             async_client_kwargs = {}
-        self.async_client = AsyncOpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1", **async_client_kwargs)
+        self.async_client = AsyncOpenAI(api_key=api_key, base_url=base_url, **async_client_kwargs)
 
     @property
     def is_chat_model(self) -> bool:

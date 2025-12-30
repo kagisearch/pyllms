@@ -37,6 +37,7 @@ class OpenAIProvider(BaseProvider):
         self,
         api_key: Union[str, None] = None,
         model: Union[str, None] = None,
+        api_base: Union[str, None] = None,
         client_kwargs: Union[dict, None] = None,
         async_client_kwargs: Union[dict, None] = None,
     ):
@@ -45,9 +46,13 @@ class OpenAIProvider(BaseProvider):
         self.model = model
         if client_kwargs is None:
             client_kwargs = {}
+        if api_base:
+            client_kwargs.setdefault('base_url', api_base)
         self.client = OpenAI(api_key=api_key, **client_kwargs)
         if async_client_kwargs is None:
             async_client_kwargs = {}
+        if api_base:
+            async_client_kwargs.setdefault('base_url', api_base)
         self.async_client = AsyncOpenAI(api_key=api_key, **async_client_kwargs)
 
     @property
