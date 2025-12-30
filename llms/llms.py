@@ -734,7 +734,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                             "outputs": outputs,
                             "total_latency": 0,
                             "total_cost": 0,
-                            "evaluation": [None] * len(outputs),
+                            "evaluation": {},  # Use dict with prompt_index as key
                         }
 
                         for output_data in outputs:
@@ -771,7 +771,7 @@ Question: Is there a series of flights that goes from city F to city I?",
             sorted_models = sorted(
                 model_results,
                 key=lambda x: model_results[x]["aggregated_speed"]
-                * sum(filter(None, model_results[x]["evaluation"])),
+                * sum(filter(None, model_results[x]["evaluation"].values())),
                 reverse=True,
             )
         else:
@@ -805,10 +805,12 @@ Question: Is there a series of flights that goes from city F to city I?",
             total_tokens = 0
             total_score = 0
             valid_evaluations = 0
-            for index, output_data in enumerate(model_data["outputs"]):
+            for output_data in model_data["outputs"]:
+                prompt_idx = output_data["prompt_index"]
                 total_tokens += output_data["tokens"]
-                if evaluator and model_results[model]["evaluation"][index] is not None:
-                    total_score += model_results[model]["evaluation"][index]
+                eval_result = model_results[model]["evaluation"].get(prompt_idx)
+                if evaluator and eval_result is not None:
+                    total_score += eval_result
                     valid_evaluations += 1
                 row_data = [
                     str(model),
@@ -821,7 +823,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                 if not show_outputs:
                     row_data.remove(output_data["text"])
                 if evaluator:
-                    row_data.append(model_results[model]["evaluation"][index])
+                    row_data.append(eval_result)
                 table.add_row(row_data)
 
             if show_outputs:
@@ -857,13 +859,9 @@ Question: Is there a series of flights that goes from city F to city I?",
         for i, problem in enumerate(problems):
             valid_results = []
             for model in model_results:
-                try:
-                    if len(model_results[model]["evaluation"]) > i:
-                        eval_result = model_results[model]["evaluation"][i]
-                        if eval_result is not None:
-                            valid_results.append(eval_result)
-                except (IndexError, KeyError):
-                    continue
+                eval_result = model_results[model]["evaluation"].get(i)
+                if eval_result is not None:
+                    valid_results.append(eval_result)
                 
             if valid_results:  # Only evaluate if we have valid results
                 all_correct = all(result == 1 for result in valid_results)
