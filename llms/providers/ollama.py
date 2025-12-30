@@ -19,19 +19,19 @@ def _get_model_info(ollama_host: Optional[str] = "http://localhost:11434"):
                 "completion": 0.0,
                 "token_limit": 4096  # Default token limit
             }
-
-        if not pulled_models:
-            raise ValueError("Could not retrieve any models from Ollama")
     except Exception as e:
         # Log the error but continue with empty model info
         pass
-        #print(f"Warning: Could not connect to Ollama server: {str(e)}")
-   
+
     return model_info
 
 
 class OllamaProvider(BaseProvider):
+    # Initialize with default host; will be updated in __init__ if custom host is provided
     MODEL_INFO = _get_model_info()
+
+    # Class-level cache for model info per host
+    _model_info_cache: Dict[str, Dict[str, Any]] = {}
 
     def count_tokens(self, content: Union[str, List[Dict[str, Any]]]) -> int:
         """Estimate token count using simple word-based heuristic"""
@@ -43,15 +43,37 @@ class OllamaProvider(BaseProvider):
         # Rough estimation: split on whitespace and punctuation
         return len(text.split())
 
+    @classmethod
+    def get_model_info_for_host(cls, ollama_host: str) -> Dict[str, Any]:
+        """Get model info for a specific host, using cache if available."""
+        if ollama_host not in cls._model_info_cache:
+            cls._model_info_cache[ollama_host] = _get_model_info(ollama_host)
+        return cls._model_info_cache[ollama_host]
+
+    @classmethod
+    def update_model_info(cls, ollama_host: str) -> None:
+        """Update the class-level MODEL_INFO for a specific host."""
+        model_info = cls.get_model_info_for_host(ollama_host)
+        if model_info:
+            cls.MODEL_INFO.update(model_info)
+
     def __init__(
         self,
         model: Optional[str] = None,
         ollama_host: Optional[str] = "http://localhost:11434",
         ollama_client_options: Optional[dict] = None
     ):
+        # Update MODEL_INFO with models from the specified host
+        self.ollama_host = ollama_host
+        self.__class__.update_model_info(ollama_host)
+
         self.model = model
         if self.model is None:
-            self.model = list(self.MODEL_INFO.keys())[0]
+            model_info = self.get_model_info_for_host(ollama_host)
+            if model_info:
+                self.model = list(model_info.keys())[0]
+            else:
+                raise ValueError(f"No models found on Ollama server at {ollama_host}")
 
         if ollama_client_options is None:
             ollama_client_options = {}

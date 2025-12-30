@@ -924,19 +924,24 @@ Question: Is there a series of flights that goes from city F to city I?",
             else ([model] if isinstance(model, str) else model)
         )
 
-    def _validate_model(self, single_model: str, provider: Provider) -> bool:
+    def _validate_model(self, single_model: str, provider: Provider, kwargs: Dict[str, Any] = None) -> bool:
+        # Special handling for Ollama: update MODEL_INFO with custom host if specified
+        if provider.provider == OllamaProvider and kwargs:
+            ollama_host = kwargs.get('ollama_host', 'http://localhost:11434')
+            OllamaProvider.update_model_info(ollama_host)
+
         return (
             single_model in provider.provider.MODEL_INFO
             and (provider.api_key or not provider.needs_api_key)
         )
 
     def _initialize_providers(self, kwargs: Dict[str, Any]) -> None:
-      
+
         self._providers = [
             provider.provider(model=single_model, **({**kwargs, 'api_key': provider.api_key} if provider.needs_api_key else kwargs))
             for single_model in self._models
             for provider in self._provider_map.values()
-            if self._validate_model(single_model, provider)
+            if self._validate_model(single_model, provider, kwargs)
         ]
 
         if not self._providers:
