@@ -910,6 +910,7 @@ Question: Is there a series of flights that goes from city F to city I?",
                 api_key=kwargs.pop(provider.api_key_name.lower(), None)
                 or os.getenv(provider.api_key_name) if provider.api_key_name else None,
                 needs_api_key=provider.needs_api_key,
+                custom_credential_check=provider.custom_credential_check,
             )
             for name, provider in self._provider_map.items()
         }
@@ -928,15 +929,19 @@ Question: Is there a series of flights that goes from city F to city I?",
             ollama_host = kwargs.get('ollama_host', 'http://localhost:11434')
             OllamaProvider.update_model_info(ollama_host)
 
+        has_credentials = bool(provider.api_key) or not provider.needs_api_key
+        if not has_credentials and provider.custom_credential_check is not None:
+            has_credentials = provider.custom_credential_check()
+
         return (
             single_model in provider.provider.MODEL_INFO
-            and (provider.api_key or not provider.needs_api_key)
+            and has_credentials
         )
 
     def _initialize_providers(self, kwargs: Dict[str, Any]) -> None:
 
         self._providers = [
-            provider.provider(model=single_model, **({**kwargs, 'api_key': provider.api_key} if provider.needs_api_key else kwargs))
+            provider.provider(model=single_model, **({**kwargs, 'api_key': provider.api_key} if provider.needs_api_key and provider.api_key_name else kwargs))
             for single_model in self._models
             for provider in self._provider_map.values()
             if self._validate_model(single_model, provider, kwargs)
