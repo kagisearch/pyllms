@@ -1,3 +1,7 @@
+## Note: PyLLMS is deprecated. We recommend using [pydantic-ai](https://github.com/pydantic/pydantic-ai) instead.
+
+---
+
 # PyLLMs
 
 [![PyPI version](https://badge.fury.io/py/pyllms.svg)](https://badge.fury.io/py/pyllms)
