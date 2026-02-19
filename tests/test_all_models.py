@@ -28,13 +28,12 @@ def get_available_providers() -> Dict[str, Any]:
     available_providers = {}
     
     for provider_name, provider_config in LLMS._provider_map.items():
-        if not provider_config.needs_api_key:
-            # Providers that don't need API keys (like Ollama, Google Vertex)
-            available_providers[provider_name] = provider_config
-        elif provider_config.custom_credential_check:
-            # Providers with custom credential checking (like BedrockAnthropic)
+        if provider_config.custom_credential_check:
             if provider_config.custom_credential_check():
                 available_providers[provider_name] = provider_config
+        elif not provider_config.needs_api_key:
+            # Providers that don't need API keys (like Ollama, Google Vertex)
+            available_providers[provider_name] = provider_config
         elif provider_config.api_key_name and os.getenv(provider_config.api_key_name):
             # Providers that need API keys and have them available
             available_providers[provider_name] = provider_config
@@ -86,10 +85,10 @@ class TestModelDiscovery:
         print(f"\nFound {len(available_providers)} available providers:")
         
         for provider_name, provider_config in available_providers.items():
-            if not provider_config.needs_api_key:
-                api_key_status = "No API key needed"
-            elif provider_config.custom_credential_check:
+            if provider_config.custom_credential_checlk:
                 api_key_status = "Custom credentials"
+            elif not provider_config.needs_api_key:
+                api_key_status = "No API key needed"
             else:
                 api_key_status = f"API key: {provider_config.api_key_name}"
             print(f"  ✓ {provider_name} ({api_key_status})")
